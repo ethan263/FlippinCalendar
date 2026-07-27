@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useOrganization } from "@clerk/nextjs";
+import { useAuth, useOrganization } from "@clerk/nextjs";
 
 import {
   defaultTerminology,
@@ -28,6 +28,7 @@ type WorkspaceContextValue = {
   organization: Organization | null;
   terminology: Terminology;
   isBootstrapping: boolean;
+  bootstrapError: string | null;
   refreshOrganization: () => Promise<void>;
 };
 
@@ -40,11 +41,13 @@ export function WorkspaceProvider({
   children: ReactNode;
   orgSlug: string;
 }) {
-  const { organization: clerkOrganization, isLoaded } = useOrganization();
+  const { isLoaded, orgId } = useAuth();
+  const { organization: clerkOrganization } = useOrganization();
   const [organization, setOrganization] = useState<Organization | null | undefined>(
     undefined,
   );
   const [isCreating, setIsCreating] = useState(false);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const requestedBootstrap = useRef(false);
 
   const refreshOrganization = useCallback(async () => {
@@ -53,24 +56,41 @@ export function WorkspaceProvider({
   }, []);
 
   useEffect(() => {
-    if (!isLoaded || !clerkOrganization) return;
+    // Prefer session orgId from useAuth — useOrganization() can lag behind the
+    // active Clerk session even when the server layout already resolved orgSlug.
+    if (!isLoaded) return;
+
+    if (!orgId) {
+      setOrganization(null);
+      setBootstrapError(
+        "Select an organization in the switcher to open this workspace.",
+      );
+      return;
+    }
+
     let cancelled = false;
+    setBootstrapError(null);
     void fetchCurrentOrganizationAction()
       .then((current) => {
         if (!cancelled) setOrganization(current);
       })
-      .catch(() => {
-        if (!cancelled) setOrganization(null);
+      .catch((error) => {
+        if (!cancelled) {
+          setOrganization(null);
+          setBootstrapError(
+            error instanceof Error ? error.message : "Failed to load workspace.",
+          );
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [clerkOrganization, isLoaded, orgSlug]);
+  }, [isLoaded, orgId, orgSlug]);
 
   useEffect(() => {
     if (
       !isLoaded ||
-      !clerkOrganization ||
+      !orgId ||
       organization !== null ||
       requestedBootstrap.current
     ) {
@@ -79,17 +99,26 @@ export function WorkspaceProvider({
 
     requestedBootstrap.current = true;
     setIsCreating(true);
+    setBootstrapError(null);
     void bootstrapCurrentOrganizationAction({
-      name: clerkOrganization.name,
+      name: clerkOrganization?.name,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       locale: navigator.language,
     })
-      .then((created) => setOrganization(created))
-      .catch(() => {
+      .then((created) => {
+        setOrganization(created);
+        setBootstrapError(null);
+      })
+      .catch((error) => {
         requestedBootstrap.current = false;
+        setBootstrapError(
+          error instanceof Error
+            ? error.message
+            : "Failed to initialize workspace.",
+        );
       })
       .finally(() => setIsCreating(false));
-  }, [clerkOrganization, isLoaded, organization, orgSlug]);
+  }, [clerkOrganization?.name, isLoaded, orgId, organization, orgSlug]);
 
   const value = useMemo<WorkspaceContextValue>(
     () => ({
@@ -99,9 +128,10 @@ export function WorkspaceProvider({
         ? normalizeTerminology(organization.terminology)
         : defaultTerminology,
       isBootstrapping: organization === undefined || isCreating,
+      bootstrapError,
       refreshOrganization,
     }),
-    [isCreating, organization, orgSlug, refreshOrganization],
+    [bootstrapError, isCreating, organization, orgSlug, refreshOrganization],
   );
 
   return (

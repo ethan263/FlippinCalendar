@@ -76,7 +76,7 @@ export function HeroSection() {
   return (
     <section className="relative border-b">
       <div className="absolute inset-0 hairline-grid opacity-45 mask-[linear-gradient(to_bottom,black,transparent_88%)]" />
-      <div className="relative mx-auto grid max-w-[1400px] gap-14 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[0.98fr_1.02fr] lg:px-12 lg:pb-28 lg:pt-30">
+      <div className="relative mx-auto grid max-w-350 gap-14 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[0.98fr_1.02fr] lg:px-12 lg:pb-28 lg:pt-30">
         <div
           className="relative flex items-center order-2 lg:order-1"
           style={{ perspective: 1400 }}
@@ -142,7 +142,7 @@ export function HeroSection() {
                         {detail}
                       </p>
                     </div>
-                    <span className="hidden font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground sm:inline">
+                    <span className="hidden font-mono text-[9px] uppercase tracking-widest text-muted-foreground sm:inline">
                       0{index + 1}
                     </span>
                   </motion.div>
@@ -184,7 +184,7 @@ export function HeroSection() {
               variant="outline"
               className="mb-7 rounded-sm bg-background px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em]"
             >
-              AI front desk · built around your business
+              front desk Assistant · Tailored to your business
             </Badge>
           </motion.div>
 
@@ -220,7 +220,7 @@ export function HeroSection() {
           >
             <Button asChild size="lg" className="h-12 gap-2 rounded-md px-6 shadow-none">
               <Link href="/sign-up">
-                Build your front desk <ArrowRight className="size-4" />
+                Build your assistant <ArrowRight className="size-4" />
               </Link>
             </Button>
             <Button

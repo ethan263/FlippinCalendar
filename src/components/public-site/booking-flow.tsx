@@ -196,12 +196,12 @@ function StepOption({
       className={cn(
         "group relative w-full rounded-[calc(var(--radius)*1.25)] border bg-background p-4 text-left transition duration-200 outline-none hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-sm focus-visible:ring-3 focus-visible:ring-ring/35",
         selected &&
-          "border-primary bg-primary/[0.055] shadow-sm ring-1 ring-primary/20",
+          "border-primary bg-primary/5.5 shadow-sm ring-1 ring-primary/20",
         className,
       )}
     >
       {selected ? (
-        <span className="absolute end-3 top-3 grid size-6 place-items-center rounded-full bg-primary text-primary-foreground">
+        <span className="absolute inset-e-3 top-3 grid size-6 place-items-center rounded-full bg-primary text-primary-foreground">
           <Check className="size-3.5" aria-hidden="true" />
         </span>
       ) : null}
@@ -446,7 +446,7 @@ export function BookingFlow({
 
   return (
     <Card className="mx-auto w-full max-w-6xl overflow-visible bg-card/80 py-0 shadow-[0_24px_80px_-44px_color-mix(in_srgb,var(--foreground)_35%,transparent)] backdrop-blur-sm">
-      <div className="grid min-h-[37rem] lg:grid-cols-[15rem_minmax(0,1fr)]">
+      <div className="grid min-h-148 lg:grid-cols-[15rem_minmax(0,1fr)]">
         <aside className="border-b bg-muted/45 p-5 lg:border-e lg:border-b-0 lg:p-6">
           <div className="lg:sticky lg:top-6">
             <div className="flex items-center justify-between gap-4 lg:block">
@@ -766,7 +766,7 @@ export function BookingFlow({
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="booking-name">Name</Label>
                     <div className="relative">
-                      <UserRound className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <UserRound className="pointer-events-none absolute inset-s-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="booking-name"
                         autoComplete="name"
@@ -781,7 +781,7 @@ export function BookingFlow({
                   <div className="space-y-2">
                     <Label htmlFor="booking-email">Email</Label>
                     <div className="relative">
-                      <Mail className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Mail className="pointer-events-none absolute inset-s-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="booking-email"
                         type="email"
@@ -797,7 +797,7 @@ export function BookingFlow({
                   <div className="space-y-2">
                     <Label htmlFor="booking-phone">Phone</Label>
                     <div className="relative">
-                      <Phone className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Phone className="pointer-events-none absolute inset-s-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="booking-phone"
                         type="tel"
