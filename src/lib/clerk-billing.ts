@@ -2,7 +2,7 @@ import "server-only";
 
 import { clerkClient } from "@clerk/nextjs/server";
 
-export type TrimrFeature =
+export type FlippinCalendarFeature =
   | "operations_hub"
   | "custom_public_page"
   | "web_agent"
@@ -18,7 +18,7 @@ export type TrimrFeature =
  */
 export async function organizationHasFeature(
   organizationId: string,
-  feature: TrimrFeature,
+  feature: FlippinCalendarFeature,
 ): Promise<boolean> {
   const client = await clerkClient();
 

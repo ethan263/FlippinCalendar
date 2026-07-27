@@ -38,7 +38,7 @@ export default async function AppIndexPage({ searchParams }: AppIndexPageProps) 
                 <Sparkles className="size-4" />
               </span>
               <span className="font-heading text-xl font-semibold tracking-tight">
-                Trimr
+                flippinCalendar
               </span>
             </div>
 

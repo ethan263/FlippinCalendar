@@ -31,8 +31,8 @@ function MarketingNav({ signedIn }: { signedIn: boolean }) {
       <div className="mx-auto flex h-17 max-w-350 items-center px-5 sm:px-8 lg:px-12">
         <Brand />
         <nav className="ml-12 hidden items-center gap-7 text-sm text-muted-foreground md:flex">
-          <Link className="transition-colors hover:text-foreground" href="#trimr">
-            Trimr
+          <Link className="transition-colors hover:text-foreground" href="#flippincalendar">
+            flippinCalendar
           </Link>
           <Link className="transition-colors hover:text-foreground" href="#built-for">
             Built for
@@ -78,7 +78,7 @@ export default async function Home() {
 
       <HeroSection />
 
-      <section id="trimr" className="mx-auto max-w-350 px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+      <section id="flippincalendar" className="mx-auto max-w-350 px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
         <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr]">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">One system, three surfaces</p>
@@ -114,7 +114,7 @@ export default async function Home() {
             </h2>
             <p className="mt-6 max-w-lg text-base leading-7 text-white/58">
               A salon calls it a treatment. A consultant calls it a session. A
-              support team calls it a case. Trimr’s terminology, forms,
+              support team calls it a case. flippinCalendar’s terminology, forms,
               availability, and public page adapt without changing the core.
             </p>
           </div>

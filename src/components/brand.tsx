@@ -14,7 +14,7 @@ export function Brand({
     <Link
       href={href}
       className={cn("group inline-flex items-center gap-2.5", className)}
-      aria-label="Trimr home"
+      aria-label="flippinCalendar home"
     >
       <span
         className={cn(
@@ -36,7 +36,7 @@ export function Brand({
           inverted && "text-white",
         )}
       >
-        Trimr
+        flippinCalendar
       </span>
     </Link>
   );

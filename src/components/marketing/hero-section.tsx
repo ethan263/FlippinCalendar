@@ -214,7 +214,7 @@ export function HeroSection() {
             animate="show"
             className="mt-9 max-w-xl text-lg leading-7 text-muted-foreground sm:text-xl sm:leading-8"
           >
-            Trimr answers questions, chats with clients, and organizes bookings
+            flippinCalendar answers questions, chats with clients, and organizes bookings
             for any service business—using your language, hours, people, and
             brand.
           </motion.p>

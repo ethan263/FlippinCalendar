@@ -33,8 +33,8 @@ const newsreader = Newsreader({
 
 export const metadata: Metadata = {
   title: {
-    default: "Trimr — AI front desk for modern teams",
-    template: "%s · Trimr",
+    default: "flippinCalendar — AI front desk for modern teams",
+    template: "%s · flippinCalendar",
   },
   description:
     "Run bookings, customer conversations, and a text-and-audio web concierge from one multi-tenant workspace.",
@@ -59,7 +59,7 @@ export default function RootLayout({
             theme: shadcn,
             elements: {
               // Clerk's fixed drawers intentionally ship without a z-index.
-              // Keep checkout and its backdrop above Trimr's sticky UI.
+              // Keep checkout and its backdrop above flippinCalendar's sticky UI.
               drawerBackdrop: { zIndex: 9_999 },
               drawerRoot: { zIndex: 10_000 },
             },

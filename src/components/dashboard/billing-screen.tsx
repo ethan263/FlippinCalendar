@@ -120,7 +120,7 @@ export function BillingScreen({
 
       <div className="mt-4 flex items-start gap-2 rounded-lg border border-black/10 bg-white p-3 text-[11px] leading-5 text-muted-foreground">
         <Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" />
-        Trimr gates capabilities by Clerk feature entitlement, so a feature
+        flippinCalendar gates capabilities by Clerk feature entitlement, so a feature
         can move between plans without changing application code.
       </div>
     </>

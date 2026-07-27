@@ -254,7 +254,7 @@ export function VoiceAgentScreen() {
                   Current agent
                 </p>
                 <CardTitle className="mt-1 font-heading text-xl tracking-tight">
-                  Trimr concierge
+                  flippinCalendar concierge
                 </CardTitle>
               </div>
               <CardAction>

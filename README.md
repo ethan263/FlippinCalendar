@@ -1,4 +1,4 @@
-# Trimr — AI Receptionist & Front-Desk SaaS (ElevenLabs Voice Agents)
+# flippinCalendar — AI Receptionist & Front-Desk SaaS (ElevenLabs Voice Agents)
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![Convex](https://img.shields.io/badge/Convex-Backend-ff6b35?logo=convex)](https://convex.dev/referral/SONNYS4371)
@@ -43,7 +43,7 @@ This project uses **[Clerk](https://go.clerk.com/IVUd0XO)** for authentication, 
 
 ## 🤔 What Is This App?
 
-Think of Trimr as **your AI receptionist** — a branded booking page plus a talking concierge, plus a back-office dashboard.
+Think of flippinCalendar as **your AI receptionist** — a branded booking page plus a talking concierge, plus a back-office dashboard.
 
 It's a multi-tenant workspace app built on **two identity worlds** (the whole point):
 
@@ -352,7 +352,7 @@ Open [http://localhost:3000](http://localhost:3000), sign up, create an organiza
 
 ## 🗄️ Database Schema Overview
 
-Trimr uses **Convex** with a flat, relational, tenant-scoped schema. All tables are defined in [`convex/schema.ts`](convex/schema.ts). Every operational table carries an `organizationId` and is indexed by it.
+flippinCalendar uses **Convex** with a flat, relational, tenant-scoped schema. All tables are defined in [`convex/schema.ts`](convex/schema.ts). Every operational table carries an `organizationId` and is indexed by it.
 
 | Table                       | Purpose                                                    | Key Fields                                                                        |
 | --------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------- |
