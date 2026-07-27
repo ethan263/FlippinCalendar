@@ -9,10 +9,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FeatureEntitlementCard } from "@/components/dashboard/feature-gates";
 import { ScreenHeader } from "@/components/dashboard/screen-kit";
 import { useWorkspace } from "@/components/dashboard/workspace-context";
+import { BillingCheckoutLauncher } from "@/components/billing/billing-checkout-launcher";
+import type { ClerkPlanSlug } from "@/lib/marketing/plans";
 
-export function BillingScreen() {
+type BillingScreenProps = {
+  highlightedPlan?: ClerkPlanSlug;
+  autoCheckoutPlanSlug?: ClerkPlanSlug;
+};
+
+export function BillingScreen({
+  highlightedPlan,
+  autoCheckoutPlanSlug,
+}: BillingScreenProps) {
   const { has, isLoaded } = useAuth();
   const { organization } = useWorkspace();
+  const billingRedirectUrl = `/app/${organization?.slug ?? ""}/billing`;
   const currentTier = has?.({ plan: "org:voice" })
     ? "Voice"
     : has?.({ plan: "org:engage" })
@@ -21,6 +32,12 @@ export function BillingScreen() {
 
   return (
     <>
+      {autoCheckoutPlanSlug ? (
+        <BillingCheckoutLauncher
+          planSlug={autoCheckoutPlanSlug}
+          redirectUrl={billingRedirectUrl}
+        />
+      ) : null}
       <ScreenHeader
         eyebrow="Organization subscription"
         title="Billing"
@@ -83,7 +100,8 @@ export function BillingScreen() {
         <div className="overflow-hidden rounded-xl border border-black/10 bg-white p-3 sm:p-5">
           <PricingTable
             for="organization"
-            newSubscriptionRedirectUrl={`/app/${organization?.slug ?? ""}/billing`}
+            highlightedPlan={highlightedPlan}
+            newSubscriptionRedirectUrl={billingRedirectUrl}
             fallback={
               <div className="grid gap-4 md:grid-cols-3">
                 {[0, 1, 2].map((value) => (

@@ -1,15 +1,24 @@
 import { SignUp } from "@clerk/nextjs";
 import { AuthShell } from "@/components/auth-shell";
+import { buildAppEntryUrl, normalizePlanIntent } from "@/lib/marketing/plan-intent";
 
-export default function SignUpPage() {
+type SignUpPageProps = {
+  searchParams: Promise<{ plan?: string }>;
+};
+
+export default async function SignUpPage({ searchParams }: SignUpPageProps) {
+  const { plan } = await searchParams;
+  const planIntent = normalizePlanIntent(plan);
+  const redirectUrl = buildAppEntryUrl(planIntent);
+
   return (
     <AuthShell eyebrow="Start with the essentials" title="Create your workspace">
       <SignUp
         routing="path"
         path="/sign-up"
-        signInUrl="/sign-in"
-        forceRedirectUrl="/app"
-        fallbackRedirectUrl="/app"
+        signInUrl={planIntent ? `/sign-in?plan=${planIntent.key}` : "/sign-in"}
+        forceRedirectUrl={redirectUrl}
+        fallbackRedirectUrl={redirectUrl}
         appearance={{
           elements: {
             rootBox: "w-full",

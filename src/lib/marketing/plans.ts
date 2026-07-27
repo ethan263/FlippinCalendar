@@ -1,4 +1,10 @@
+export type MarketingPlanKey = "core" | "pro" | "voice";
+
+export type ClerkPlanSlug = "free_org" | "engage" | "voice";
+
 export type MarketingPlan = {
+  key: MarketingPlanKey;
+  clerkPlanSlug: ClerkPlanSlug;
   name: string;
   price: string;
   description?: string;
@@ -10,6 +16,8 @@ export type MarketingPlan = {
 /** Public marketing prices in South African Rand (ZAR). */
 export const marketingPlans: MarketingPlan[] = [
   {
+    key: "core",
+    clerkPlanSlug: "free_org",
     name: "Core",
     price: "R0",
     copy: "The operational home for a new organization.",
@@ -21,8 +29,10 @@ export const marketingPlans: MarketingPlan[] = [
     ],
   },
   {
+    key: "pro",
+    clerkPlanSlug: "engage",
     name: "Pro",
-    price: "R99",
+    price: "R249",
     copy: "Give every visitor an AI concierge on the web.",
     description: "Add an ElevenLabs agent to every client page.",
     features: [
@@ -33,8 +43,10 @@ export const marketingPlans: MarketingPlan[] = [
     featured: true,
   },
   {
+    key: "voice",
+    clerkPlanSlug: "voice",
     name: "Voice",
-    price: "R2,499",
+    price: "R699",
     copy: "Let clients speak with your AI front desk from any browser.",
     description: "Let clients speak with your agent directly in the browser.",
     features: [

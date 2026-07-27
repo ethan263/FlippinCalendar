@@ -14,8 +14,10 @@ import { Brand } from "@/components/brand";
 import { HeroSection } from "@/components/marketing/hero-section";
 import { Button } from "@/components/ui/button";
 import { marketingPlans, pricingPeriodLabel } from "@/lib/marketing/plans";
+import { buildPlanChoiceHref, buildSignUpUrl } from "@/lib/marketing/plan-intent";
 
 const plans = marketingPlans.map((plan) => ({
+  key: plan.key,
   name: plan.name,
   price: plan.price,
   copy: plan.copy ?? plan.description ?? "",
@@ -68,7 +70,7 @@ function MarketingNav({ signedIn }: { signedIn: boolean }) {
 }
 
 export default async function Home() {
-  const { userId } = await auth();
+  const { userId, orgSlug } = await auth();
 
   return (
     <main className="overflow-hidden bg-background">
@@ -163,7 +165,16 @@ export default async function Home() {
                 ))}
               </div>
               <Button asChild variant={plan.featured ? "secondary" : "outline"} className="mt-auto h-11 justify-between rounded-md shadow-none">
-                <Link href="/sign-up">Choose {plan.name}<ArrowRight className="size-4" /></Link>
+                <Link
+                  href={buildPlanChoiceHref({
+                    planKey: plan.key,
+                    signedIn: Boolean(userId),
+                    orgSlug,
+                  })}
+                >
+                  Choose {plan.name}
+                  <ArrowRight className="size-4" />
+                </Link>
               </Button>
             </article>
           ))}
@@ -177,7 +188,9 @@ export default async function Home() {
             <h2 className="mt-6 max-w-3xl font-heading text-5xl font-medium leading-[0.94] tracking-tighter sm:text-7xl">Give your team their time back.</h2>
           </div>
           <Button asChild size="lg" className="h-12 shrink-0 gap-2 rounded-md px-6 shadow-none">
-            <Link href="/sign-up">Start with Core <ArrowRight className="size-4" /></Link>
+            <Link href={buildSignUpUrl("core")}>
+              Start with Core <ArrowRight className="size-4" />
+            </Link>
           </Button>
         </div>
       </section>

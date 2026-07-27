@@ -3,12 +3,30 @@ import { auth } from "@clerk/nextjs/server";
 import { ArrowRight, Building2, Sparkles } from "lucide-react";
 import { redirect } from "next/navigation";
 
-export default async function AppIndexPage() {
+import {
+  buildAfterOrganizationUrl,
+  buildBillingCheckoutUrl,
+  normalizePlanIntent,
+} from "@/lib/marketing/plan-intent";
+
+type AppIndexPageProps = {
+  searchParams: Promise<{ plan?: string }>;
+};
+
+export default async function AppIndexPage({ searchParams }: AppIndexPageProps) {
   const { orgSlug } = await auth.protect();
+  const { plan } = await searchParams;
+  const planIntent = normalizePlanIntent(plan);
 
   if (orgSlug) {
-    redirect(`/app/${orgSlug}`);
+    redirect(
+      planIntent
+        ? buildBillingCheckoutUrl(orgSlug, planIntent)
+        : `/app/${orgSlug}`,
+    );
   }
+
+  const afterOrganizationUrl = buildAfterOrganizationUrl(planIntent);
 
   return (
     <main className="grid min-h-svh place-items-center bg-[#f3f0e8] px-4 py-12 text-foreground">
@@ -51,8 +69,8 @@ export default async function AppIndexPage() {
               </p>
               <OrganizationList
                 hidePersonal
-                afterCreateOrganizationUrl="/app/:slug"
-                afterSelectOrganizationUrl="/app/:slug"
+                afterCreateOrganizationUrl={afterOrganizationUrl}
+                afterSelectOrganizationUrl={afterOrganizationUrl}
                 appearance={{
                   elements: {
                     rootBox: "w-full",

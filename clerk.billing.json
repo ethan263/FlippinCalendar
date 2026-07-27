@@ -49,8 +49,8 @@
         "publicly_visible": true
       },
       "engage": {
-        "amount": 9900,
-        "annual_monthly_amount": 7900,
+        "amount": 24900,
+        "annual_monthly_amount": 19900,
         "currency": "zar",
         "description": "Add an ElevenLabs web concierge to every customer touchpoint.",
         "features": [
@@ -66,8 +66,8 @@
         "publicly_visible": true
       },
       "voice": {
-        "amount": 249900,
-        "annual_monthly_amount": 199900,
+        "amount": 69900,
+        "annual_monthly_amount": 55900,
         "currency": "zar",
         "description": "Add live browser audio to the web concierge and measure every outcome.",
         "features": [
