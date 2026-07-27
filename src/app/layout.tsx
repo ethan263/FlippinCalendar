@@ -7,6 +7,7 @@ import {
 import { ClerkProvider } from "@clerk/nextjs";
 import { ui } from "@clerk/ui";
 import { shadcn } from "@clerk/ui/themes";
+import { Analytics } from "@vercel/analytics/next";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -72,6 +73,7 @@ export default function RootLayout({
         >
           <Providers>{children}</Providers>
         </ClerkProvider>
+        <Analytics />
       </body>
     </html>
   );
