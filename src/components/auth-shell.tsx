@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, CalendarCheck, Headphones, Sparkles } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { AuthShellMotionVideo } from "@/components/marketing/auth-shell-motion-video";
+import { FlippingWord } from "@/components/marketing/flipping-word";
 
 const signals = [
   { icon: Headphones, label: "Every conversation, answered" },
@@ -32,7 +33,8 @@ export function AuthShell({
             One workspace. Every front door.
           </p>
           <h1 className="font-heading text-6xl font-medium leading-[0.94] tracking-[-0.05em] text-balance">
-            Your business can be personal without being permanently online.
+            Just book it on the <FlippingWord word="flippin'" intervalMs={2000} />{" "}
+            calendar.
           </h1>
 
           <div className="mt-10">
