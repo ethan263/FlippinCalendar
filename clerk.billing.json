@@ -36,7 +36,7 @@
       "free_org": {
         "amount": 0,
         "annual_monthly_amount": 0,
-        "currency": "",
+        "currency": "zar",
         "description": "Run the essentials and publish a polished booking page.",
         "features": [
           "operations_hub",
@@ -49,9 +49,9 @@
         "publicly_visible": true
       },
       "engage": {
-        "amount": 4900,
-        "annual_monthly_amount": 3900,
-        "currency": "usd",
+        "amount": 9900,
+        "annual_monthly_amount": 7900,
+        "currency": "zar",
         "description": "Add an ElevenLabs web concierge to every customer touchpoint.",
         "features": [
           "operations_hub",
@@ -61,14 +61,14 @@
         "free_trial_days": 14,
         "free_trial_enabled": true,
         "is_recurring": true,
-        "name": "Engage",
+        "name": "Pro",
         "payer_type": "org",
         "publicly_visible": true
       },
       "voice": {
-        "amount": 14900,
-        "annual_monthly_amount": 11900,
-        "currency": "usd",
+        "amount": 249900,
+        "annual_monthly_amount": 199900,
+        "currency": "zar",
         "description": "Add live browser audio to the web concierge and measure every outcome.",
         "features": [
           "operations_hub",

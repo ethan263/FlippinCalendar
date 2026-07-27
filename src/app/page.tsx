@@ -13,28 +13,15 @@ import { auth } from "@clerk/nextjs/server";
 import { Brand } from "@/components/brand";
 import { HeroSection } from "@/components/marketing/hero-section";
 import { Button } from "@/components/ui/button";
+import { marketingPlans, pricingPeriodLabel } from "@/lib/marketing/plans";
 
-const plans = [
-  {
-    name: "Core",
-    price: "$0",
-    copy: "The operational home for a new organization.",
-    features: ["Bookings and availability", "Offerings and team", "Custom public page"],
-  },
-  {
-    name: "Engage",
-    price: "$49",
-    copy: "Give every visitor an AI concierge on the web.",
-    features: ["Everything in Core", "ElevenLabs web agent", "Conversation history"],
-    featured: true,
-  },
-  {
-    name: "Voice",
-    price: "$149",
-    copy: "Let clients speak with your AI front desk from any browser.",
-    features: ["Everything in Engage", "Live browser audio", "Advanced analytics"],
-  },
-];
+const plans = marketingPlans.map((plan) => ({
+  name: plan.name,
+  price: plan.price,
+  copy: plan.copy ?? plan.description ?? "",
+  features: plan.features,
+  featured: plan.featured,
+}));
 
 function MarketingNav({ signedIn }: { signedIn: boolean }) {
   return (
@@ -150,7 +137,9 @@ export default async function Home() {
         <div className="mb-12 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Feature-based plans</p>
-            <h2 className="mt-4 font-heading text-5xl font-medium tracking-tighter sm:text-6xl">Start useful. Add a voice.</h2>
+            <h2 className="mt-4 max-w-3xl font-heading text-5xl font-medium tracking-tighter text-balance sm:text-6xl">
+              Start useful. Add a voice. Plan for every feature.
+            </h2>
           </div>
           <Link href="/pricing" className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
             Compare plans <ChevronRight className="size-4" />
@@ -161,7 +150,12 @@ export default async function Home() {
             <article key={plan.name} className={`relative flex min-h-107.5 flex-col border-b border-r p-7 sm:p-9 ${plan.featured ? "bg-primary text-primary-foreground" : "bg-card"}`}>
               {plan.featured ? <span className="absolute right-5 top-5 font-mono text-[9px] uppercase tracking-[0.15em] text-primary-foreground/65">Most popular</span> : null}
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] opacity-55">{plan.name}</p>
-              <p className="mt-8 font-heading text-6xl font-medium tracking-[-0.06em]">{plan.price}<span className="ml-1 font-sans text-xs font-normal tracking-normal opacity-60">/mo</span></p>
+              <p className="mt-8 font-heading text-6xl font-medium tracking-[-0.06em]">
+                {plan.price}
+                <span className="ml-1 font-sans text-xs font-normal tracking-normal opacity-60">
+                  {pricingPeriodLabel}
+                </span>
+              </p>
               <p className="mt-4 max-w-xs text-sm leading-6 opacity-65">{plan.copy}</p>
               <div className="mt-9 space-y-3 border-t border-current/15 pt-6">
                 {plan.features.map((feature) => (

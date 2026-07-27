@@ -16,7 +16,7 @@ export function BillingScreen() {
   const currentTier = has?.({ plan: "org:voice" })
     ? "Voice"
     : has?.({ plan: "org:engage" })
-      ? "Engage"
+      ? "Pro"
       : "Core";
 
   return (

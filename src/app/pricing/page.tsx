@@ -4,12 +4,15 @@ import { PricingTable } from "@clerk/nextjs";
 import { ArrowLeft, Check } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
+import { marketingPlans, pricingPeriodLabel } from "@/lib/marketing/plans";
 
-const publicPlans = [
-  { name: "Core", price: "$0", description: "Bookings, operations, and a custom public page.", features: ["Bookings and availability", "Offerings and team", "Configurable public site"] },
-  { name: "Engage", price: "$49", description: "Add an ElevenLabs agent to every client page.", features: ["Everything in Core", "Web text agent", "Conversation history"], featured: true },
-  { name: "Voice", price: "$149", description: "Let clients speak with your agent directly in the browser.", features: ["Everything in Engage", "Live browser audio", "Advanced analytics"] },
-];
+const publicPlans = marketingPlans.map((plan) => ({
+  name: plan.name,
+  price: plan.price,
+  description: plan.description ?? plan.copy ?? "",
+  features: plan.features,
+  featured: plan.featured,
+}));
 
 export default async function PricingPage() {
   const { userId, orgId } = await auth();
@@ -42,7 +45,12 @@ export default async function PricingPage() {
               {publicPlans.map((plan) => (
                 <article key={plan.name} className={`flex min-h-102.5 flex-col border-b border-r p-8 ${plan.featured ? "bg-primary text-primary-foreground" : "bg-card"}`}>
                   <p className="font-mono text-[10px] uppercase tracking-[0.18em] opacity-60">{plan.name}</p>
-                  <p className="mt-8 font-heading text-6xl tracking-[-0.06em]">{plan.price}<span className="ml-1 font-sans text-xs tracking-normal opacity-60">/mo</span></p>
+                  <p className="mt-8 font-heading text-6xl tracking-[-0.06em]">
+                    {plan.price}
+                    <span className="ml-1 font-sans text-xs tracking-normal opacity-60">
+                      {pricingPeriodLabel}
+                    </span>
+                  </p>
                   <p className="mt-4 text-sm leading-6 opacity-65">{plan.description}</p>
                   <div className="mt-8 space-y-3 border-t border-current/15 pt-6">
                     {plan.features.map((feature) => <p key={feature} className="flex items-center gap-2 text-sm"><Check className="size-3.5" /> {feature}</p>)}
