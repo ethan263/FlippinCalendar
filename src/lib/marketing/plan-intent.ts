@@ -6,6 +6,8 @@ import {
 
 export type PlanIntent = Pick<MarketingPlan, "key" | "name" | "clerkPlanSlug">;
 
+export const PLAN_INTENT_COOKIE = "fc_plan_intent";
+
 const planByKey = new Map(
   marketingPlans.map((plan) => [plan.key, plan] as const),
 );

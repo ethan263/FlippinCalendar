@@ -12,6 +12,7 @@ import {
   slugify,
   type BackendTerminology,
 } from "@/lib/data/shared";
+import { resolveElevenLabsAgentId } from "@/lib/elevenlabs/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type OrganizationRow = {
@@ -105,7 +106,10 @@ export async function bootstrapCurrentOrganization(args: {
   }
 
   const existing = await getCurrentOrganization();
-  if (existing) return existing;
+  if (existing) {
+    await ensureWorkspaceRows(existing._id, existing.name, existing.slug);
+    return existing;
+  }
 
   const name = requiredTrimmed(
     args.name ??
@@ -119,11 +123,11 @@ export async function bootstrapCurrentOrganization(args: {
   );
   const timezone = optionalTrimmed(args.timezone, "timezone", 100) ?? "UTC";
   assertIanaTimezone(timezone);
-  const currency = (args.currency ?? "USD").trim().toUpperCase();
+  const currency = (args.currency ?? "ZAR").trim().toUpperCase();
   if (!/^[A-Z]{3}$/.test(currency)) {
     throw new Error("currency must be a three-letter ISO 4217 code.");
   }
-  const locale = optionalTrimmed(args.locale, "locale", 35) ?? "en-US";
+  const locale = optionalTrimmed(args.locale, "locale", 35) ?? "en-ZA";
   try {
     new Intl.Locale(locale);
   } catch {
@@ -144,10 +148,7 @@ export async function bootstrapCurrentOrganization(args: {
     ? `${preferredSlug}-${slugify(clerkAuth.clerkOrgId).slice(-8)}`
     : preferredSlug;
 
-  const defaultAgentId = process.env.ELEVENLABS_DEFAULT_AGENT_ID?.trim();
-  if (defaultAgentId && defaultAgentId.length > 200) {
-    throw new Error("ELEVENLABS_DEFAULT_AGENT_ID is invalid.");
-  }
+  const defaultAgentId = resolveElevenLabsAgentId();
 
   const { data: organization, error: insertError } = await supabase
     .from("organizations")
@@ -167,31 +168,84 @@ export async function bootstrapCurrentOrganization(args: {
     // Concurrent bootstrap: return the row created by the other request.
     if (insertError.code === "23505") {
       const raced = await getCurrentOrganization();
-      if (raced) return raced;
+      if (raced) {
+        await ensureWorkspaceRows(raced._id, raced.name, raced.slug);
+        return raced;
+      }
     }
     throw new Error(insertError.message);
   }
 
   const orgRow = organization as OrganizationRow;
-
-  const [{ error: siteError }, { error: agentError }] = await Promise.all([
-    supabase.from("public_sites").insert({
-      organization_id: orgRow.id,
-      site_slug: slug,
-      draft: defaultSiteConfig(name),
-    }),
-    supabase.from("agent_integrations").insert({
-      organization_id: orgRow.id,
-      provider: "elevenlabs",
-      web_agent_id: defaultAgentId || null,
-      web_enabled: Boolean(defaultAgentId),
-    }),
-  ]);
-
-  if (siteError) throw new Error(siteError.message);
-  if (agentError) throw new Error(agentError.message);
+  await ensureWorkspaceRows(orgRow.id, name, slug, defaultAgentId);
 
   return viewOrganization(orgRow, clerkAuth.role);
+}
+
+async function ensureWorkspaceRows(
+  organizationId: string,
+  businessName: string,
+  siteSlug: string,
+  agentId = resolveElevenLabsAgentId(),
+) {
+  const supabase = createAdminClient();
+
+  const [{ data: site }, { data: integration }] = await Promise.all([
+    supabase
+      .from("public_sites")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .maybeSingle(),
+    supabase
+      .from("agent_integrations")
+      .select("id, web_enabled, web_agent_id")
+      .eq("organization_id", organizationId)
+      .eq("provider", "elevenlabs")
+      .maybeSingle(),
+  ]);
+
+  if (!site) {
+    const { error: siteError } = await supabase.from("public_sites").insert({
+      organization_id: organizationId,
+      site_slug: siteSlug,
+      draft: defaultSiteConfig(businessName),
+    });
+    if (siteError && siteError.code !== "23505") {
+      throw new Error(siteError.message);
+    }
+  }
+
+  if (!integration) {
+    const { error: agentError } = await supabase
+      .from("agent_integrations")
+      .insert({
+        organization_id: organizationId,
+        provider: "elevenlabs",
+        web_agent_id: agentId,
+        web_enabled: Boolean(agentId),
+      });
+    if (agentError && agentError.code !== "23505") {
+      throw new Error(agentError.message);
+    }
+    return;
+  }
+
+  const needsRepair =
+    !integration.web_enabled ||
+    !integration.web_agent_id ||
+    integration.web_agent_id === "agent_your_shared_concierge";
+
+  if (needsRepair && agentId) {
+    const { error: repairError } = await supabase
+      .from("agent_integrations")
+      .update({
+        web_agent_id: agentId,
+        web_enabled: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", integration.id);
+    if (repairError) throw new Error(repairError.message);
+  }
 }
 
 export async function updateCurrentOrganization(args: {

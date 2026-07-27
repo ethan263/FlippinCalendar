@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAgentDynamicVariables } from "@/lib/agent-context";
 import { organizationHasFeature } from "@/lib/clerk-billing";
 import { requestPublicSession } from "@/lib/data/agents";
+import { resolveElevenLabsAgentId } from "@/lib/elevenlabs/config";
 import { getPublishedBySlug } from "@/lib/data/public-site";
 
 export const runtime = "nodejs";
@@ -33,10 +34,8 @@ export async function POST(
     );
   }
 
-  const apiKey = process.env.ELEVENLABS_API_KEY;
-  const agentId = process.env.ELEVENLABS_DEFAULT_AGENT_ID?.trim();
-
-  if (!apiKey || !agentId) {
+  const apiKey = process.env.ELEVENLABS_API_KEY?.trim();
+  if (!apiKey) {
     return NextResponse.json(
       { error: "The concierge is not configured." },
       { status: 503 },
@@ -54,6 +53,14 @@ export async function POST(
       return NextResponse.json(
         { error: "The concierge is not enabled for this page." },
         { status: 404 },
+      );
+    }
+
+    const agentId = resolveElevenLabsAgentId(sessionConfig.webAgentId);
+    if (!agentId) {
+      return NextResponse.json(
+        { error: "The concierge is not configured." },
+        { status: 503 },
       );
     }
 

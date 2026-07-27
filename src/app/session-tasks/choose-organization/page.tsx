@@ -1,6 +1,10 @@
 import { TaskChooseOrganization } from "@clerk/nextjs";
 import { AuthShell } from "@/components/auth-shell";
-import { buildAppEntryUrl, normalizePlanIntent } from "@/lib/marketing/plan-intent";
+import {
+  buildAppEntryUrl,
+  normalizePlanIntent,
+} from "@/lib/marketing/plan-intent";
+import { readPlanIntentCookie } from "@/lib/marketing/plan-intent-cookie";
 
 type ChooseOrganizationPageProps = {
   searchParams: Promise<{ plan?: string }>;
@@ -10,7 +14,8 @@ export default async function ChooseOrganizationPage({
   searchParams,
 }: ChooseOrganizationPageProps) {
   const { plan } = await searchParams;
-  const planIntent = normalizePlanIntent(plan);
+  const planIntent =
+    normalizePlanIntent(plan) ?? (await readPlanIntentCookie());
 
   return (
     <AuthShell eyebrow="One last step" title="Choose where you’re working">

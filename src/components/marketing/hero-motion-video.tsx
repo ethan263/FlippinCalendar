@@ -2,8 +2,6 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
-const HERO_VIDEO_SRC = "/marketing/hero-motion-graphic.mp4";
-
 export function HeroMotionVideo() {
   const reduceMotion = useReducedMotion();
 
@@ -46,7 +44,10 @@ export function HeroMotionVideo() {
               preload={reduceMotion ? "metadata" : "auto"}
               aria-label="flippinCalendar product motion preview"
             >
-              <source src={HERO_VIDEO_SRC} type="video/mp4" />
+              <source
+                src="/marketing/hero-motion-graphic.webm"
+                type="video/webm"
+              />
             </video>
           </div>
         </div>

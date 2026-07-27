@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   Bot,
   Check,
+  Copy,
   Eye,
   Globe2,
   ImageIcon,
@@ -22,6 +23,14 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -480,6 +489,8 @@ function SiteEditor({
   const [publishedAt, setPublishedAt] = useState(initial.site.publishedAt);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   function update<Key extends keyof SiteConfig>(
     key: Key,
@@ -511,11 +522,27 @@ function SiteEditor({
       await saveDraft();
       const published = await publishSiteAction();
       setPublishedAt(published.publishedAt);
+      setCopied(false);
+      setPublishDialogOpen(true);
       toast.success("Public site published");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not publish site");
     } finally {
       setPublishing(false);
+    }
+  }
+
+  async function copyShareLink() {
+    const url =
+      typeof window === "undefined"
+        ? `/p/${siteSlug}`
+        : `${window.location.origin}/p/${siteSlug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      toast.success("Link copied");
+    } catch {
+      toast.error("Could not copy link");
     }
   }
 
@@ -570,6 +597,7 @@ function SiteEditor({
                     <SelectItem value="editorial">Editorial</SelectItem>
                     <SelectItem value="gallery">Gallery</SelectItem>
                     <SelectItem value="compact">Compact</SelectItem>
+                    <SelectItem value="business-card">Business card</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -931,6 +959,55 @@ function SiteEditor({
           </CardContent>
         </Card>
       </form>
+
+      <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Your page is live</DialogTitle>
+            <DialogDescription>
+              Preview the public experience, or copy a share link for customers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 rounded-xl border border-black/10 bg-muted/40 p-2 pl-3">
+              <p className="min-w-0 flex-1 truncate font-mono text-xs">
+                /p/{siteSlug}
+              </p>
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                className="shrink-0"
+                onClick={() => void copyShareLink()}
+                aria-label="Copy share link"
+              >
+                {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+              </Button>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:justify-stretch">
+            <Button
+              asChild
+              variant="outline"
+              className="flex-1"
+              onClick={() => setPublishDialogOpen(false)}
+            >
+              <Link href={`/p/${siteSlug}`} target="_blank" rel="noreferrer">
+                <Eye className="size-4" />
+                Preview
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              className="flex-1"
+              onClick={() => void copyShareLink()}
+            >
+              {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+              {copied ? "Copied" : "Share link"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div>
         <div className="mb-3 flex items-center justify-between gap-3">

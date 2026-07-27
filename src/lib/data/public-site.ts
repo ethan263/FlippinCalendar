@@ -40,7 +40,7 @@ export async function getPublishedBySlug(siteSlugRaw: string) {
   if (!organization) return null;
   const org = organization as OrganizationRow;
 
-  const [offeringsRes, teamRes, knowledgeRes] = await Promise.all([
+  const [offeringsRes, teamRes, knowledgeRes, hoursRes] = await Promise.all([
     supabase
       .from("offerings")
       .select("*")
@@ -59,13 +59,25 @@ export async function getPublishedBySlug(siteSlugRaw: string) {
       .eq("organization_id", org.id)
       .eq("published", true)
       .limit(201),
+    supabase
+      .from("availability_rules")
+      .select("day_of_week, start_minute, end_minute, active")
+      .eq("organization_id", org.id)
+      .eq("active", true)
+      .limit(1_001),
   ]);
-  for (const result of [offeringsRes, teamRes, knowledgeRes]) {
+  for (const result of [offeringsRes, teamRes, knowledgeRes, hoursRes]) {
     if (result.error) throw new Error(result.error.message);
   }
   const offerings = (offeringsRes.data ?? []) as OfferingRow[];
   const teamMembers = (teamRes.data ?? []) as TeamMemberRow[];
   const knowledgeItems = knowledgeRes.data ?? [];
+  const hourRows = (hoursRes.data ?? []) as Array<{
+    day_of_week: number;
+    start_minute: number;
+    end_minute: number;
+    active: boolean;
+  }>;
   if (
     offerings.length > 200 ||
     teamMembers.length > 200 ||
@@ -73,6 +85,44 @@ export async function getPublishedBySlug(siteSlugRaw: string) {
   ) {
     throw new Error("Published site content limit exceeded.");
   }
+
+  const dayLabels = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const hoursByDay = new Map<
+    number,
+    Array<{ startMinute: number; endMinute: number }>
+  >();
+  for (const row of hourRows) {
+    const ranges = hoursByDay.get(row.day_of_week) ?? [];
+    const exists = ranges.some(
+      (range) =>
+        range.startMinute === row.start_minute &&
+        range.endMinute === row.end_minute,
+    );
+    if (!exists) {
+      ranges.push({
+        startMinute: row.start_minute,
+        endMinute: row.end_minute,
+      });
+      hoursByDay.set(row.day_of_week, ranges);
+    }
+  }
+  const weeklyHours = [1, 2, 3, 4, 5, 6, 0]
+    .filter((day) => hoursByDay.has(day))
+    .map((day) => ({
+      dayOfWeek: day,
+      label: dayLabels[day] ?? `Day ${day}`,
+      ranges: (hoursByDay.get(day) ?? []).sort(
+        (a, b) => a.startMinute - b.startMinute,
+      ),
+    }));
 
   return {
     site: {
@@ -123,6 +173,7 @@ export async function getPublishedBySlug(siteSlugRaw: string) {
         content: item.content,
         category: item.category,
       })),
+    weeklyHours,
   };
 }
 

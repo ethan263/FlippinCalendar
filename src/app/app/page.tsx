@@ -8,6 +8,7 @@ import {
   buildBillingCheckoutUrl,
   normalizePlanIntent,
 } from "@/lib/marketing/plan-intent";
+import { readPlanIntentCookie } from "@/lib/marketing/plan-intent-cookie";
 
 type AppIndexPageProps = {
   searchParams: Promise<{ plan?: string }>;
@@ -16,7 +17,8 @@ type AppIndexPageProps = {
 export default async function AppIndexPage({ searchParams }: AppIndexPageProps) {
   const { orgSlug } = await auth.protect();
   const { plan } = await searchParams;
-  const planIntent = normalizePlanIntent(plan);
+  const planIntent =
+    normalizePlanIntent(plan) ?? (await readPlanIntentCookie());
 
   if (orgSlug) {
     redirect(

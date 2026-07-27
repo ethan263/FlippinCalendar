@@ -158,7 +158,7 @@ export type SiteConfig = {
   announcement?: string;
   logoUrl?: string;
   heroImageUrl?: string;
-  template: "editorial" | "gallery" | "compact";
+  template: "editorial" | "gallery" | "compact" | "business-card";
   theme: {
     accentColor: string;
     backgroundColor: string;

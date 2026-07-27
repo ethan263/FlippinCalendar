@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { cn } from "@/lib/utils";
 import { AgentLauncher } from "@/components/public-site/agent-launcher";
 import { BookingFlow } from "@/components/public-site/booking-flow";
+import { BusinessCardSite } from "@/components/public-site/business-card-site";
 import { ElevenLabsEmbed } from "@/components/public-site/elevenlabs-embed";
 import type { PublishedSite, PublicOffering } from "@/components/public-site/types";
 
@@ -215,6 +216,18 @@ export function PublicSite({
   const { organization, site, offerings, teamMembers, knowledgeItems } =
     publishedSite;
   const { config } = site;
+
+  if (config.template === "business-card") {
+    return (
+      <BusinessCardSite
+        siteSlug={siteSlug}
+        publishedSite={publishedSite}
+        textAgentEnabled={textAgentEnabled}
+        voiceAgentEnabled={voiceAgentEnabled}
+      />
+    );
+  }
+
   const { terminology } = organization;
   const heroImageUrl = safeHttpUrl(config.heroImageUrl);
   const logoUrl = safeHttpUrl(config.logoUrl);

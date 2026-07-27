@@ -45,7 +45,13 @@ export function sanitizeSiteConfig(config: SiteConfig): SiteConfig {
     announcement: optionalTrimmed(config.announcement, "announcement", 240),
     logoUrl: safeOptionalUrl(config.logoUrl, "logoUrl"),
     heroImageUrl: safeOptionalUrl(config.heroImageUrl, "heroImageUrl"),
-    template: config.template,
+    template: (() => {
+      const allowed = ["editorial", "gallery", "compact", "business-card"] as const;
+      if (!allowed.includes(config.template as (typeof allowed)[number])) {
+        throw new Error("template must be editorial, gallery, compact, or business-card.");
+      }
+      return config.template;
+    })(),
     theme: {
       accentColor: safeColor(config.theme.accentColor, "theme.accentColor"),
       backgroundColor: safeColor(

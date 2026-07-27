@@ -1,6 +1,10 @@
 import { SignUp } from "@clerk/nextjs";
 import { AuthShell } from "@/components/auth-shell";
-import { buildAppEntryUrl, normalizePlanIntent } from "@/lib/marketing/plan-intent";
+import {
+  buildAppEntryUrl,
+  normalizePlanIntent,
+} from "@/lib/marketing/plan-intent";
+import { persistPlanIntentCookie } from "@/lib/marketing/plan-intent-cookie";
 
 type SignUpPageProps = {
   searchParams: Promise<{ plan?: string }>;
@@ -9,6 +13,7 @@ type SignUpPageProps = {
 export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   const { plan } = await searchParams;
   const planIntent = normalizePlanIntent(plan);
+  await persistPlanIntentCookie(planIntent);
   const redirectUrl = buildAppEntryUrl(planIntent);
 
   return (

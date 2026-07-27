@@ -42,6 +42,11 @@ export type PublishedSite = {
     content: string;
     category: string;
   }>;
+  weeklyHours: Array<{
+    dayOfWeek: number;
+    label: string;
+    ranges: Array<{ startMinute: number; endMinute: number }>;
+  }>;
 };
 
 export type PublicOffering = PublishedSite["offerings"][number];

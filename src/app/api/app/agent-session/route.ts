@@ -7,6 +7,7 @@ import { getCurrentAgent } from "@/lib/data/agents";
 import { listOfferings } from "@/lib/data/catalog";
 import { listKnowledge } from "@/lib/data/knowledge";
 import { getCurrentOrganization } from "@/lib/data/organizations";
+import { resolveElevenLabsAgentId } from "@/lib/elevenlabs/config";
 import { getCurrentDraft } from "@/lib/data/public-site";
 
 export const runtime = "nodejs";
@@ -36,8 +37,8 @@ export async function POST() {
     );
   }
 
-  const apiKey = process.env.ELEVENLABS_API_KEY;
-  const agentId = process.env.ELEVENLABS_DEFAULT_AGENT_ID?.trim();
+  const apiKey = process.env.ELEVENLABS_API_KEY?.trim();
+  const agentId = resolveElevenLabsAgentId();
   if (!apiKey || !agentId) {
     return NextResponse.json(
       { error: "The agent test is not configured." },

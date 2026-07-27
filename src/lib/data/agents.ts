@@ -166,6 +166,7 @@ export async function requestPublicSession(args: {
     clerkOrgId: organization.clerk_org_id,
     siteSlug: site.site_slug,
     mode: args.mode,
+    webAgentId: (integration.web_agent_id as string | null) ?? null,
   };
 }
 

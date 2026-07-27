@@ -13,17 +13,22 @@ import { BillingCheckoutLauncher } from "@/components/billing/billing-checkout-l
 import type { ClerkPlanSlug } from "@/lib/marketing/plans";
 
 type BillingScreenProps = {
+  orgSlug?: string;
   highlightedPlan?: ClerkPlanSlug;
   autoCheckoutPlanSlug?: ClerkPlanSlug;
 };
 
 export function BillingScreen({
+  orgSlug,
   highlightedPlan,
   autoCheckoutPlanSlug,
 }: BillingScreenProps) {
   const { has, isLoaded } = useAuth();
   const { organization } = useWorkspace();
-  const billingRedirectUrl = `/app/${organization?.slug ?? ""}/billing`;
+  const resolvedSlug = orgSlug || organization?.slug || "";
+  const billingRedirectUrl = `/app/${resolvedSlug}/billing`;
+  const canLaunchCheckout =
+    Boolean(resolvedSlug) && Boolean(autoCheckoutPlanSlug);
   const currentTier = has?.({ plan: "org:voice" })
     ? "Voice"
     : has?.({ plan: "org:engage" })
@@ -32,7 +37,7 @@ export function BillingScreen({
 
   return (
     <>
-      {autoCheckoutPlanSlug ? (
+      {canLaunchCheckout && autoCheckoutPlanSlug ? (
         <BillingCheckoutLauncher
           planSlug={autoCheckoutPlanSlug}
           redirectUrl={billingRedirectUrl}
