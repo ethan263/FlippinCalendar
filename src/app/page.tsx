@@ -14,7 +14,7 @@ import { Brand } from "@/components/brand";
 import { HeroSection } from "@/components/marketing/hero-section";
 import { Button } from "@/components/ui/button";
 import { marketingPlans, pricingPeriodLabel } from "@/lib/marketing/plans";
-import { buildPlanChoiceHref, buildSignUpUrl } from "@/lib/marketing/plan-intent";
+import { buildPlanChoiceHref } from "@/lib/marketing/plan-intent";
 
 const plans = marketingPlans.map((plan) => ({
   key: plan.key,
@@ -188,7 +188,7 @@ export default async function Home() {
             <h2 className="mt-6 max-w-3xl font-heading text-5xl font-medium leading-[0.94] tracking-tighter sm:text-7xl">Give your team their time back.</h2>
           </div>
           <Button asChild size="lg" className="h-12 shrink-0 gap-2 rounded-md px-6 shadow-none">
-            <Link href={buildSignUpUrl("core")}>
+            <Link href={buildPlanChoiceHref({ planKey: "core" })}>
               Start with Core <ArrowRight className="size-4" />
             </Link>
           </Button>

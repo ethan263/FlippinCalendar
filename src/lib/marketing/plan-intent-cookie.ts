@@ -9,19 +9,9 @@ import {
 export async function persistPlanIntentCookie(
   planIntent: PlanIntent | null,
 ): Promise<void> {
-  const store = await cookies();
-  if (!planIntent || planIntent.clerkPlanSlug === "free_org") {
-    store.delete(PLAN_INTENT_COOKIE);
-    return;
-  }
-
-  store.set(PLAN_INTENT_COOKIE, planIntent.key, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24,
-  });
+  // Cookie writes are only allowed in Route Handlers / Server Actions /
+  // middleware. Prefer `/go/plan/[planKey]` or proxy.ts for writes.
+  void planIntent;
 }
 
 export async function readPlanIntentCookie(): Promise<PlanIntent | null> {
@@ -30,6 +20,6 @@ export async function readPlanIntentCookie(): Promise<PlanIntent | null> {
 }
 
 export async function clearPlanIntentCookie(): Promise<void> {
-  const store = await cookies();
-  store.delete(PLAN_INTENT_COOKIE);
+  // Deleting cookies must happen in middleware or a Route Handler.
+  // proxy.ts clears the intent when billing checkout is opened.
 }

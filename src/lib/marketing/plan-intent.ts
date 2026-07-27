@@ -76,21 +76,10 @@ export function buildBillingCheckoutUrl(
 
 export function buildPlanChoiceHref(args: {
   planKey: MarketingPlanKey;
-  signedIn: boolean;
+  signedIn?: boolean;
   orgSlug?: string | null;
 }): string {
-  const planIntent = normalizePlanIntent(args.planKey);
-  if (!planIntent) {
-    return args.signedIn ? "/app" : "/sign-up";
-  }
-
-  if (args.orgSlug) {
-    return buildBillingCheckoutUrl(args.orgSlug, planIntent);
-  }
-
-  if (args.signedIn) {
-    return buildAppEntryUrl(planIntent);
-  }
-
-  return buildSignUpUrl(planIntent.key);
+  // Always go through the plan router so the intent cookie is set reliably
+  // (Server Components cannot write cookies during render).
+  return `/go/plan/${encodeURIComponent(args.planKey)}`;
 }

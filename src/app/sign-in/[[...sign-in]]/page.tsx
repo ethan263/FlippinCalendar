@@ -4,7 +4,7 @@ import {
   buildAppEntryUrl,
   normalizePlanIntent,
 } from "@/lib/marketing/plan-intent";
-import { persistPlanIntentCookie } from "@/lib/marketing/plan-intent-cookie";
+import { readPlanIntentCookie } from "@/lib/marketing/plan-intent-cookie";
 
 type SignInPageProps = {
   searchParams: Promise<{ plan?: string }>;
@@ -12,8 +12,8 @@ type SignInPageProps = {
 
 export default async function SignInPage({ searchParams }: SignInPageProps) {
   const { plan } = await searchParams;
-  const planIntent = normalizePlanIntent(plan);
-  await persistPlanIntentCookie(planIntent);
+  const planIntent =
+    normalizePlanIntent(plan) ?? (await readPlanIntentCookie());
   const redirectUrl = buildAppEntryUrl(planIntent);
 
   return (

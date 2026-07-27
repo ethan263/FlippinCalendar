@@ -5,10 +5,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { marketingPlans, pricingPeriodLabel } from "@/lib/marketing/plans";
-import {
-  buildPlanChoiceHref,
-  normalizePlanIntent,
-} from "@/lib/marketing/plan-intent";
+import { buildPlanChoiceHref } from "@/lib/marketing/plan-intent";
 
 const publicPlans = marketingPlans.map((plan) => ({
   key: plan.key,
@@ -20,14 +17,8 @@ const publicPlans = marketingPlans.map((plan) => ({
   clerkPlanSlug: plan.clerkPlanSlug,
 }));
 
-type PricingPageProps = {
-  searchParams: Promise<{ plan?: string }>;
-};
-
-export default async function PricingPage({ searchParams }: PricingPageProps) {
+export default async function PricingPage() {
   const { userId, orgId, orgSlug } = await auth();
-  const { plan } = await searchParams;
-  const selectedPlan = normalizePlanIntent(plan);
 
   return (
     <main className="min-h-dvh bg-background">
@@ -56,67 +47,66 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
           </p>
         </div>
 
+        <div className="grid border-l border-t lg:grid-cols-3">
+          {publicPlans.map((plan) => (
+            <article
+              key={plan.name}
+              className={`flex min-h-102.5 flex-col border-b border-r p-8 ${plan.featured ? "bg-primary text-primary-foreground" : "bg-card"}`}
+            >
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] opacity-60">
+                {plan.name}
+              </p>
+              <p className="mt-8 font-heading text-6xl tracking-[-0.06em]">
+                {plan.price}
+                <span className="ml-1 font-sans text-xs tracking-normal opacity-60">
+                  {pricingPeriodLabel}
+                </span>
+              </p>
+              <p className="mt-4 text-sm leading-6 opacity-65">{plan.description}</p>
+              <div className="mt-8 space-y-3 border-t border-current/15 pt-6">
+                {plan.features.map((feature) => (
+                  <p key={feature} className="flex items-center gap-2 text-sm">
+                    <Check className="size-3.5" /> {feature}
+                  </p>
+                ))}
+              </div>
+              <Button
+                asChild
+                variant={plan.featured ? "secondary" : "outline"}
+                className="mt-auto shadow-none"
+              >
+                <Link
+                  href={buildPlanChoiceHref({
+                    planKey: plan.key,
+                    signedIn: Boolean(userId),
+                    orgSlug,
+                  })}
+                >
+                  Choose {plan.name}
+                </Link>
+              </Button>
+            </article>
+          ))}
+        </div>
+
         {orgId ? (
-          <div className="rounded-lg border bg-card p-2 sm:p-6">
+          <div className="mt-14 rounded-lg border bg-card p-2 sm:p-6">
+            <p className="mb-4 px-2 pt-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Or manage your organization subscription
+            </p>
             <PricingTable
               for="organization"
-              highlightedPlan={selectedPlan?.clerkPlanSlug ?? "engage"}
-              newSubscriptionRedirectUrl="/app"
+              highlightedPlan="engage"
+              newSubscriptionRedirectUrl={
+                orgSlug ? `/app/${orgSlug}/billing` : "/app"
+              }
             />
           </div>
         ) : (
-          <>
-            <div className="grid border-l border-t lg:grid-cols-3">
-              {publicPlans.map((plan) => (
-                <article
-                  key={plan.name}
-                  className={`flex min-h-102.5 flex-col border-b border-r p-8 ${plan.featured ? "bg-primary text-primary-foreground" : "bg-card"}`}
-                >
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] opacity-60">
-                    {plan.name}
-                  </p>
-                  <p className="mt-8 font-heading text-6xl tracking-[-0.06em]">
-                    {plan.price}
-                    <span className="ml-1 font-sans text-xs tracking-normal opacity-60">
-                      {pricingPeriodLabel}
-                    </span>
-                  </p>
-                  <p className="mt-4 text-sm leading-6 opacity-65">
-                    {plan.description}
-                  </p>
-                  <div className="mt-8 space-y-3 border-t border-current/15 pt-6">
-                    {plan.features.map((feature) => (
-                      <p
-                        key={feature}
-                        className="flex items-center gap-2 text-sm"
-                      >
-                        <Check className="size-3.5" /> {feature}
-                      </p>
-                    ))}
-                  </div>
-                  <Button
-                    asChild
-                    variant={plan.featured ? "secondary" : "outline"}
-                    className="mt-auto shadow-none"
-                  >
-                    <Link
-                      href={buildPlanChoiceHref({
-                        planKey: plan.key,
-                        signedIn: Boolean(userId),
-                        orgSlug,
-                      })}
-                    >
-                      Choose {plan.name}
-                    </Link>
-                  </Button>
-                </article>
-              ))}
-            </div>
-            <p className="mt-5 text-center text-xs text-muted-foreground">
-              Create your organization first, then manage its subscription
-              securely with Clerk.
-            </p>
-          </>
+          <p className="mt-5 text-center text-xs text-muted-foreground">
+            Create your organization first, then manage its subscription
+            securely with Clerk.
+          </p>
         )}
       </section>
     </main>
