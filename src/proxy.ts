@@ -1,9 +1,18 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-export default clerkMiddleware({
-  signInUrl: "/sign-in",
-  signUpUrl: "/sign-up",
-});
+const isAppRoute = createRouteMatcher(["/app(.*)", "/session-tasks(.*)"]);
+
+export default clerkMiddleware(
+  async (auth, req) => {
+    if (isAppRoute(req)) {
+      await auth.protect();
+    }
+  },
+  {
+    signInUrl: "/sign-in",
+    signUpUrl: "/sign-up",
+  },
+);
 
 export const config = {
   matcher: [

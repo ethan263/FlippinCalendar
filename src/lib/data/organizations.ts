@@ -12,7 +12,7 @@ import {
   slugify,
   type BackendTerminology,
 } from "@/lib/data/shared";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 type OrganizationRow = {
   id: string;
@@ -80,7 +80,7 @@ export async function requireActiveClerkOrganization(): Promise<ActiveClerkOrgan
 
 export async function getCurrentOrganization(): Promise<Organization | null> {
   const clerkAuth = await requireActiveClerkOrganization();
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("organizations")
@@ -131,7 +131,7 @@ export async function bootstrapCurrentOrganization(args: {
   }
 
   const preferredSlug = slugify(clerkAuth.clerkOrgSlug ?? name);
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: slugOwner, error: slugError } = await supabase
     .from("organizations")
@@ -236,7 +236,7 @@ export async function updateCurrentOrganization(args: {
       ) as BackendTerminology)
     : undefined;
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   if (timezone && timezone !== current.timezone) {
     const { count, error } = await supabase

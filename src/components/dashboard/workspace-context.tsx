@@ -60,6 +60,8 @@ export function WorkspaceProvider({
     // active Clerk session even when the server layout already resolved orgSlug.
     if (!isLoaded) return;
 
+    requestedBootstrap.current = false;
+
     if (!orgId) {
       setOrganization(null);
       setBootstrapError(
@@ -69,6 +71,7 @@ export function WorkspaceProvider({
     }
 
     let cancelled = false;
+    setOrganization(undefined);
     setBootstrapError(null);
     void fetchCurrentOrganizationAction()
       .then((current) => {

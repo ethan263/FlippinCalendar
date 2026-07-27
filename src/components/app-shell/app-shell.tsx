@@ -237,9 +237,29 @@ function ShellChrome({
               <p className="text-[10px] font-semibold tracking-[0.14em] text-sidebar-foreground/50 uppercase">
                 Live workspace
               </p>
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700">
-                <span className="size-1.5 rounded-full bg-emerald-500" />
-                Synced
+              <span
+                className={`inline-flex items-center gap-1 text-[10px] font-medium ${
+                  bootstrapError && !organization
+                    ? "text-rose-700"
+                    : isBootstrapping
+                      ? "text-amber-700"
+                      : "text-emerald-700"
+                }`}
+              >
+                <span
+                  className={`size-1.5 rounded-full ${
+                    bootstrapError && !organization
+                      ? "bg-rose-500"
+                      : isBootstrapping
+                        ? "bg-amber-500"
+                        : "bg-emerald-500"
+                  }`}
+                />
+                {bootstrapError && !organization
+                  ? "Sync failed"
+                  : isBootstrapping
+                    ? "Syncing"
+                    : "Synced"}
               </span>
             </div>
             <p className="mt-2 truncate text-xs font-medium">

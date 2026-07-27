@@ -66,6 +66,8 @@ export default function RootLayout({
           }}
           signInUrl="/sign-in"
           signUpUrl="/sign-up"
+          signInFallbackRedirectUrl="/app"
+          signUpFallbackRedirectUrl="/app"
           afterSignOutUrl="/"
           taskUrls={{
             "choose-organization": "/session-tasks/choose-organization",

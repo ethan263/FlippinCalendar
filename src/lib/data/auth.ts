@@ -3,7 +3,7 @@ import "server-only";
 import { auth } from "@clerk/nextjs/server";
 
 import type { BackendTerminology, Organization } from "@/components/dashboard/data";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type OrganizationRow = {
   id: string;
@@ -76,7 +76,11 @@ export async function requireActiveClerkOrganization(): Promise<ActiveClerkOrgan
 
 export async function requireCurrentOrganization() {
   const clerkAuth = await requireActiveClerkOrganization();
-  const supabase = await createClient();
+  // Service role after Clerk verification: dashboard tenancy is enforced by
+  // clerk_org_id / organization_id filters below, not by JWT RLS claims.
+  // This keeps workspace sync working when Clerk session tokens lack
+  // `role: authenticated` (required for Supabase third-party auth RLS).
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("organizations")
     .select("*")
