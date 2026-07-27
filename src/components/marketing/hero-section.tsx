@@ -75,7 +75,7 @@ export function HeroSection() {
 
   return (
     <section className="relative border-b">
-      <div className="absolute inset-0 hairline-grid opacity-45 [mask-image:linear-gradient(to_bottom,black,transparent_88%)]" />
+      <div className="absolute inset-0 hairline-grid opacity-45 mask-[linear-gradient(to_bottom,black,transparent_88%)]" />
       <div className="relative mx-auto grid max-w-[1400px] gap-14 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[0.98fr_1.02fr] lg:px-12 lg:pb-28 lg:pt-30">
         <div
           className="relative flex items-center order-2 lg:order-1"
