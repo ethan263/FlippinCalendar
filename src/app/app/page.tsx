@@ -14,7 +14,7 @@ export default async function AppIndexPage() {
     <main className="grid min-h-svh place-items-center bg-[#f3f0e8] px-4 py-12 text-foreground">
       <section className="w-full max-w-5xl overflow-hidden rounded-2xl border border-black/10 bg-[#faf9f5] shadow-[0_24px_70px_rgba(44,36,24,0.12)]">
         <div className="grid lg:grid-cols-[0.8fr_1.2fr]">
-          <div className="flex min-h-72 flex-col justify-between border-b border-black/10 bg-[#1c1c1a] p-7 text-white lg:min-h-[620px] lg:border-r lg:border-b-0 lg:p-10">
+          <div className="flex min-h-72 flex-col justify-between border-b border-black/10 bg-[#1c1c1a] p-7 text-white lg:min-h-155 lg:border-r lg:border-b-0 lg:p-10">
             <div className="flex items-center gap-2.5">
               <span className="grid size-9 place-items-center rounded-md bg-primary text-primary-foreground">
                 <Sparkles className="size-4" />

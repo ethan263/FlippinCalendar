@@ -25,7 +25,6 @@ import {
 import { createMember, listMembers, updateMember } from "@/lib/data/team";
 import type {
   AvailabilityRule,
-  BackendTerminology,
   BookingStatus,
   SiteConfig,
 } from "@/components/dashboard/data";
@@ -178,6 +177,3 @@ export async function listKnowledgeAction(args: {
 } = {}) {
   return listKnowledge(args);
 }
-
-// re-export type for consumers that need terminology shape
-export type { BackendTerminology };

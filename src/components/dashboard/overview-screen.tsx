@@ -148,7 +148,7 @@ export function OverviewScreen() {
                 </span>
                 <Icon className="size-4 text-muted-foreground" />
               </div>
-              <p className="mt-7 font-heading text-4xl font-semibold tracking-[-0.05em] tabular-nums">
+              <p className="mt-7 font-heading text-4xl font-semibold tracking-tighter tabular-nums">
                 {metric.value}
               </p>
               <p className="mt-2 text-xs font-semibold">{metric.label}</p>

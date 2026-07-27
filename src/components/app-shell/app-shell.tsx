@@ -163,8 +163,12 @@ function ShellChrome({
   orgSlug: string;
 }) {
   const pathname = usePathname();
-  const { organization, isBootstrapping, terminology } = useWorkspace();
-  const publicSite = useServerData(() => getCurrentDraftAction(), [organization?._id]);
+  const { organization, isBootstrapping, bootstrapError, terminology } =
+    useWorkspace();
+  const publicSite = useServerData(
+    () => getCurrentDraftAction(),
+    [organization?._id],
+  );
   const navigation = navigationFor(terminology);
   const routeLabels = Object.fromEntries(
     navigation.flatMap((section) =>
@@ -247,7 +251,7 @@ function ShellChrome({
       </Sidebar>
 
       <SidebarInset className="min-w-0 bg-[#faf9f5]">
-        <header className="sticky top-0 z-30 flex h-14 items-center border-b border-black/10 bg-[#faf9f5]/95 px-4 supports-[backdrop-filter]:bg-[#faf9f5]/85 supports-[backdrop-filter]:backdrop-blur-md sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center border-b border-black/10 bg-[#faf9f5]/95 px-4 supports-backdrop-filter:bg-[#faf9f5]/85 supports-backdrop-filter:backdrop-blur-md sm:px-6">
           <SidebarTrigger className="mr-3 md:hidden" />
 
           <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
@@ -280,7 +284,27 @@ function ShellChrome({
         </header>
 
         <main className="min-h-[calc(100svh-3.5rem)] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          <div className="mx-auto w-full max-w-[1440px]">{children}</div>
+          <div className="mx-auto w-full max-w-360">
+            {bootstrapError && !organization && !isBootstrapping ? (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-5 py-6 text-sm text-rose-900">
+                <p className="font-heading text-lg font-semibold tracking-tight">
+                  Workspace could not sync
+                </p>
+                <p className="mt-2 max-w-2xl text-xs leading-5 text-rose-800/90">
+                  {bootstrapError}
+                </p>
+                <Button
+                  className="mt-4"
+                  variant="outline"
+                  onClick={() => window.location.reload()}
+                >
+                  Retry
+                </Button>
+              </div>
+            ) : (
+              children
+            )}
+          </div>
         </main>
       </SidebarInset>
     </SidebarProvider>

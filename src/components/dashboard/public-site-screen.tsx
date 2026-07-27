@@ -161,7 +161,7 @@ function SitePreview({
       </div>
 
       <div
-        className="min-h-[620px]"
+        className="min-h-155"
         style={{
           backgroundColor: config.theme.backgroundColor,
           color: config.theme.foregroundColor,

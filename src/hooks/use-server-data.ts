@@ -7,18 +7,26 @@ export function useServerData<T>(
   loader: () => Promise<T>,
   deps: unknown[],
 ): T | undefined {
-  const [data, setData] = useState<T | undefined>(undefined);
+  const depsKey = JSON.stringify(deps);
+  const [cache, setCache] = useState<{ key: string; data: T | undefined }>({
+    key: depsKey,
+    data: undefined,
+  });
+
+  // Reset to the loading sentinel when deps change (React "adjust state during render").
+  if (cache.key !== depsKey) {
+    setCache({ key: depsKey, data: undefined });
+  }
 
   useEffect(() => {
     let cancelled = false;
-    setData(undefined);
     void loader()
       .then((result) => {
-        if (!cancelled) setData(result);
+        if (!cancelled) setCache({ key: depsKey, data: result });
       })
       .catch((error) => {
         console.error(error);
-        if (!cancelled) setData(undefined);
+        if (!cancelled) setCache({ key: depsKey, data: undefined });
       });
     return () => {
       cancelled = true;
@@ -26,5 +34,5 @@ export function useServerData<T>(
     // eslint-disable-next-line react-hooks/exhaustive-deps -- caller owns deps
   }, deps);
 
-  return data;
+  return cache.key === depsKey ? cache.data : undefined;
 }
