@@ -10,6 +10,8 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { AnimatedContainer } from "@/components/motion/animated-container";
+import { AnimatedList } from "@/components/motion/animated-list";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -31,7 +33,6 @@ import {
 } from "@/components/ui/select";
 import {
   Table,
-  TableBody,
   TableCell,
   TableHead,
   TableHeader,
@@ -274,14 +275,17 @@ export function BookingsScreen() {
 
   return (
     <>
-      <ScreenHeader
-        eyebrow="Schedule desk"
-        title={terminology.bookingPlural}
-        description={`Create, search, and manage every ${terminology.booking.toLowerCase()} across your public page, AI agent, and team.`}
-        action={<CreateBookingDialog />}
-      />
+      <AnimatedContainer animation="fadeInUp">
+        <ScreenHeader
+          eyebrow="Schedule desk"
+          title={terminology.bookingPlural}
+          description={`Create, search, and manage every ${terminology.booking.toLowerCase()} across your public page, AI agent, and team.`}
+          action={<CreateBookingDialog />}
+        />
+      </AnimatedContainer>
 
-      <Card className="bg-white">
+      <AnimatedContainer animation="fadeInUp" delay={0.08}>
+        <Card className="bg-white">
         <CardContent className="space-y-4 pt-0">
           <div className="flex flex-col gap-3 border-b border-black/8 pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:max-w-sm">
@@ -328,9 +332,15 @@ export function BookingsScreen() {
                   <TableHead className="text-right">Change</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {filtered.map((booking) => (
-                  <TableRow key={booking._id}>
+              <AnimatedList
+                as="tbody"
+                itemAs="tr"
+                items={filtered}
+                keyExtractor={(booking) => booking._id}
+                className="[&_tr:last-child]:border-0"
+                itemClassName="border-b transition-colors hover:bg-muted/50"
+                renderItem={(booking) => (
+                  <>
                     <TableCell className="font-mono text-xs">
                       {formatDateTime(booking.startAt, organization?.timezone)}
                     </TableCell>
@@ -362,9 +372,9 @@ export function BookingsScreen() {
                     <TableCell className="text-right">
                       <BookingStatusSelect booking={booking} />
                     </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
+                  </>
+                )}
+              />
             </Table>
           ) : (
             <EmptyState
@@ -384,6 +394,7 @@ export function BookingsScreen() {
           )}
         </CardContent>
       </Card>
+      </AnimatedContainer>
     </>
   );
 }

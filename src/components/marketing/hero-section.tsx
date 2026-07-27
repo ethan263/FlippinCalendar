@@ -13,6 +13,9 @@ import {
 import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AnimatedContainer } from "@/components/motion/animated-container";
+import { AnimatedList } from "@/components/motion/animated-list";
+import { transitions } from "@/lib/motion/transitions";
 
 const moments: {
   time: string;
@@ -51,21 +54,21 @@ const copyVariants = {
     y: 0,
     transition: {
       delay: 0.08 + i * 0.08,
+      ...transitions.smooth,
       duration: 0.55,
       ease: [0.22, 1, 0.36, 1] as const,
     },
   }),
 };
 
-const rowVariants = {
-  hidden: { opacity: 0, y: 10 },
+const statVariants = {
+  hidden: { opacity: 0, y: 8 },
   show: (i: number) => ({
     opacity: 1,
     y: 0,
     transition: {
-      delay: 0.55 + i * 0.1,
-      duration: 0.4,
-      ease: [0.22, 1, 0.36, 1] as const,
+      delay: 0.95 + i * 0.08,
+      ...transitions.spring,
     },
   }),
 };
@@ -119,34 +122,35 @@ export function HeroSection() {
                 </span>
               </div>
               <div className="p-3 sm:p-5">
-                {moments.map(({ time, icon: Icon, label, detail, tone }, index) => (
-                  <motion.div
-                    key={label}
-                    custom={index}
-                    variants={rowVariants}
-                    initial={reduceMotion ? false : "hidden"}
-                    animate="show"
-                    className="grid grid-cols-[42px_40px_1fr_auto] items-center gap-3 border-b px-1 py-4 last:border-0 sm:grid-cols-[48px_44px_1fr_auto]"
-                  >
-                    <span className="font-mono text-[10px] text-muted-foreground">
-                      {time}
-                    </span>
-                    <span
-                      className={`grid size-9 place-items-center rounded-md ${tone}`}
-                    >
-                      <Icon className="size-4" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{label}</p>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {detail}
-                      </p>
-                    </div>
-                    <span className="hidden font-mono text-[9px] uppercase tracking-widest text-muted-foreground sm:inline">
-                      0{index + 1}
-                    </span>
-                  </motion.div>
-                ))}
+                <AnimatedList
+                  as="div"
+                  itemAs="div"
+                  items={moments}
+                  keyExtractor={(moment) => moment.label}
+                  className="divide-y divide-black/8"
+                  itemClassName="grid grid-cols-[42px_40px_1fr_auto] items-center gap-3 border-b px-1 py-4 last:border-0 sm:grid-cols-[48px_44px_1fr_auto]"
+                  renderItem={({ time, icon: Icon, label, detail, tone }, index) => (
+                    <>
+                      <span className="font-mono text-[10px] text-muted-foreground">
+                        {time}
+                      </span>
+                      <span
+                        className={`grid size-9 place-items-center rounded-md ${tone}`}
+                      >
+                        <Icon className="size-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">{label}</p>
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                          {detail}
+                        </p>
+                      </div>
+                      <span className="hidden font-mono text-[9px] uppercase tracking-widest text-muted-foreground sm:inline">
+                        0{index + 1}
+                      </span>
+                    </>
+                  )}
+                />
               </div>
               <div className="grid grid-cols-3 border-t bg-[#171b24] text-white">
                 {(
@@ -155,9 +159,13 @@ export function HeroSection() {
                     ["4", "booked"],
                     ["98%", "resolved"],
                   ] as const
-                ).map(([value, label]) => (
-                  <div
+                ).map(([value, label], index) => (
+                  <motion.div
                     key={label}
+                    custom={index}
+                    variants={statVariants}
+                    initial={reduceMotion ? false : "hidden"}
+                    animate="show"
                     className="border-r border-white/10 px-4 py-5 last:border-0"
                   >
                     <p className="font-heading text-3xl tracking-[-0.04em]">
@@ -166,7 +174,7 @@ export function HeroSection() {
                     <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.16em] text-white/45">
                       {label}
                     </p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -184,7 +192,7 @@ export function HeroSection() {
               variant="outline"
               className="mb-7 rounded-sm bg-background px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em]"
             >
-              front desk Assistant · Tailored to your business
+              AI concierge · Tailored to your business
             </Badge>
           </motion.div>
 
@@ -195,8 +203,8 @@ export function HeroSection() {
             animate="show"
             className="font-heading text-[clamp(3.8rem,8vw,7.4rem)] font-medium leading-[0.82] tracking-[-0.065em] text-balance"
           >
-            Every request,
-            <span className="mt-3 block text-primary italic">one front door.</span>
+            The smart choice
+            <span className="mt-3 block text-primary italic">concierge.</span>
           </motion.h1>
 
           <motion.p
@@ -223,16 +231,18 @@ export function HeroSection() {
                 Build your assistant <ArrowRight className="size-4" />
               </Link>
             </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="h-12 gap-2 rounded-md bg-background px-6 shadow-none"
-            >
-              <Link href="/p/papafam-cuts">
-                View a client page <MoveUpRight className="size-4" />
-              </Link>
-            </Button>
+            <AnimatedContainer animation="scaleIn" delay={0.32} duration={0.35}>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="h-12 gap-2 rounded-md bg-background px-6 shadow-none"
+              >
+                <Link href="/p/papafam-cuts">
+                  View a client page <MoveUpRight className="size-4" />
+                </Link>
+              </Button>
+            </AnimatedContainer>
           </motion.div>
 
           <motion.div

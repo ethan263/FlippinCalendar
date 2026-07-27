@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 
 import { overviewAction } from "@/app/actions/dashboard";
+import { AnimatedContainer } from "@/components/motion/animated-container";
+import { AnimatedList } from "@/components/motion/animated-list";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -124,24 +126,32 @@ export function OverviewScreen() {
 
   return (
     <>
-      <ScreenHeader
-        eyebrow="Live operations"
-        title={`Good day, ${overview.organization.name}.`}
-        description={`A live read on ${terminology.bookingPlural.toLowerCase()}, ${terminology.customerPlural.toLowerCase()}, and every conversation your team is handling.`}
-        action={
-          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/85">
-            <Link href={`/app/${orgSlug}/bookings`}>
-              <CalendarPlus className="size-4" /> New {terminology.booking}
-            </Link>
-          </Button>
-        }
-      />
+      <AnimatedContainer animation="fadeInUp">
+        <ScreenHeader
+          eyebrow="Live operations"
+          title={`Good day, ${overview.organization.name}.`}
+          description={`A live read on ${terminology.bookingPlural.toLowerCase()}, ${terminology.customerPlural.toLowerCase()}, and every conversation your team is handling.`}
+          action={
+            <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/85">
+              <Link href={`/app/${orgSlug}/bookings`}>
+                <CalendarPlus className="size-4" /> New {terminology.booking}
+              </Link>
+            </Button>
+          }
+        />
+      </AnimatedContainer>
 
-      <section className="grid gap-px overflow-hidden rounded-xl border border-black/10 bg-black/10 sm:grid-cols-2 xl:grid-cols-4">
-        {metrics.map((metric, index) => {
+      <AnimatedList
+        as="div"
+        itemAs="div"
+        items={metrics}
+        keyExtractor={(metric) => metric.label}
+        className="grid gap-px overflow-hidden rounded-xl border border-black/10 bg-black/10 sm:grid-cols-2 xl:grid-cols-4"
+        itemClassName="bg-white p-4 sm:p-5"
+        renderItem={(metric, index) => {
           const Icon = metric.icon;
           return (
-            <div key={metric.label} className="bg-white p-4 sm:p-5">
+            <>
               <div className="flex items-start justify-between gap-3">
                 <span className="font-mono text-[10px] font-semibold text-muted-foreground">
                   0{index + 1}
@@ -155,98 +165,107 @@ export function OverviewScreen() {
               <p className="mt-0.5 text-[11px] text-muted-foreground">
                 {metric.note}
               </p>
-            </div>
+            </>
           );
-        })}
-      </section>
+        }}
+      />
 
-      <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(19rem,0.65fr)]">
-        <Card className="bg-white">
-          <CardHeader className="border-b border-black/8 pb-4">
-            <div>
-              <p className="text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-                Today
-              </p>
-              <CardTitle className="mt-1 font-heading text-xl tracking-tight">
-                The live run sheet
-              </CardTitle>
-            </div>
-            <CardAction>
-              <Button asChild variant="ghost" size="sm">
-                <Link href={`/app/${orgSlug}/bookings`}>
-                  Full schedule <ArrowRight />
-                </Link>
-              </Button>
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            {today.length ? (
-              <div className="divide-y divide-black/8">
-                {today.slice(0, 7).map((booking) => (
-                  <BookingRow key={booking._id} booking={booking} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                compact
-                icon={CalendarClock}
-                title={`No ${terminology.bookingPlural.toLowerCase()} today`}
-                description={`A clear run sheet for now. New ${terminology.bookingPlural.toLowerCase()} will appear here instantly.`}
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <div className="grid gap-3">
-            <FeatureEntitlementCard feature="web_agent" compact />
-            <FeatureEntitlementCard feature="browser_voice" compact />
-          </div>
-
-          <Card className="bg-[#20201e] text-white ring-black/15">
-            <CardHeader className="border-b border-white/10 pb-4">
+      <AnimatedContainer animation="fadeInUp" delay={0.12} className="mt-6">
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(19rem,0.65fr)]">
+          <Card className="bg-white">
+            <CardHeader className="border-b border-black/8 pb-4">
               <div>
-                <p className="text-[10px] font-semibold tracking-[0.16em] text-white/45 uppercase">
-                  Recent signal
+                <p className="text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                  Today
                 </p>
-                <CardTitle className="mt-1 font-heading text-xl tracking-tight text-white">
-                  Conversations
+                <CardTitle className="mt-1 font-heading text-xl tracking-tight">
+                  The live run sheet
                 </CardTitle>
               </div>
               <CardAction>
-                <AudioLines className="size-4 text-primary" />
+                <Button asChild variant="ghost" size="sm">
+                  <Link href={`/app/${orgSlug}/bookings`}>
+                    Full schedule <ArrowRight />
+                  </Link>
+                </Button>
               </CardAction>
             </CardHeader>
             <CardContent>
-              {overview.recentConversations.length ? (
-                <div>
-                  {overview.recentConversations.slice(0, 3).map((conversation, index) => (
-                    <div key={conversation._id}>
-                      {index > 0 && <Separator className="my-3 bg-white/10" />}
-                      <div className="flex items-start gap-3">
-                        <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-                        <div className="min-w-0">
-                          <p className="truncate text-xs font-medium text-white">
-                            {conversation.caller ?? "New contact"}
-                          </p>
-                          <p className="mt-1 line-clamp-2 text-[11px] leading-5 text-white/50">
-                            {conversation.summary ?? "Conversation captured and ready to review."}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              {today.length ? (
+                <AnimatedList
+                  as="div"
+                  itemAs="div"
+                  items={today.slice(0, 7)}
+                  keyExtractor={(booking) => booking._id}
+                  className="divide-y divide-black/8"
+                  renderItem={(booking) => <BookingRow booking={booking} />}
+                />
               ) : (
-                <p className="py-6 text-center text-xs leading-5 text-white/45">
-                  Conversation summaries will collect here once your agent starts
-                  helping people.
-                </p>
+                <EmptyState
+                  compact
+                  icon={CalendarClock}
+                  title={`No ${terminology.bookingPlural.toLowerCase()} today`}
+                  description={`A clear run sheet for now. New ${terminology.bookingPlural.toLowerCase()} will appear here instantly.`}
+                />
               )}
             </CardContent>
           </Card>
-        </div>
-      </section>
+
+          <div className="space-y-6">
+            <div className="grid gap-3">
+              <FeatureEntitlementCard feature="web_agent" compact />
+              <FeatureEntitlementCard feature="browser_voice" compact />
+            </div>
+
+            <Card className="bg-[#20201e] text-white ring-black/15">
+              <CardHeader className="border-b border-white/10 pb-4">
+                <div>
+                  <p className="text-[10px] font-semibold tracking-[0.16em] text-white/45 uppercase">
+                    Recent signal
+                  </p>
+                  <CardTitle className="mt-1 font-heading text-xl tracking-tight text-white">
+                    Conversations
+                  </CardTitle>
+                </div>
+                <CardAction>
+                  <AudioLines className="size-4 text-primary" />
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                {overview.recentConversations.length ? (
+                  <AnimatedList
+                    as="div"
+                    itemAs="div"
+                    items={overview.recentConversations.slice(0, 3)}
+                    keyExtractor={(conversation) => conversation._id}
+                    renderItem={(conversation, index) => (
+                      <>
+                        {index > 0 && <Separator className="my-3 bg-white/10" />}
+                        <div className="flex items-start gap-3">
+                          <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-medium text-white">
+                              {conversation.caller ?? "New contact"}
+                            </p>
+                            <p className="mt-1 line-clamp-2 text-[11px] leading-5 text-white/50">
+                              {conversation.summary ?? "Conversation captured and ready to review."}
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  />
+                ) : (
+                  <p className="py-6 text-center text-xs leading-5 text-white/45">
+                    Conversation summaries will collect here once your agent starts
+                    helping people.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      </AnimatedContainer>
     </>
   );
 }
