@@ -1,0 +1,183 @@
+"use server";
+
+import { getCurrentAgent, listRecentConversations } from "@/lib/data/agents";
+import {
+  listRules,
+  replaceMemberRules,
+} from "@/lib/data/availability";
+import {
+  createForCurrentOrg,
+  listForCurrentOrg,
+  updateStatus,
+} from "@/lib/data/bookings";
+import {
+  createOffering,
+  listOfferings,
+  updateOffering,
+} from "@/lib/data/catalog";
+import { overview } from "@/lib/data/dashboard";
+import { listKnowledge } from "@/lib/data/knowledge";
+import {
+  getCurrentDraft,
+  publish,
+  updateDraft,
+} from "@/lib/data/public-site";
+import { createMember, listMembers, updateMember } from "@/lib/data/team";
+import type {
+  AvailabilityRule,
+  BackendTerminology,
+  BookingStatus,
+  SiteConfig,
+} from "@/components/dashboard/data";
+
+export async function listOfferingsAction(args: { includeInactive?: boolean } = {}) {
+  return listOfferings(args);
+}
+
+export async function createOfferingAction(args: {
+  name: string;
+  description?: string;
+  category?: string;
+  durationMinutes: number;
+  bufferBeforeMinutes?: number;
+  bufferAfterMinutes?: number;
+  priceMinor: number;
+  capacity?: number;
+  active?: boolean;
+  bookableOnline?: boolean;
+}) {
+  return createOffering(args);
+}
+
+export async function updateOfferingAction(args: {
+  offeringId: string;
+  name?: string;
+  description?: string;
+  category?: string;
+  durationMinutes?: number;
+  bufferBeforeMinutes?: number;
+  bufferAfterMinutes?: number;
+  priceMinor?: number;
+  capacity?: number;
+  active?: boolean;
+  bookableOnline?: boolean;
+}) {
+  return updateOffering(args);
+}
+
+export async function listMembersAction(args: { includeInactive?: boolean } = {}) {
+  return listMembers(args);
+}
+
+export async function createMemberAction(args: {
+  name: string;
+  title?: string;
+  bio?: string;
+  email?: string;
+  phone?: string;
+  imageUrl?: string;
+  offeringIds: string[];
+  active?: boolean;
+  acceptingBookings?: boolean;
+  sortOrder?: number;
+}) {
+  return createMember(args);
+}
+
+export async function updateMemberAction(args: {
+  teamMemberId: string;
+  name?: string;
+  title?: string;
+  bio?: string;
+  email?: string;
+  phone?: string;
+  imageUrl?: string;
+  offeringIds?: string[];
+  active?: boolean;
+  acceptingBookings?: boolean;
+  sortOrder?: number;
+}) {
+  return updateMember(args);
+}
+
+export async function listRulesAction(args: { teamMemberId?: string } = {}) {
+  return listRules(args);
+}
+
+export async function replaceMemberRulesAction(args: {
+  teamMemberId: string;
+  rules: Array<{
+    dayOfWeek: number;
+    startMinute: number;
+    endMinute: number;
+    active?: boolean;
+  }>;
+}): Promise<AvailabilityRule[]> {
+  return replaceMemberRules(args);
+}
+
+export async function listBookingsAction(args: {
+  from?: number;
+  to?: number;
+  status?: BookingStatus;
+  limit?: number;
+} = {}) {
+  return listForCurrentOrg(args);
+}
+
+export async function createBookingAction(args: {
+  offeringId: string;
+  teamMemberId?: string;
+  startAt: number;
+  customer: { name: string; email?: string; phone?: string };
+  notes?: string;
+  idempotencyKey?: string;
+}) {
+  return createForCurrentOrg(args);
+}
+
+export async function updateBookingStatusAction(args: {
+  bookingId: string;
+  status: BookingStatus;
+}) {
+  return updateStatus(args);
+}
+
+export async function overviewAction() {
+  return overview();
+}
+
+export async function getCurrentDraftAction() {
+  return getCurrentDraft();
+}
+
+export async function updateDraftAction(args: {
+  config: SiteConfig;
+  siteSlug?: string;
+}) {
+  return updateDraft(args);
+}
+
+export async function publishSiteAction() {
+  return publish();
+}
+
+export async function getCurrentAgentAction() {
+  return getCurrentAgent();
+}
+
+export async function listRecentConversationsAction(args: {
+  limit?: number;
+  channel?: "web";
+} = {}) {
+  return listRecentConversations(args);
+}
+
+export async function listKnowledgeAction(args: {
+  includeUnpublished?: boolean;
+} = {}) {
+  return listKnowledge(args);
+}
+
+// re-export type for consumers that need terminology shape
+export type { BackendTerminology };
