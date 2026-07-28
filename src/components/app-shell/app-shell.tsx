@@ -16,13 +16,13 @@ import {
   LockKeyhole,
   PanelsTopLeft,
   Settings2,
-  Sparkles,
   UsersRound,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Brand } from "@/components/brand";
 import {
   Sidebar,
   SidebarContent,
@@ -237,22 +237,13 @@ function ShellChrome({
     >
       <HoverExpandSidebar className="border-r border-black/10 bg-[#f2f0e9]">
         <SidebarHeader className="gap-4 px-3 pt-4 pb-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-2">
-          <Link
+          <Brand
             href={`/app/${orgSlug}`}
-            className="group/brand flex items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring group-data-[collapsible=icon]:justify-center"
-          >
-            <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground shadow-[0_2px_0_rgba(0,0,0,0.16)] transition-transform group-hover/brand:-rotate-2">
-              <Sparkles className="size-4" aria-hidden="true" />
-            </span>
-            <span className="min-w-0 group-data-[collapsible=icon]:hidden">
-              <span className="block font-heading text-[17px] leading-none font-semibold tracking-[-0.02em]">
-                flippinCalendar
-              </span>
-              <span className="mt-1 block text-[9px] font-semibold tracking-[0.18em] text-sidebar-foreground/45 uppercase">
-                Operations desk
-              </span>
-            </span>
-          </Link>
+            size="sm"
+            subtitle="Operations desk"
+            className="rounded-md group-data-[collapsible=icon]:justify-center"
+            wordmarkClassName="group-data-[collapsible=icon]:hidden"
+          />
 
           <div className="rounded-lg border border-black/10 bg-white/70 px-2 py-1 shadow-[0_1px_0_rgba(0,0,0,0.05)] group-data-[collapsible=icon]:hidden">
             <OrganizationSwitcher

@@ -1,7 +1,8 @@
 import { OrganizationList } from "@clerk/nextjs";
-import { ArrowRight, Building2, Sparkles } from "lucide-react";
+import { ArrowRight, Building2 } from "lucide-react";
 import { redirect } from "next/navigation";
 
+import { Brand } from "@/components/brand";
 import { requireAppSession } from "@/lib/auth/require-app-session";
 import {
   buildAfterOrganizationUrl,
@@ -35,14 +36,7 @@ export default async function AppIndexPage({ searchParams }: AppIndexPageProps) 
       <section className="w-full max-w-5xl overflow-hidden rounded-2xl border border-black/10 bg-[#faf9f5] shadow-[0_24px_70px_rgba(44,36,24,0.12)]">
         <div className="grid lg:grid-cols-[0.8fr_1.2fr]">
           <div className="flex min-h-72 flex-col justify-between border-b border-black/10 bg-[#1c1c1a] p-7 text-white lg:min-h-155 lg:border-r lg:border-b-0 lg:p-10">
-            <div className="flex items-center gap-2.5">
-              <span className="grid size-9 place-items-center rounded-md bg-primary text-primary-foreground">
-                <Sparkles className="size-4" />
-              </span>
-              <span className="font-heading text-xl font-semibold tracking-tight">
-                flippinCalendar
-              </span>
-            </div>
+            <Brand href="/app" inverted size="md" />
 
             <div>
               <p className="text-xs font-semibold tracking-[0.18em] text-white/45 uppercase">
