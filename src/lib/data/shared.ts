@@ -69,7 +69,7 @@ export function defaultSiteConfig(businessName: string): SiteConfig {
       "Choose what you need, find a time that works, and confirm in moments.",
     about:
       "Thoughtful service, straightforward scheduling, and a team ready to help.",
-    template: "editorial",
+    template: "business-card",
     theme: {
       accentColor: "#2446D8",
       backgroundColor: "#F5F1E8",

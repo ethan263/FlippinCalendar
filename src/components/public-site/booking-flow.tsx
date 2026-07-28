@@ -21,6 +21,10 @@ import {
   createPublicBookingAction,
   getAvailabilityAction,
 } from "@/app/actions/public";
+import {
+  StackedFlowCards,
+  type StackDirection,
+} from "@/components/motion/stacked-flow-cards";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -256,6 +260,7 @@ export function BookingFlow({
   maximumAdvanceDays: number;
 }) {
   const [step, setStep] = useState<BookingStep>("offering");
+  const [stackDirection, setStackDirection] = useState<StackDirection>(1);
   const [offeringId, setOfferingId] = useState<PublicOffering["_id"] | null>(
     null,
   );
@@ -362,13 +367,21 @@ export function BookingFlow({
     setContact((current) => ({ ...current, [field]: value }));
   }
 
+  function goToStep(next: BookingStep) {
+    const nextIndex = steps.findIndex((item) => item.key === next);
+    const currentIndex = steps.findIndex((item) => item.key === step);
+    setStackDirection(nextIndex >= currentIndex ? 1 : -1);
+    setStep(next);
+  }
+
   function goBack() {
     if (currentStepIndex <= 0) return;
     setSubmitError(null);
-    setStep(steps[currentStepIndex - 1].key);
+    goToStep(steps[currentStepIndex - 1].key);
   }
 
   function startAgain() {
+    setStackDirection(1);
     setStep("offering");
     setOfferingId(null);
     setTeamMemberId(null);
@@ -415,7 +428,7 @@ export function BookingFlow({
         idempotencyKey: idempotencyKeyRef.current,
       });
       setConfirmation(result);
-      setStep("confirmation");
+      goToStep("confirmation");
     } catch (error) {
       setSubmitError(bookingErrorMessage(error));
     } finally {
@@ -479,7 +492,7 @@ export function BookingFlow({
                     <button
                       type="button"
                       disabled={!canNavigate}
-                      onClick={() => canNavigate && setStep(item.key)}
+                      onClick={() => canNavigate && goToStep(item.key)}
                       aria-current={isActive ? "step" : undefined}
                       className={cn(
                         "flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm transition",
@@ -543,7 +556,12 @@ export function BookingFlow({
         </aside>
 
         <CardContent className="flex min-w-0 flex-col p-5 sm:p-8 lg:p-10">
-          <div className="flex-1">
+          <StackedFlowCards
+            stepKey={step}
+            direction={stackDirection}
+            className="flex-1"
+            depth={2}
+          >
             {step === "offering" ? (
               <div className="space-y-7">
                 <StepHeading
@@ -899,7 +917,7 @@ export function BookingFlow({
                 </Button>
               </div>
             ) : null}
-          </div>
+          </StackedFlowCards>
 
           {step !== "confirmation" ? (
             <div className="mt-8 flex items-center justify-between gap-3 border-t pt-5">
@@ -921,7 +939,7 @@ export function BookingFlow({
                   size="lg"
                   disabled={!offeringId}
                   onClick={() =>
-                    setStep(eligibleTeamMembers.length ? "team" : "date")
+                    goToStep(eligibleTeamMembers.length ? "team" : "date")
                   }
                   className="h-11 px-4"
                 >
@@ -930,7 +948,7 @@ export function BookingFlow({
                 </Button>
               ) : null}
               {step === "team" ? (
-                <Button type="button" size="lg" onClick={() => setStep("date")} className="h-11 px-4">
+                <Button type="button" size="lg" onClick={() => goToStep("date")} className="h-11 px-4">
                   Choose a date
                   <ArrowRight data-icon="inline-end" />
                 </Button>
@@ -940,7 +958,7 @@ export function BookingFlow({
                   type="button"
                   size="lg"
                   disabled={!selectedDate}
-                  onClick={() => setStep("slot")}
+                  onClick={() => goToStep("slot")}
                   className="h-11 px-4"
                 >
                   See available times
@@ -949,7 +967,7 @@ export function BookingFlow({
               ) : null}
               {step === "slot" ? (
                 availability && availableSlots.length === 0 ? (
-                  <Button type="button" size="lg" onClick={() => setStep("date")} className="h-11 px-4">
+                  <Button type="button" size="lg" onClick={() => goToStep("date")} className="h-11 px-4">
                     Try another date
                   </Button>
                 ) : (
@@ -957,7 +975,7 @@ export function BookingFlow({
                     type="button"
                     size="lg"
                     disabled={!selectedSlot}
-                    onClick={() => setStep("details")}
+                    onClick={() => goToStep("details")}
                     className="h-11 px-4"
                   >
                     Add your details

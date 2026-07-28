@@ -88,3 +88,16 @@ export const dialogContent = {
   visible: { opacity: 1, scale: 1, y: 0 },
   exit: { opacity: 0, scale: 0.95, y: 16 },
 } as const;
+
+/** Forward: current card stacks behind; next card rises in front. */
+export const stackCardForward = {
+  enter: { opacity: 0, y: 42, scale: 1.03 },
+  center: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: -36, scale: 0.88 },
+} as const;
+
+export const stackCardBackward = {
+  enter: { opacity: 0, y: -28, scale: 0.9 },
+  center: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: 48, scale: 1.02 },
+} as const;

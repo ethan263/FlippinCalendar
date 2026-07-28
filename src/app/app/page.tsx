@@ -1,8 +1,8 @@
 import { OrganizationList } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
 import { ArrowRight, Building2, Sparkles } from "lucide-react";
 import { redirect } from "next/navigation";
 
+import { requireAppSession } from "@/lib/auth/require-app-session";
 import {
   buildAfterOrganizationUrl,
   buildBillingCheckoutUrl,
@@ -15,11 +15,7 @@ type AppIndexPageProps = {
 };
 
 export default async function AppIndexPage({ searchParams }: AppIndexPageProps) {
-  const { orgSlug } = await auth.protect(
-    process.env.NODE_ENV === "production"
-      ? undefined
-      : { treatPendingAsSignedOut: false },
-  );
+  const { orgSlug } = await requireAppSession();
   const { plan } = await searchParams;
   const planIntent =
     normalizePlanIntent(plan) ?? (await readPlanIntentCookie());

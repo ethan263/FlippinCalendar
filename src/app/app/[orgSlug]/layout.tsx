@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell/app-shell";
+import { requireAppSession } from "@/lib/auth/require-app-session";
 
 export default async function OrganizationLayout({
   children,
@@ -11,11 +11,7 @@ export default async function OrganizationLayout({
   children: ReactNode;
   params: Promise<{ orgSlug: string }>;
 }) {
-  const session = await auth.protect(
-    process.env.NODE_ENV === "production"
-      ? undefined
-      : { treatPendingAsSignedOut: false },
-  );
+  const session = await requireAppSession();
   const { orgSlug: routeOrgSlug } = await params;
 
   if (!session.orgId || !session.orgSlug) {

@@ -217,7 +217,9 @@ export function PublicSite({
     publishedSite;
   const { config } = site;
 
-  if (config.template === "business-card") {
+  // Card-first client experience (sleek viewport card). Gallery keeps the
+  // full multi-section mini-site for catalog-heavy businesses.
+  if (config.template !== "gallery") {
     return (
       <BusinessCardSite
         siteSlug={siteSlug}
@@ -231,8 +233,8 @@ export function PublicSite({
   const { terminology } = organization;
   const heroImageUrl = safeHttpUrl(config.heroImageUrl);
   const logoUrl = safeHttpUrl(config.logoUrl);
-  const isCompact = config.template === "compact";
-  const isGallery = config.template === "gallery";
+  const isCompact = false;
+  const isGallery = true;
   const bookingIsVisible =
     config.booking.enabled && config.sections.includes("booking");
   const textAgentIsVisible =

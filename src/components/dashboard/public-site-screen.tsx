@@ -594,10 +594,10 @@ function SiteEditor({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="editorial">Editorial</SelectItem>
-                    <SelectItem value="gallery">Gallery</SelectItem>
-                    <SelectItem value="compact">Compact</SelectItem>
-                    <SelectItem value="business-card">Business card</SelectItem>
+                    <SelectItem value="business-card">Card (default)</SelectItem>
+                    <SelectItem value="editorial">Card · editorial theme</SelectItem>
+                    <SelectItem value="compact">Card · compact</SelectItem>
+                    <SelectItem value="gallery">Full page · gallery</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

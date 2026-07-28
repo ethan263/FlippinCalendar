@@ -209,6 +209,7 @@ function Sidebar({
       className="group peer hidden text-sidebar-foreground md:block"
       data-state={state}
       data-collapsible={state === "collapsed" ? collapsible : ""}
+      data-mode={collapsible}
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
@@ -219,6 +220,8 @@ function Sidebar({
         className={cn(
           "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
           "group-data-[collapsible=offcanvas]:w-0",
+          // Icon mode keeps a stable icon rail so hover-expand overlays content.
+          "group-data-[mode=icon]:w-(--sidebar-width-icon)",
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
             ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
@@ -234,6 +237,8 @@ function Sidebar({
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+          // Hover-expanded icon rail overlays the page instead of pushing it.
+          "group-data-[mode=icon]:z-40 group-data-[mode=icon]:group-data-[state=expanded]:shadow-[12px_0_40px_-20px_rgba(20,16,12,0.35)]",
           className
         )}
         {...props}
