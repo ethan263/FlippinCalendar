@@ -1,20 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "Cloudflare DNS prep for flippincalendar.co.za. Apply in Cloudflare dashboard when ready — do NOT change registrar nameservers or orange-cloud proxy until cutover is approved.",
+  "description": "Cloudflare DNS for flippincalendar.co.za — Vercel app + Clerk Production. Keep Clerk/email CNAMEs DNS-only (grey cloud). Apex/www grey until Vercel verifies, then optional orange-cloud.",
   "zone": "flippincalendar.co.za",
   "architecture": {
     "dns_cdn_waf": "Cloudflare",
     "app_hosting": "Vercel (Next.js)",
-    "auth": "Clerk Production instance",
+    "auth": "Clerk Production instance ins_3H8qnDBcKY6852h5cV9BTnqJFT2",
     "data": "Supabase",
     "voice": "ElevenLabs"
   },
-  "cloudflare_settings_before_cutover": {
+  "cloudflare_settings": {
     "ssl_mode": "full_strict",
     "always_use_https": true,
     "automatic_https_rewrites": true,
-    "min_tls": "1.2",
-    "proxy_note": "Keep records DNS-only (grey cloud) until Vercel domain is verified, then optionally enable proxy."
+    "min_tls": "1.2"
   },
   "records": [
     {
@@ -23,7 +22,7 @@
       "content": "76.76.21.21",
       "proxied": false,
       "ttl": "auto",
-      "note": "Vercel apex. Confirm in Vercel → Domains after adding flippincalendar.co.za."
+      "note": "Vercel apex"
     },
     {
       "type": "CNAME",
@@ -31,22 +30,57 @@
       "content": "cname.vercel-dns.com",
       "proxied": false,
       "ttl": "auto",
-      "note": "Vercel www. Replace with project-specific target if Vercel shows a different CNAME."
-    }
-  ],
-  "redirects": [
+      "note": "Vercel www"
+    },
     {
-      "from": "https://www.flippincalendar.co.za/*",
-      "to": "https://flippincalendar.co.za/$1",
-      "status": 308,
-      "via": "Cloudflare Bulk Redirects or Vercel domain redirect — pick one, not both."
+      "type": "CNAME",
+      "name": "clerk",
+      "content": "frontend-api.clerk.services",
+      "proxied": false,
+      "ttl": "auto",
+      "note": "Clerk Frontend API — MUST stay DNS-only"
+    },
+    {
+      "type": "CNAME",
+      "name": "accounts",
+      "content": "accounts.clerk.services",
+      "proxied": false,
+      "ttl": "auto",
+      "note": "Clerk Accounts Portal — MUST stay DNS-only"
+    },
+    {
+      "type": "CNAME",
+      "name": "clkmail",
+      "content": "mail.ioxqly7efr5z.clerk.services",
+      "proxied": false,
+      "ttl": "auto",
+      "note": "Clerk email"
+    },
+    {
+      "type": "CNAME",
+      "name": "clk._domainkey",
+      "content": "dkim1.ioxqly7efr5z.clerk.services",
+      "proxied": false,
+      "ttl": "auto",
+      "note": "Clerk DKIM1"
+    },
+    {
+      "type": "CNAME",
+      "name": "clk2._domainkey",
+      "content": "dkim2.ioxqly7efr5z.clerk.services",
+      "proxied": false,
+      "ttl": "auto",
+      "note": "Clerk DKIM2"
     }
   ],
-  "cutover_blockers": [
-    "Clerk Production keys + domains allowlist",
-    "Vercel Production env NEXT_PUBLIC_APP_URL + secrets",
-    "Supabase Auth redirect URLs / CORS if applicable",
-    "ElevenLabs webhook URL + agent domain allowlist",
-    "Registrar nameserver change to Cloudflare (only at cutover)"
+  "google_oauth_callbacks": [
+    "https://clerk.flippincalendar.co.za/v1/oauth_callback",
+    "https://accounts.flippincalendar.co.za/v1/oauth_callback"
+  ],
+  "google_authorized_javascript_origins": [
+    "https://flippincalendar.co.za",
+    "https://www.flippincalendar.co.za",
+    "https://clerk.flippincalendar.co.za",
+    "https://accounts.flippincalendar.co.za"
   ]
 }

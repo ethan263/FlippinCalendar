@@ -1,0 +1,62 @@
+# Production DNS + OAuth checklist — flippincalendar.co.za
+
+Apply these **now** so Clerk Production can finish DNS/SSL and Google sign-in works.
+
+## 1. Cloudflare DNS (zone: `flippincalendar.co.za`)
+
+Import or create from `cloudflare/dns-records.example.json`:
+
+| Type | Name | Target | Proxy |
+|------|------|--------|-------|
+| A | `@` | `76.76.21.21` | DNS only |
+| CNAME | `www` | `cname.vercel-dns.com` | DNS only |
+| CNAME | `clerk` | `frontend-api.clerk.services` | **DNS only** |
+| CNAME | `accounts` | `accounts.clerk.services` | **DNS only** |
+| CNAME | `clkmail` | `mail.ioxqly7efr5z.clerk.services` | DNS only |
+| CNAME | `clk._domainkey` | `dkim1.ioxqly7efr5z.clerk.services` | DNS only |
+| CNAME | `clk2._domainkey` | `dkim2.ioxqly7efr5z.clerk.services` | DNS only |
+
+Then: SSL **Full (strict)** · Always HTTPS · point registrar NS to Cloudflare when records are ready.
+
+## 2. Vercel Domains + Production env
+
+Add domains: `flippincalendar.co.za`, `www.flippincalendar.co.za`.
+
+Production env (do **not** put live keys on Preview):
+
+```bash
+NEXT_PUBLIC_APP_URL=https://flippincalendar.co.za
+CLERK_AUTHORIZED_PARTIES=https://flippincalendar.co.za,https://www.flippincalendar.co.za
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_…   # from clerk env pull --instance prod
+CLERK_SECRET_KEY=sk_live_…                    # rotated cutover secret
+```
+
+Keep Supabase + ElevenLabs secrets. ElevenLabs webhook:
+
+`https://flippincalendar.co.za/api/webhooks/elevenlabs`
+
+## 3. Google Cloud OAuth (Web client)
+
+Authorized redirect URIs:
+
+- `https://clerk.flippincalendar.co.za/v1/oauth_callback`
+- `https://accounts.flippincalendar.co.za/v1/oauth_callback`
+
+Authorized JavaScript origins:
+
+- `https://flippincalendar.co.za`
+- `https://www.flippincalendar.co.za`
+- `https://clerk.flippincalendar.co.za`
+- `https://accounts.flippincalendar.co.za`
+
+Paste Client ID + Secret into Clerk Dashboard → Production → Social connections → Google.
+
+## 4. Verify
+
+```bash
+clerk deploy status
+# dns/ssl/mail → ok
+# open https://flippincalendar.co.za/sign-in
+```
+
+Clerk domains UI: https://dashboard.clerk.com/apps/app_3H4zQPUD48F6Nf1OBfcjiU4lCxg/instances/ins_3H8qnDBcKY6852h5cV9BTnqJFT2/domains
