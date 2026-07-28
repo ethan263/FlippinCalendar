@@ -196,6 +196,11 @@ export type SiteConfig = {
     showVoiceChat: boolean;
     showElevenLabsWidget: boolean;
     welcomeMessage: string;
+    /** ElevenLabs Free-compatible configure presets (per org, applied at session start). */
+    persona?: "front_desk" | "booking_specialist" | "knowledge_guide";
+    voicePreset?: "eric" | "sarah" | "george";
+    turnEagerness?: "patient" | "normal" | "eager";
+    language?: "en" | "es" | "fr";
   };
 };
 

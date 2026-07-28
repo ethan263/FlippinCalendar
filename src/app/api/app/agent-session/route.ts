@@ -9,6 +9,13 @@ import { listOfferings } from "@/lib/data/catalog";
 import { listKnowledge } from "@/lib/data/knowledge";
 import { getCurrentOrganization } from "@/lib/data/organizations";
 import { resolveElevenLabsAgentId } from "@/lib/elevenlabs/config";
+import {
+  buildSessionOverrides,
+  resolvePersonaGuidance,
+  resolveVoiceId,
+  type AgentPersonaId,
+  type AgentVoiceId,
+} from "@/lib/elevenlabs/free-plan-presets";
 import { getCurrentDraft } from "@/lib/data/public-site";
 import { DEFAULT_TERMINOLOGY } from "@/lib/data/shared";
 
@@ -126,6 +133,9 @@ export async function POST() {
       });
 
     const weeklyHours = weeklyHoursFromRules(rules);
+    const agentConfig = site.site.draft.agent;
+    const voicePreset = agentConfig.voicePreset as AgentVoiceId | undefined;
+    const persona = agentConfig.persona as AgentPersonaId | undefined;
 
     return NextResponse.json(
       {
@@ -148,6 +158,15 @@ export async function POST() {
           externalUserId: organization.clerkOrgId,
           textChatEnabled: Boolean(has({ feature: "web_agent" })),
           voiceChatEnabled: true,
+          personaGuidance: persona
+            ? resolvePersonaGuidance(persona)
+            : undefined,
+        }),
+        overrides: buildSessionOverrides({
+          welcomeMessage: agentConfig.welcomeMessage,
+          language: agentConfig.language,
+          voiceId: voicePreset ? resolveVoiceId(voicePreset) : null,
+          pace: agentConfig.turnEagerness,
         }),
       },
       { headers: { "Cache-Control": "no-store" } },

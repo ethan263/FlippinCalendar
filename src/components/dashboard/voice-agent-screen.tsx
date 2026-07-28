@@ -38,10 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Orb, type AgentState } from "@/components/ui/orb";
-import { OrbDemo } from "@/components/ui/orb-demo";
 import {
   getConversationAnalyticsAction,
   getConversationDetailAction,
@@ -55,6 +52,7 @@ import {
 import { useServerData } from "@/hooks/use-server-data";
 import type { Conversation, SiteConfig } from "@/components/dashboard/data";
 import {
+  AiAgentPlanLock,
   FeatureEntitlementCard,
   useFeatureEntitlements,
 } from "@/components/dashboard/feature-gates";
@@ -66,10 +64,20 @@ import {
   StatusBadge,
 } from "@/components/dashboard/screen-kit";
 import { useWorkspace } from "@/components/dashboard/workspace-context";
+import {
+  resolveGreeting,
+  type AgentConfigureDraft,
+} from "@/lib/elevenlabs/free-plan-presets";
+import { AgentConfigureWizard } from "@/components/dashboard/agent-configure-wizard";
 
 type AgentSessionResponse = {
   signedUrl: string;
   dynamicVariables: Record<string, string>;
+  overrides?: {
+    agent?: { firstMessage?: string; language?: string };
+    tts?: { voiceId?: string };
+    turn?: { turnEagerness?: "patient" | "normal" | "eager" };
+  };
 };
 
 async function recordOperatorConversation(conversationId: string) {
@@ -172,6 +180,7 @@ function WebAgentSession({ onRecorded }: { onRecorded?: () => void }) {
       await startSession({
         signedUrl: payload.signedUrl,
         dynamicVariables: payload.dynamicVariables,
+        ...(payload.overrides ? { overrides: payload.overrides } : {}),
         connectionType: "websocket",
         onModeChange: ({ mode }) =>
           setAgentState(mode === "speaking" ? "talking" : "listening"),
@@ -265,142 +274,6 @@ function WebAgentConsole({ onRecorded }: { onRecorded?: () => void }) {
     >
       <WebAgentSession onRecorded={onRecorded} />
     </ConversationProvider>
-  );
-}
-
-function PublicAgentSurfaceCard({
-  entitlements,
-  orgSlug,
-  workspaceReady,
-}: {
-  entitlements: ReturnType<typeof useFeatureEntitlements>;
-  orgSlug: string;
-  workspaceReady: boolean;
-}) {
-  const draft = useServerData(
-    () => getCurrentDraftAction(),
-    [workspaceReady],
-    { enabled: workspaceReady },
-  );
-  const [config, setConfig] = useState<SiteConfig | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (draft?.site.draft) setConfig(draft.site.draft);
-  }, [draft?.site.draft]);
-
-  async function patchAgent(
-    patch: Partial<SiteConfig["agent"]>,
-    { publish = false }: { publish?: boolean } = {},
-  ) {
-    if (!config || saving) return;
-    const next = {
-      ...config,
-      agent: { ...config.agent, ...patch },
-    };
-    setConfig(next);
-    setSaving(true);
-    setMessage(null);
-    try {
-      await updateDraftAction({ config: next });
-      if (publish) await publishSiteAction();
-      setMessage(
-        publish
-          ? "Published — the Orb is live on your public card."
-          : "Saved to draft. Publish to update the public card.",
-      );
-    } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Unable to update AI surface.",
-      );
-      setConfig(config);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  const siteSlug = draft?.site.siteSlug ?? orgSlug;
-  const liveChat =
-    entitlements.webAgent && Boolean(config?.agent.showWebChat);
-  const liveVoice =
-    entitlements.browserVoice && Boolean(config?.agent.showVoiceChat);
-
-  return (
-    <Card className="bg-white">
-      <CardHeader className="border-b border-black/8 pb-4">
-        <div>
-          <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            Public card
-          </p>
-          <CardTitle className="mt-1 font-heading text-xl tracking-tight">
-            Show the Orb to visitors
-          </CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4 pt-4">
-        {!workspaceReady || !entitlements.isLoaded || !config ? (
-          <p className="text-xs text-muted-foreground">Loading public settings…</p>
-        ) : (
-          <>
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <Label htmlFor="ai-show-web">Text chat Orb</Label>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">
-                  {entitlements.webAgent
-                    ? "Included on Pro and Voice"
-                    : "Requires Pro or Voice"}
-                </p>
-              </div>
-              <Switch
-                id="ai-show-web"
-                checked={Boolean(config.agent.showWebChat)}
-                disabled={!entitlements.webAgent || saving}
-                onCheckedChange={(showWebChat) =>
-                  void patchAgent({ showWebChat })
-                }
-              />
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <Label htmlFor="ai-show-voice">Browser audio</Label>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">
-                  {entitlements.browserVoice
-                    ? "Included on Voice"
-                    : "Requires Voice"}
-                </p>
-              </div>
-              <Switch
-                id="ai-show-voice"
-                checked={Boolean(config.agent.showVoiceChat)}
-                disabled={!entitlements.browserVoice || saving}
-                onCheckedChange={(showVoiceChat) =>
-                  void patchAgent({ showVoiceChat })
-                }
-              />
-            </div>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Button
-                type="button"
-                size="sm"
-                disabled={saving || (!liveChat && !liveVoice)}
-                onClick={() => void patchAgent({}, { publish: true })}
-              >
-                Publish Orb to public card
-              </Button>
-              <Button asChild size="sm" variant="outline">
-                <Link href={`/p/${siteSlug}`} target="_blank">
-                  Open public page <ArrowUpRight className="size-3.5" />
-                </Link>
-              </Button>
-            </div>
-            {message ? (
-              <p className="text-xs text-muted-foreground">{message}</p>
-            ) : null}
-          </>
-        )}
-      </CardContent>
-    </Card>
   );
 }
 
@@ -538,9 +411,9 @@ export function VoiceAgentScreen() {
     }
   }, [isSyncing, refresh, workspaceReady]);
 
-  // Background enrich once the workspace is ready — do not block the list UI.
+  // Background enrich once entitled — skip on Core (no AI Agent).
   useEffect(() => {
-    if (!workspaceReady) return;
+    if (!workspaceReady || !entitlements.hasAiAgent) return;
     let cancelled = false;
     void Promise.resolve(syncRecentConversationsAction())
       .then(() => {
@@ -552,25 +425,90 @@ export function VoiceAgentScreen() {
     return () => {
       cancelled = true;
     };
-  }, [workspaceReady, refresh]);
+  }, [workspaceReady, entitlements.hasAiAgent, refresh]);
+
+  const [configureSaving, setConfigureSaving] = useState(false);
+  const [configureMessage, setConfigureMessage] = useState<string | null>(null);
+  const siteDraft = useServerData(
+    () => getCurrentDraftAction(),
+    [organization?._id, refreshKey],
+    { enabled: workspaceReady },
+  );
+
+  async function applyAgentConfigure(draft: AgentConfigureDraft) {
+    if (!entitlements.hasAiAgent) {
+      throw new Error("AI Agent requires a Pro or Voice plan.");
+    }
+    if (!siteDraft?.site.draft) {
+      throw new Error("Public site draft is not ready yet.");
+    }
+    setConfigureSaving(true);
+    setConfigureMessage(null);
+    try {
+      const businessName =
+        siteDraft.site.draft.businessName || organization?.name || "our team";
+      const showWebChat =
+        (draft.surface === "chat" || draft.surface === "both") &&
+        entitlements.webAgent;
+      const showVoiceChat =
+        (draft.surface === "voice" || draft.surface === "both") &&
+        entitlements.browserVoice;
+      const next: SiteConfig = {
+        ...siteDraft.site.draft,
+        agent: {
+          ...siteDraft.site.draft.agent,
+          showWebChat,
+          showVoiceChat,
+          welcomeMessage: resolveGreeting(draft, businessName),
+          persona: draft.persona,
+          voicePreset: draft.voice,
+          turnEagerness: draft.pace,
+          language: draft.language,
+        },
+      };
+      await updateDraftAction({ config: next });
+      await publishSiteAction();
+      setConfigureMessage(
+        "Saved and published. The Orb on your public card uses these settings.",
+      );
+      refresh();
+    } finally {
+      setConfigureSaving(false);
+    }
+  }
 
   function openConversation(conversation: Conversation) {
     setSelectedId(conversation._id);
     setDetailOpen(true);
   }
 
+  const aiLocked = entitlements.isLoaded && !entitlements.hasAiAgent;
+  const aiChecking = !entitlements.isLoaded;
+
   return (
     <>
       <ScreenHeader
         eyebrow="AI channel control"
         title="AI Agent"
-        description="Test text chat and browser audio, inspect recent conversations, and manage the public AI experience for this organization."
+        description={
+          aiLocked
+            ? "AI Agent is included on Pro and Voice — not on Core."
+            : "Configure your concierge with simple presets, then test and review conversations."
+        }
         action={
-          <Button asChild variant="outline" className="bg-white">
-            <Link href={`/app/${orgSlug}/public-site`}>
-              Public experience <ArrowUpRight />
-            </Link>
-          </Button>
+          aiLocked ? (
+            <Button asChild className="bg-primary text-primary-foreground">
+              <Link href={`/app/${orgSlug}/billing`}>
+                Compare plans <ArrowUpRight />
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="outline" className="bg-white">
+              <Link href={`/app/${orgSlug}/public-site`}>
+                Public experience <ArrowUpRight />
+              </Link>
+            </Button>
+          )
         }
       />
 
@@ -579,18 +517,48 @@ export function VoiceAgentScreen() {
         <FeatureEntitlementCard feature="browser_voice" />
       </div>
 
-      <section className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <OrbDemo
-          small={!(entitlements.webAgent && entitlements.browserVoice)}
-          title="Concierge orb"
-          description="This is the AI launcher visitors see on your public business card when text chat or browser audio is enabled."
-          className="bg-white"
-        />
-        <PublicAgentSurfaceCard
-          entitlements={entitlements}
-          orgSlug={orgSlug}
-          workspaceReady={workspaceReady}
-        />
+      {aiChecking ? (
+        <Card className="mt-6 bg-white">
+          <CardContent className="grid min-h-48 place-items-center py-10 text-center text-sm text-muted-foreground">
+            <div>
+              <Activity className="mx-auto mb-3 size-5 animate-pulse text-primary" />
+              Checking organization plan…
+            </div>
+          </CardContent>
+        </Card>
+      ) : aiLocked ? (
+        <AiAgentPlanLock orgSlug={orgSlug} className="mt-6" />
+      ) : (
+        <>
+      <section className="mt-6">
+        {!workspaceReady || !siteDraft?.site.draft ? (
+          <div className="rounded-2xl border border-black/10 bg-white px-5 py-10 text-center text-sm text-muted-foreground">
+            Preparing agent configure wizard…
+          </div>
+        ) : (
+          <AgentConfigureWizard
+            businessName={
+              siteDraft.site.draft.businessName || organization?.name || "our team"
+            }
+            entitlements={entitlements}
+            saving={configureSaving}
+            initial={{
+              persona: siteDraft.site.draft.agent.persona,
+              voice: siteDraft.site.draft.agent.voicePreset,
+              pace: siteDraft.site.draft.agent.turnEagerness,
+              language: siteDraft.site.draft.agent.language,
+              surface: siteDraft.site.draft.agent.showVoiceChat
+                ? siteDraft.site.draft.agent.showWebChat
+                  ? "both"
+                  : "voice"
+                : "chat",
+            }}
+            onApply={applyAgentConfigure}
+          />
+        )}
+        {configureMessage ? (
+          <p className="mt-3 text-xs text-muted-foreground">{configureMessage}</p>
+        ) : null}
       </section>
 
       <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
@@ -850,6 +818,8 @@ export function VoiceAgentScreen() {
         open={detailOpen}
         onOpenChange={setDetailOpen}
       />
+        </>
+      )}
     </>
   );
 }

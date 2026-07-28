@@ -108,6 +108,7 @@ export function createAgentDynamicVariables({
   textChatEnabled,
   voiceChatEnabled,
   bookingInstruction,
+  personaGuidance,
 }: {
   siteSlug: string;
   businessName: string;
@@ -126,6 +127,7 @@ export function createAgentDynamicVariables({
   textChatEnabled?: boolean;
   voiceChatEnabled?: boolean;
   bookingInstruction?: string;
+  personaGuidance?: string;
 }): Record<string, string> {
   const formatter = new Intl.NumberFormat(locale, {
     style: "currency",
@@ -178,6 +180,11 @@ export function createAgentDynamicVariables({
     interaction_channel: "web",
     text_chat_enabled: textChatEnabled ? "true" : "false",
     voice_chat_enabled: voiceChatEnabled ? "true" : "false",
+    persona_guidance: asVar(
+      personaGuidance ||
+        "Be a warm front-desk concierge. Greet visitors, answer common questions briefly, and help them book when ready.",
+      1_500,
+    ),
     contact_number_policy: asVar(
       "This is a React web session, including text chat or browser audio. The first reply after detecting a booking, booking lookup, reschedule, cancellation, callback, or other contact-dependent request must ask for a contact phone number before giving directions or collecting other details. Confirm the number, then continue. General information does not require a phone number.",
     ),

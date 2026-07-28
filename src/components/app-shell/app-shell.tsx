@@ -13,6 +13,7 @@ import {
   Clock3,
   CreditCard,
   LayoutDashboard,
+  LockKeyhole,
   PanelsTopLeft,
   Settings2,
   Sparkles,
@@ -43,6 +44,7 @@ import { cn } from "@/lib/utils";
 import {
   type Terminology,
 } from "@/components/dashboard/data";
+import { useFeatureEntitlements } from "@/components/dashboard/feature-gates";
 import { getCurrentDraftAction } from "@/app/actions/dashboard";
 import { useServerData } from "@/hooks/use-server-data";
 import {
@@ -107,6 +109,9 @@ function WorkspaceNavigation({
   orgSlug: string;
 }) {
   const pathname = usePathname();
+  const entitlements = useFeatureEntitlements();
+  const aiAgentLocked =
+    entitlements.isLoaded && !entitlements.hasAiAgent;
 
   return (
     <>
@@ -128,25 +133,33 @@ function WorkspaceNavigation({
                   ? pathname === href || pathname.startsWith(`${href}/`)
                   : pathname === href;
                 const Icon = item.icon;
+                const locked =
+                  item.segment === "voice-agent" && aiAgentLocked;
 
                 return (
                   <SidebarMenuItem key={item.segment || "overview"}>
                     <SidebarMenuButton
                       asChild
                       isActive={isActive}
-                      tooltip={item.label}
+                      tooltip={
+                        locked ? `${item.label} · Upgrade` : item.label
+                      }
                       className={cn(
                         "h-9 rounded-md px-2.5 text-[13px] transition-colors",
                         isActive &&
                           "bg-foreground text-background hover:bg-foreground hover:text-background",
+                        locked && !isActive && "text-sidebar-foreground/55",
                       )}
                     >
                       <Link href={href}>
                         <Icon className="size-4" />
                         <span>{item.label}</span>
-                        {item.segment === "voice-agent" && (
-                          <span className="ml-auto size-1.5 rounded-full bg-primary group-data-[collapsible=icon]:hidden" />
-                        )}
+                        {item.segment === "voice-agent" &&
+                          (locked ? (
+                            <LockKeyhole className="ml-auto size-3.5 opacity-70 group-data-[collapsible=icon]:hidden" />
+                          ) : (
+                            <span className="ml-auto size-1.5 rounded-full bg-primary group-data-[collapsible=icon]:hidden" />
+                          ))}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

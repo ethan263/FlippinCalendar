@@ -41,11 +41,46 @@ const featureCopy = {
 
 export function useFeatureEntitlements() {
   const { has, isLoaded } = useAuth();
+  const webAgent = Boolean(has?.({ feature: "web_agent" }));
+  const browserVoice = Boolean(has?.({ feature: "browser_voice" }));
   return {
     isLoaded,
-    webAgent: Boolean(has?.({ feature: "web_agent" })),
-    browserVoice: Boolean(has?.({ feature: "browser_voice" })),
+    webAgent,
+    browserVoice,
+    /** Pro (`web_agent`) or Voice (`browser_voice`). Core / free_org has neither. */
+    hasAiAgent: webAgent || browserVoice,
   };
+}
+
+/** Full-page lock when Core (free) tries to open AI Agent. */
+export function AiAgentPlanLock({
+  orgSlug,
+  className,
+}: {
+  orgSlug: string;
+  className?: string;
+}) {
+  return (
+    <Card className={cn("border-dashed bg-[#f7f5ef]", className)}>
+      <CardContent className="flex flex-col items-center px-6 py-12 text-center sm:px-10">
+        <span className="grid size-12 place-items-center rounded-full border border-black/10 bg-white text-muted-foreground">
+          <LockKeyhole className="size-5" />
+        </span>
+        <h2 className="mt-5 font-heading text-2xl font-semibold tracking-tight">
+          AI Agent is on Pro and Voice
+        </h2>
+        <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+          Core includes bookings and your public page. Upgrade to Pro for the
+          ElevenLabs web concierge, or Voice for browser audio conversations.
+        </p>
+        <Button asChild className="mt-6">
+          <Link href={`/app/${orgSlug}/billing`}>
+            Compare plans <ArrowUpRight className="size-3.5" />
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function FeatureEntitlementCard({

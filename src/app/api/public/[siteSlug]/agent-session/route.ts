@@ -9,6 +9,13 @@ import {
   requestPublicSession,
 } from "@/lib/data/agents";
 import { resolveElevenLabsAgentId } from "@/lib/elevenlabs/config";
+import {
+  buildSessionOverrides,
+  resolvePersonaGuidance,
+  resolveVoiceId,
+  type AgentPersonaId,
+  type AgentVoiceId,
+} from "@/lib/elevenlabs/free-plan-presets";
 import { getPublishedBySlug } from "@/lib/data/public-site";
 import { DEFAULT_TERMINOLOGY } from "@/lib/data/shared";
 
@@ -122,6 +129,10 @@ export async function POST(
       });
 
     // Signed URL only — never return the API key or raw agent id to the browser.
+    const agentConfig = published.site.config.agent;
+    const voicePreset = agentConfig.voicePreset as AgentVoiceId | undefined;
+    const persona = agentConfig.persona as AgentPersonaId | undefined;
+
     return NextResponse.json(
       {
         signedUrl,
@@ -143,6 +154,15 @@ export async function POST(
           externalUserId: published.organization.clerkOrgId,
           textChatEnabled: textEntitled,
           voiceChatEnabled: voiceEntitled,
+          personaGuidance: persona
+            ? resolvePersonaGuidance(persona)
+            : undefined,
+        }),
+        overrides: buildSessionOverrides({
+          welcomeMessage: agentConfig.welcomeMessage,
+          language: agentConfig.language,
+          voiceId: voicePreset ? resolveVoiceId(voicePreset) : null,
+          pace: agentConfig.turnEagerness,
         }),
       },
       {

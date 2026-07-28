@@ -107,6 +107,26 @@ export function sanitizeSiteConfig(config: SiteConfig): SiteConfig {
         "agent.welcomeMessage",
         500,
       ),
+      ...(config.agent.persona === "front_desk" ||
+      config.agent.persona === "booking_specialist" ||
+      config.agent.persona === "knowledge_guide"
+        ? { persona: config.agent.persona }
+        : {}),
+      ...(config.agent.voicePreset === "eric" ||
+      config.agent.voicePreset === "sarah" ||
+      config.agent.voicePreset === "george"
+        ? { voicePreset: config.agent.voicePreset }
+        : {}),
+      ...(config.agent.turnEagerness === "patient" ||
+      config.agent.turnEagerness === "normal" ||
+      config.agent.turnEagerness === "eager"
+        ? { turnEagerness: config.agent.turnEagerness }
+        : {}),
+      ...(config.agent.language === "en" ||
+      config.agent.language === "es" ||
+      config.agent.language === "fr"
+        ? { language: config.agent.language }
+        : {}),
     },
   };
 }

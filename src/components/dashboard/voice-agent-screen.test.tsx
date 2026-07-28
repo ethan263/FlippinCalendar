@@ -18,6 +18,7 @@ const controls = {
 const entitlementState = {
   browserVoice: false,
   webAgent: false,
+  hasAiAgent: false,
   isLoaded: true,
 };
 
@@ -44,6 +45,12 @@ vi.mock("@elevenlabs/react", () => ({
 
 vi.mock("@/components/dashboard/feature-gates", () => ({
   FeatureEntitlementCard: () => <div data-testid="feature-card" />,
+  AiAgentPlanLock: ({ orgSlug }: { orgSlug: string }) => (
+    <div data-testid="ai-agent-plan-lock">
+      <a href={`/app/${orgSlug}/billing`}>Compare plans</a>
+      <p>AI Agent is on Pro and Voice</p>
+    </div>
+  ),
   useFeatureEntitlements: () => entitlementState,
 }));
 
@@ -59,8 +66,15 @@ vi.mock("@/app/actions/dashboard", () => ({
   getConversationAnalyticsAction: vi.fn(),
   getConversationDetailAction: vi.fn(),
   getCurrentAgentAction: vi.fn(),
+  getCurrentDraftAction: vi.fn(),
   listRecentConversationsAction: vi.fn(),
+  publishSiteAction: vi.fn().mockResolvedValue(undefined),
+  updateDraftAction: vi.fn().mockResolvedValue(undefined),
   syncRecentConversationsAction: vi.fn().mockResolvedValue({ imported: 0, scanned: 0 }),
+}));
+
+vi.mock("@/components/dashboard/agent-configure-wizard", () => ({
+  AgentConfigureWizard: () => <div data-testid="agent-configure-wizard" />,
 }));
 
 function setServerDataResponses(options: {
@@ -69,8 +83,8 @@ function setServerDataResponses(options: {
 }) {
   let call = 0;
   useServerDataMock.mockImplementation(() => {
-    // VoiceAgentScreen calls useServerData 3× per render; ConversationDetailDialog adds a 4th.
-    const slot = call % 4;
+    // VoiceAgentScreen: agent, analytics, conversations, siteDraft; detail dialog is 5th.
+    const slot = call % 5;
     call += 1;
     if (slot === 0) return { integration: { webEnabled: options.webEnabled } };
     if (slot === 1)
@@ -82,6 +96,25 @@ function setServerDataResponses(options: {
         outcomes: [],
       };
     if (slot === 2) return options.conversations ?? [];
+    if (slot === 3)
+      return {
+        site: {
+          siteSlug: "acme",
+          draft: {
+            businessName: "Acme",
+            agent: {
+              showWebChat: true,
+              showVoiceChat: false,
+              showElevenLabsWidget: false,
+              welcomeMessage: "Hello",
+              persona: "front_desk",
+              voicePreset: "eric",
+              turnEagerness: "normal",
+              language: "en",
+            },
+          },
+        },
+      };
     return null;
   });
 }
@@ -91,6 +124,7 @@ describe("dashboard voice-agent action buttons", () => {
     statusState.status = "disconnected";
     entitlementState.browserVoice = false;
     entitlementState.webAgent = false;
+    entitlementState.hasAiAgent = false;
     entitlementState.isLoaded = true;
     controls.startSession.mockReset();
     controls.endSession.mockReset();
@@ -101,9 +135,26 @@ describe("dashboard voice-agent action buttons", () => {
     vi.unstubAllGlobals();
   });
 
+  it("locks the full AI Agent screen on Core (no web_agent / browser_voice)", () => {
+    setServerDataResponses({ webEnabled: true });
+    render(<VoiceAgentScreen />);
+    expect(screen.getByTestId("ai-agent-plan-lock")).toBeInTheDocument();
+    expect(
+      screen.getByText("AI Agent is on Pro and Voice"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Start voice test" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("agent-configure-wizard"),
+    ).not.toBeInTheDocument();
+  });
+
   it(
     "routes disabled browser voice state to Compare plans",
     () => {
+      entitlementState.webAgent = true;
+      entitlementState.hasAiAgent = true;
       setServerDataResponses({ webEnabled: true });
       render(<VoiceAgentScreen />);
       expect(
@@ -114,6 +165,8 @@ describe("dashboard voice-agent action buttons", () => {
   );
 
   it("routes setup-incomplete state to Open settings", () => {
+    entitlementState.webAgent = true;
+    entitlementState.hasAiAgent = true;
     setServerDataResponses({ webEnabled: false });
     render(<VoiceAgentScreen />);
     expect(screen.getByRole("link", { name: "Open settings" })).toHaveAttribute(
@@ -124,6 +177,7 @@ describe("dashboard voice-agent action buttons", () => {
 
   it("shows pending state while connecting a voice test", () => {
     entitlementState.browserVoice = true;
+    entitlementState.hasAiAgent = true;
     setServerDataResponses({ webEnabled: true });
     statusState.status = "connecting";
 
@@ -134,6 +188,7 @@ describe("dashboard voice-agent action buttons", () => {
 
   it("waits for entitlement load before offering Compare plans", () => {
     entitlementState.isLoaded = false;
+    entitlementState.hasAiAgent = false;
     setServerDataResponses({ webEnabled: true });
     render(<VoiceAgentScreen />);
     expect(
@@ -144,6 +199,7 @@ describe("dashboard voice-agent action buttons", () => {
 
   it("shows actionable error when microphone access fails", async () => {
     entitlementState.browserVoice = true;
+    entitlementState.hasAiAgent = true;
     setServerDataResponses({ webEnabled: true });
 
     vi.stubGlobal("navigator", {
@@ -165,6 +221,7 @@ describe("dashboard voice-agent action buttons", () => {
 
   it("shows session API entitlement error and never starts ElevenLabs", async () => {
     entitlementState.browserVoice = true;
+    entitlementState.hasAiAgent = true;
     setServerDataResponses({ webEnabled: true });
 
     const trackStop = vi.fn();
@@ -197,6 +254,7 @@ describe("dashboard voice-agent action buttons", () => {
 
   it("starts voice test after mic permission and signed session URL", async () => {
     entitlementState.browserVoice = true;
+    entitlementState.hasAiAgent = true;
     setServerDataResponses({ webEnabled: true });
 
     vi.stubGlobal("navigator", {
@@ -234,6 +292,7 @@ describe("dashboard voice-agent action buttons", () => {
 
   it("disables end button while stop is pending", async () => {
     entitlementState.browserVoice = true;
+    entitlementState.hasAiAgent = true;
     setServerDataResponses({ webEnabled: true });
     statusState.status = "connected";
 

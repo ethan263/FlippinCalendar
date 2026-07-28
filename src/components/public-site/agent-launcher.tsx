@@ -41,6 +41,11 @@ import { cn } from "@/lib/utils";
 type SessionResponse = {
   signedUrl?: string;
   dynamicVariables?: Record<string, string>;
+  overrides?: {
+    agent?: { firstMessage?: string; language?: string };
+    tts?: { voiceId?: string };
+    turn?: { turnEagerness?: "patient" | "normal" | "eager" };
+  };
 };
 
 type ChatMessage = {
@@ -288,6 +293,7 @@ function AgentLauncherInner({
           signedUrl: session.signedUrl,
           connectionType: "websocket",
           textOnly: kind === "text",
+          ...(session.overrides ? { overrides: session.overrides } : {}),
           onDisconnect: () => {
             void recordConversation();
           },

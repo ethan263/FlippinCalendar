@@ -58,6 +58,10 @@ export type SiteConfig = {
     showVoiceChat: boolean;
     showElevenLabsWidget: boolean;
     welcomeMessage: string;
+    persona?: "front_desk" | "booking_specialist" | "knowledge_guide";
+    voicePreset?: "eric" | "sarah" | "george";
+    turnEagerness?: "patient" | "normal" | "eager";
+    language?: "en" | "es" | "fr";
   };
 };
 
@@ -94,6 +98,10 @@ export function defaultSiteConfig(businessName: string): SiteConfig {
       showVoiceChat: true,
       showElevenLabsWidget: false,
       welcomeMessage: `Hi, I'm the ${businessName} concierge. How can I help?`,
+      persona: "front_desk",
+      voicePreset: "eric",
+      turnEagerness: "normal",
+      language: "en",
     },
   };
 }
