@@ -36,16 +36,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import type { SessionAgentOverrides } from "@/lib/elevenlabs/free-plan-presets";
 import { cn } from "@/lib/utils";
 
 type SessionResponse = {
   signedUrl?: string;
   dynamicVariables?: Record<string, string>;
-  overrides?: {
-    agent?: { firstMessage?: string; language?: string };
-    tts?: { voiceId?: string };
-    turn?: { turnEagerness?: "patient" | "normal" | "eager" };
-  };
+  overrides?: SessionAgentOverrides;
 };
 
 type ChatMessage = {

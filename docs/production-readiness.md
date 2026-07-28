@@ -1,7 +1,9 @@
 # Production readiness — flippincalendar.co.za
 
-**Status:** prepared, **not** cut over.  
-**Edge:** Cloudflare DNS / WAF / CDN in front of **Vercel** Next.js hosting.
+**Status:** build unblocked locally; **not** cut over to custom domain.  
+**Live app URL today:** Vercel project `trimr` on `*.vercel.app` (production deploys from branch `Herpies`).  
+**Blockers for real go-live:** Clerk **Production** keys + `NEXT_PUBLIC_APP_URL` + domain on Vercel + Cloudflare NS cutover.  
+**Edge (target):** Cloudflare DNS / WAF / CDN in front of **Vercel** Next.js hosting.
 
 ## Senior brief (canonical)
 

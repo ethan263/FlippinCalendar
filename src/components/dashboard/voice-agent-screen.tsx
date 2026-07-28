@@ -67,17 +67,14 @@ import { useWorkspace } from "@/components/dashboard/workspace-context";
 import {
   resolveGreeting,
   type AgentConfigureDraft,
+  type SessionAgentOverrides,
 } from "@/lib/elevenlabs/free-plan-presets";
 import { AgentConfigureWizard } from "@/components/dashboard/agent-configure-wizard";
 
 type AgentSessionResponse = {
   signedUrl: string;
   dynamicVariables: Record<string, string>;
-  overrides?: {
-    agent?: { firstMessage?: string; language?: string };
-    tts?: { voiceId?: string };
-    turn?: { turnEagerness?: "patient" | "normal" | "eager" };
-  };
+  overrides?: SessionAgentOverrides;
 };
 
 async function recordOperatorConversation(conversationId: string) {

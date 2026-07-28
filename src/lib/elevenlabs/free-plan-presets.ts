@@ -200,7 +200,7 @@ export function resolvePersonaGuidance(persona: AgentPersonaId): string {
 export type SessionAgentOverrides = {
   agent?: {
     firstMessage?: string;
-    language?: string;
+    language?: AgentLanguageId;
   };
   tts?: {
     voiceId?: string;
@@ -210,16 +210,26 @@ export type SessionAgentOverrides = {
   };
 };
 
+function resolveSessionLanguage(
+  language?: string | null,
+): AgentLanguageId | undefined {
+  if (language === "en" || language === "es" || language === "fr") {
+    return language;
+  }
+  return undefined;
+}
+
 export function buildSessionOverrides(args: {
   welcomeMessage: string;
   language?: string | null;
   voiceId?: string | null;
   pace?: string | null;
 }): SessionAgentOverrides {
+  const language = resolveSessionLanguage(args.language);
   return {
     agent: {
       firstMessage: args.welcomeMessage,
-      ...(args.language ? { language: args.language } : {}),
+      ...(language ? { language } : {}),
     },
     tts: {
       ...(args.voiceId ? { voiceId: args.voiceId } : {}),
