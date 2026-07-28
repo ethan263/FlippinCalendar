@@ -38,6 +38,10 @@ export const metadata: Metadata = {
   },
   description:
     "Run bookings, customer conversations, and a text-and-audio web concierge from one multi-tenant workspace.",
+  icons: {
+    icon: [{ url: "/icon.png", type: "image/png" }],
+    apple: [{ url: "/apple-icon.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({

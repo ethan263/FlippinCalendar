@@ -374,12 +374,12 @@ function AgentLauncherInner({
   return (
     <Card
       id="assistant"
-      className="h-full min-h-[30rem] scroll-mt-24 gap-0 overflow-hidden border-foreground/10 bg-card/95 py-0 shadow-[0_35px_100px_-45px_color-mix(in_srgb,var(--foreground)_45%,transparent)] backdrop-blur-xl sm:min-h-[36rem]"
+      className="h-full min-h-0 scroll-mt-24 gap-0 overflow-hidden border-foreground/10 bg-card/95 py-0 shadow-[0_35px_100px_-45px_color-mix(in_srgb,var(--foreground)_45%,transparent)] backdrop-blur-xl sm:min-h-[30rem]"
     >
-      <CardHeader className="relative border-b bg-primary p-5 text-primary-foreground sm:p-6">
+      <CardHeader className="relative shrink-0 border-b bg-primary p-4 text-primary-foreground sm:p-6">
         <div className="absolute inset-0 opacity-15 [background-image:radial-gradient(circle_at_16%_0%,white_0,transparent_38%)]" />
         <div className="relative flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
+          <div className="flex min-w-0 items-start gap-3">
             <div className="grid size-11 shrink-0 place-items-center rounded-full bg-primary-foreground/15 ring-1 ring-primary-foreground/20">
               {isConnected && mode === "speaking" ? (
                 <AudioLines className="size-5 animate-pulse" aria-hidden="true" />
@@ -387,11 +387,11 @@ function AgentLauncherInner({
                 <Sparkles className="size-5" aria-hidden="true" />
               )}
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-[0.65rem] font-semibold tracking-[0.16em] text-primary-foreground/60 uppercase">
                 Available now
               </p>
-              <CardTitle className="mt-1 text-lg text-primary-foreground">
+              <CardTitle className="mt-1 break-words text-lg text-primary-foreground">
                 {businessName} AI concierge
               </CardTitle>
               <p className="mt-1 text-xs leading-5 text-primary-foreground/70">
@@ -411,12 +411,12 @@ function AgentLauncherInner({
         </div>
       </CardHeader>
 
-      <CardContent className="flex min-h-0 flex-1 flex-col gap-4 p-5 sm:p-6">
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain p-4 sm:gap-4 sm:p-6">
         {timeline.length > 0 ? (
           <div
             ref={transcriptRef}
             onScroll={handleTranscriptScroll}
-            className="h-[min(22rem,45svh)] min-h-44 shrink-0 space-y-3 overflow-y-auto overscroll-contain rounded-xl bg-muted/45 p-3 [scrollbar-gutter:stable]"
+            className="max-h-[min(18rem,40dvh)] min-h-36 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-xl bg-muted/45 p-3 [scrollbar-gutter:stable] sm:max-h-[min(22rem,45svh)] sm:min-h-44"
             role="log"
             aria-live="polite"
             aria-relevant="additions text"
@@ -430,7 +430,7 @@ function AgentLauncherInner({
                 <div
                   key={item.id}
                   className={cn(
-                    "w-fit max-w-[88%] rounded-xl px-3 py-2 text-sm leading-5",
+                    "w-fit max-w-[88%] break-words rounded-xl px-3 py-2 text-sm leading-5",
                     item.role === "user"
                       ? "ms-auto bg-primary text-primary-foreground"
                       : "bg-card text-card-foreground shadow-sm ring-1 ring-foreground/8",
@@ -442,9 +442,9 @@ function AgentLauncherInner({
             )}
           </div>
         ) : (
-          <div className="flex h-[min(22rem,45svh)] min-h-44 shrink-0 flex-col justify-between rounded-xl bg-muted/60 p-5">
+          <div className="flex min-h-36 max-h-[min(18rem,40dvh)] flex-1 flex-col justify-between rounded-xl bg-muted/60 p-4 sm:max-h-[min(22rem,45svh)] sm:min-h-44 sm:p-5">
             <MessageCircle className="size-5 text-primary" aria-hidden="true" />
-            <p className="mt-6 font-heading text-xl leading-7 tracking-tight">
+            <p className="mt-4 break-words font-heading text-lg leading-7 tracking-tight sm:mt-6 sm:text-xl">
               {welcomeMessage ||
                 `Hi! How can I help you with ${businessName} today?`}
             </p>

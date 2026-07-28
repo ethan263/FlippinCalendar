@@ -28,8 +28,8 @@ const stackVariants: Variants = {
   exit: (direction: StackDirection) =>
     direction > 0
       ? // Fade back into the stack behind the next card
-        { opacity: 0, y: -36, scale: 0.88, filter: "blur(3px)" }
-      : { opacity: 0, y: 48, scale: 1.02, filter: "blur(0px)" },
+        { opacity: 0, y: -28, scale: 0.94, filter: "blur(2px)" }
+      : { opacity: 0, y: 36, scale: 1.01, filter: "blur(0px)" },
 };
 
 type StackedFlowCardsProps = {
@@ -55,13 +55,13 @@ export function StackedFlowCards({
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative min-w-0", className)}>
       {!reduceMotion && depth > 0
         ? Array.from({ length: depth }, (_, index) => (
             <div
               key={`stack-depth-${index}`}
               aria-hidden
-              className="pointer-events-none absolute inset-x-3 rounded-[1.25rem] border border-foreground/6 bg-background/55 shadow-[0_12px_40px_-28px_rgba(20,16,12,0.45)]"
+              className="pointer-events-none absolute inset-x-2 rounded-[1.25rem] border border-foreground/6 bg-background/55 shadow-[0_12px_40px_-28px_rgba(20,16,12,0.45)] sm:inset-x-3"
               style={{
                 top: -(index + 1) * 7,
                 bottom: (index + 1) * 5,
@@ -73,8 +73,8 @@ export function StackedFlowCards({
           ))
         : null}
 
-      <div className="relative z-[1] grid">
-        <AnimatePresence mode="sync" custom={direction} initial={false}>
+      <div className="relative z-[1] min-w-0">
+        <AnimatePresence mode="wait" custom={direction} initial={false}>
           <motion.div
             key={stepKey}
             custom={direction}
@@ -91,7 +91,7 @@ export function StackedFlowCards({
                     opacity: { duration: 0.32 },
                   }
             }
-            className="col-start-1 row-start-1 w-full"
+            className="w-full min-w-0"
             style={{ transformOrigin: "50% 20%" }}
           >
             {children}

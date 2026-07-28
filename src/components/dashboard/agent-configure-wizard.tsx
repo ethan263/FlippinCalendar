@@ -103,11 +103,11 @@ function OptionCard({
         {icon ?? <Sparkles className="size-4" />}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-2 text-sm font-semibold">
+        <span className="flex items-center gap-2 break-words text-sm font-semibold">
           {title}
-          {selected ? <Check className="size-3.5 text-primary" /> : null}
+          {selected ? <Check className="size-3.5 shrink-0 text-primary" /> : null}
         </span>
-        <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
+        <span className="mt-0.5 block break-words text-xs leading-5 text-muted-foreground">
           {hint}
         </span>
       </span>
@@ -129,10 +129,10 @@ function StepHeading({
       <p className="text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
         {eyebrow}
       </p>
-      <h3 className="mt-1 font-heading text-2xl font-semibold tracking-tight">
+      <h3 className="mt-1 break-words font-heading text-xl font-semibold tracking-tight sm:text-2xl">
         {title}
       </h3>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
+      <p className="mt-2 break-words text-sm leading-6 text-muted-foreground">{description}</p>
     </div>
   );
 }
@@ -215,9 +215,9 @@ export function AgentConfigureWizard({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-black/10 bg-[#faf9f5]">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/8 px-5 py-4">
-        <div>
+    <div className="flex max-h-[min(90dvh,52rem)] min-w-0 flex-col overflow-hidden rounded-2xl border border-black/10 bg-[#faf9f5]">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-black/8 px-4 py-4 sm:px-5">
+        <div className="min-w-0">
           <p className="text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
             Configure · ElevenLabs Free-compatible
           </p>
@@ -225,15 +225,20 @@ export function AgentConfigureWizard({
             Step {stepIndex + 1} of {STEPS.length}
           </p>
         </div>
-        <p className="max-w-xs text-[11px] leading-5 text-muted-foreground">
+        <p className="max-w-xs break-words text-[11px] leading-5 text-muted-foreground">
           Stock voices, multilingual, widget/chat, knowledge — no cloning or
           telephony on Free.
         </p>
       </div>
 
-      <div className="grid gap-0 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.85fr)]">
-        <div className="p-5 sm:p-6">
-          <StackedFlowCards stepKey={step} direction={direction} depth={2}>
+      <div className="grid min-h-0 min-w-0 flex-1 gap-0 lg:grid-cols-[minmax(0,1.15fr)_minmax(14rem,0.85fr)]">
+        <div className="flex min-h-0 min-w-0 flex-col overflow-y-auto overscroll-contain p-4 sm:p-6">
+          <StackedFlowCards
+            stepKey={step}
+            direction={direction}
+            depth={2}
+            className="min-w-0"
+          >
             {step === "persona" ? (
               <div>
                 <StepHeading
@@ -498,7 +503,7 @@ export function AgentConfigureWizard({
             </p>
           ) : null}
 
-          <div className="mt-6 flex items-center justify-between gap-3 border-t border-black/8 pt-4">
+          <div className="mt-6 flex shrink-0 items-center justify-between gap-3 border-t border-black/8 pt-4">
             <Button
               type="button"
               variant="ghost"
@@ -522,7 +527,7 @@ export function AgentConfigureWizard({
           </div>
         </div>
 
-        <aside className="border-t border-black/8 bg-[#20201e] p-5 text-white lg:border-t-0 lg:border-l lg:border-black/20">
+        <aside className="min-w-0 border-t border-black/8 bg-[#20201e] p-4 text-white sm:p-5 lg:overflow-y-auto lg:border-t-0 lg:border-l lg:border-black/20">
           <OrbDemo
             small
             hideControls

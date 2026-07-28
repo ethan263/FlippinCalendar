@@ -228,10 +228,10 @@ function StepHeading({
       <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
         {eyebrow}
       </p>
-      <h3 className="font-heading text-2xl leading-tight tracking-[-0.035em] sm:text-3xl">
+      <h3 className="break-words font-heading text-xl leading-tight tracking-[-0.035em] sm:text-3xl">
         {title}
       </h3>
-      <p className="max-w-xl text-sm leading-6 text-muted-foreground">
+      <p className="max-w-xl break-words text-sm leading-6 text-muted-foreground">
         {description}
       </p>
     </div>
@@ -458,16 +458,18 @@ export function BookingFlow({
   }
 
   return (
-    <Card className="mx-auto w-full max-w-6xl overflow-visible bg-card/80 py-0 shadow-[0_24px_80px_-44px_color-mix(in_srgb,var(--foreground)_35%,transparent)] backdrop-blur-sm">
-      <div className="grid min-h-148 lg:grid-cols-[15rem_minmax(0,1fr)]">
-        <aside className="border-b bg-muted/45 p-5 lg:border-e lg:border-b-0 lg:p-6">
+    <Card className="mx-auto w-full max-w-6xl min-w-0 overflow-x-clip bg-card/80 py-0 shadow-[0_24px_80px_-44px_color-mix(in_srgb,var(--foreground)_35%,transparent)] backdrop-blur-sm">
+      <div className="grid min-h-0 min-w-0 lg:min-h-148 lg:grid-cols-[15rem_minmax(0,1fr)]">
+        <aside className="border-b bg-muted/45 p-4 sm:p-5 lg:border-e lg:border-b-0 lg:p-6">
           <div className="lg:sticky lg:top-6">
             <div className="flex items-center justify-between gap-4 lg:block">
-              <div>
+              <div className="min-w-0">
                 <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Book with
                 </p>
-                <p className="mt-1 font-heading text-lg leading-tight">{businessName}</p>
+                <p className="mt-1 truncate font-heading text-lg leading-tight">
+                  {businessName}
+                </p>
               </div>
               <Badge variant="outline" className="bg-background/60">
                 {currentStepIndex + 1} / {steps.length}
@@ -555,11 +557,11 @@ export function BookingFlow({
           </div>
         </aside>
 
-        <CardContent className="flex min-w-0 flex-col p-5 sm:p-8 lg:p-10">
+        <CardContent className="flex min-h-0 min-w-0 flex-col overflow-x-hidden p-4 sm:p-8 lg:p-10">
           <StackedFlowCards
             stepKey={step}
             direction={stackDirection}
-            className="flex-1"
+            className="min-w-0 flex-1"
             depth={2}
           >
             {step === "offering" ? (
@@ -920,7 +922,7 @@ export function BookingFlow({
           </StackedFlowCards>
 
           {step !== "confirmation" ? (
-            <div className="mt-8 flex items-center justify-between gap-3 border-t pt-5">
+            <div className="mt-6 flex shrink-0 items-center justify-between gap-3 border-t pt-4 sm:mt-8 sm:pt-5">
               <Button
                 type="button"
                 variant="ghost"

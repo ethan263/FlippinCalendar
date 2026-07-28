@@ -453,6 +453,11 @@ export function VoiceAgentScreen() {
       const showVoiceChat =
         (draft.surface === "voice" || draft.surface === "both") &&
         entitlements.browserVoice;
+      if (!showWebChat && !showVoiceChat) {
+        throw new Error(
+          "Pick a surface your plan includes (text chat on Pro, browser audio on Voice).",
+        );
+      }
       const next: SiteConfig = {
         ...siteDraft.site.draft,
         agent: {
@@ -467,9 +472,9 @@ export function VoiceAgentScreen() {
         },
       };
       await updateDraftAction({ config: next });
-      await publishSiteAction();
+      const published = await publishSiteAction();
       setConfigureMessage(
-        "Saved and published. The Orb on your public card uses these settings.",
+        `Published to /p/${published.siteSlug}. Open the public page to see the Orb.`,
       );
       refresh();
     } finally {
@@ -557,7 +562,18 @@ export function VoiceAgentScreen() {
           />
         )}
         {configureMessage ? (
-          <p className="mt-3 text-xs text-muted-foreground">{configureMessage}</p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            {configureMessage}{" "}
+            {siteDraft?.site.siteSlug ? (
+              <Link
+                href={`/p/${siteDraft.site.siteSlug}`}
+                target="_blank"
+                className="font-medium text-primary underline-offset-2 hover:underline"
+              >
+                Open public page
+              </Link>
+            ) : null}
+          </p>
         ) : null}
       </section>
 

@@ -251,7 +251,7 @@ export function BusinessCardSite({
       />
 
       <motion.article
-        className="relative z-10 flex h-[min(100dvh-1.5rem,52rem)] w-full max-w-md flex-col overflow-hidden rounded-[1.75rem] border border-black/8 shadow-[0_28px_90px_rgba(28,24,18,0.22)] sm:h-[min(100dvh-2.5rem,54rem)] sm:rounded-[2rem]"
+        className="relative z-10 flex h-[min(100dvh-1.5rem,52rem)] w-full max-w-md min-h-0 flex-col overflow-hidden rounded-[1.75rem] border border-black/8 shadow-[0_28px_90px_rgba(28,24,18,0.22)] sm:h-[min(100dvh-2.5rem,54rem)] sm:rounded-[2rem]"
         style={meshBackground}
         initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -266,7 +266,7 @@ export function BusinessCardSite({
           className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/25 via-transparent to-black/35"
         />
 
-        <header className="relative z-10 flex items-center justify-between gap-3 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
+        <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
           <div className="flex min-w-0 items-center gap-3">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -423,7 +423,7 @@ export function BusinessCardSite({
         <AnimatePresence>
           {panel ? (
             <motion.div
-              className="absolute inset-0 z-20 flex flex-col bg-[color-mix(in_srgb,var(--background)_92%,white)] shadow-[0_24px_80px_rgba(20,16,12,0.28)]"
+              className="absolute inset-0 z-20 flex min-h-0 flex-col overflow-hidden rounded-[inherit] bg-[color-mix(in_srgb,var(--background)_92%,white)] shadow-[0_24px_80px_rgba(20,16,12,0.28)]"
               initial={
                 reduceMotion
                   ? false
@@ -437,8 +437,8 @@ export function BusinessCardSite({
               }
               transition={transitions.page}
             >
-              <div className="flex items-center justify-between gap-3 border-b border-black/8 px-4 py-3.5 sm:px-5">
-                <p className="font-heading text-lg font-semibold tracking-[-0.02em]">
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-black/8 px-4 py-3.5 sm:px-5">
+                <p className="min-w-0 truncate font-heading text-lg font-semibold tracking-[-0.02em]">
                   {panel === "booking"
                     ? "Find a time"
                     : panel === "offerings"
@@ -458,7 +458,7 @@ export function BusinessCardSite({
                 <button
                   type="button"
                   onClick={close}
-                  className="grid size-9 place-items-center rounded-full hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40"
+                  className="grid size-9 shrink-0 place-items-center rounded-full hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40"
                   aria-label="Close"
                 >
                   <X className="size-4" />
@@ -466,7 +466,7 @@ export function BusinessCardSite({
               </div>
 
               <motion.div
-                className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5"
+                className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain break-words p-3 sm:p-5"
                 initial={reduceMotion ? false : { opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={transitions.page}
@@ -477,7 +477,7 @@ export function BusinessCardSite({
                       {weeklyHours.map((day) => (
                         <li
                           key={day.dayOfWeek}
-                          className="flex items-start justify-between gap-3 text-sm"
+                          className="flex items-start justify-between gap-3 break-words text-sm"
                         >
                           <span className="font-medium">{day.label}</span>
                           <span className="text-right text-[var(--muted)]">
@@ -499,7 +499,7 @@ export function BusinessCardSite({
                 ) : null}
 
                 {panel === "about" ? (
-                  <p className="text-sm leading-7 text-[var(--muted)]">
+                  <p className="break-words text-sm leading-7 text-[var(--muted)]">
                     {config.about}
                   </p>
                 ) : null}
@@ -599,31 +599,35 @@ export function BusinessCardSite({
                 ) : null}
 
                 {panel === "booking" ? (
-                  <BookingFlow
-                    siteSlug={siteSlug}
-                    businessName={config.businessName}
-                    offerings={offerings}
-                    teamMembers={teamMembers}
-                    terminology={organization.terminology}
-                    locale={organization.locale}
-                    currency={organization.currency}
-                    timezone={organization.timezone}
-                    maximumAdvanceDays={config.booking.maximumAdvanceDays}
-                  />
+                  <div className="min-h-0 min-w-0 flex-1">
+                    <BookingFlow
+                      siteSlug={siteSlug}
+                      businessName={config.businessName}
+                      offerings={offerings}
+                      teamMembers={teamMembers}
+                      terminology={organization.terminology}
+                      locale={organization.locale}
+                      currency={organization.currency}
+                      timezone={organization.timezone}
+                      maximumAdvanceDays={config.booking.maximumAdvanceDays}
+                    />
+                  </div>
                 ) : null}
 
                 {panel === "chat" && agentVisible ? (
-                  <AgentLauncher
-                    siteSlug={siteSlug}
-                    businessName={config.businessName}
-                    welcomeMessage={config.agent.welcomeMessage}
-                    textEnabled={textAgentVisible}
-                    voiceEnabled={voiceAgentVisible}
-                    offerings={offerings}
-                    teamMembers={teamMembers}
-                    timezone={organization.timezone}
-                    locale={organization.locale}
-                  />
+                  <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                    <AgentLauncher
+                      siteSlug={siteSlug}
+                      businessName={config.businessName}
+                      welcomeMessage={config.agent.welcomeMessage}
+                      textEnabled={textAgentVisible}
+                      voiceEnabled={voiceAgentVisible}
+                      offerings={offerings}
+                      teamMembers={teamMembers}
+                      timezone={organization.timezone}
+                      locale={organization.locale}
+                    />
+                  </div>
                 ) : null}
               </motion.div>
             </motion.div>

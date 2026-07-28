@@ -1,5 +1,7 @@
 import "server-only";
 
+import { revalidatePath } from "next/cache";
+
 import { sanitizeSiteConfig } from "@/lib/data/site-config";
 import { requiredTrimmed, slugify } from "@/lib/data/shared";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -303,6 +305,11 @@ export async function publish() {
     })
     .eq("id", siteRow.id);
   if (updateError) throw new Error(updateError.message);
+  revalidatePath(`/p/${siteRow.site_slug}`);
+  if (organization.slug) {
+    revalidatePath(`/app/${organization.slug}/public-site`);
+    revalidatePath(`/app/${organization.slug}/voice-agent`);
+  }
   return {
     siteSlug: siteRow.site_slug,
     publishedAt: ms(now)!,
