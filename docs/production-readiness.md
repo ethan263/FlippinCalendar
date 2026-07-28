@@ -1,8 +1,8 @@
 # Production readiness — flippincalendar.co.za
 
-**Status:** build unblocked locally; **not** cut over to custom domain.  
-**Live app URL today:** Vercel project `trimr` on `*.vercel.app` (production deploys from branch `Herpies`).  
-**Blockers for real go-live:** Clerk **Production** keys + `NEXT_PUBLIC_APP_URL` + domain on Vercel + Cloudflare NS cutover.  
+**Status:** PARTIAL cutover — Herpies Production build READY; Clerk Production instance created with domain `flippincalendar.co.za` + Organizations enabled. DNS / Vercel live keys / Google OAuth / Billing Stripe still outstanding.  
+**Live app URL today:** Vercel Production from `Herpies` (`*.vercel.app`). Canonical target: `https://flippincalendar.co.za`.  
+**Cutover DNS + OAuth checklist:** [`docs/cutover-dns-oauth.md`](cutover-dns-oauth.md)  
 **Edge (target):** Cloudflare DNS / WAF / CDN in front of **Vercel** Next.js hosting.
 
 ## Senior brief (canonical)
