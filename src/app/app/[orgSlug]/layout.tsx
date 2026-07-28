@@ -11,7 +11,11 @@ export default async function OrganizationLayout({
   children: ReactNode;
   params: Promise<{ orgSlug: string }>;
 }) {
-  const session = await auth.protect({ treatPendingAsSignedOut: false });
+  const session = await auth.protect(
+    process.env.NODE_ENV === "production"
+      ? undefined
+      : { treatPendingAsSignedOut: false },
+  );
   const { orgSlug: routeOrgSlug } = await params;
 
   if (!session.orgId || !session.orgSlug) {

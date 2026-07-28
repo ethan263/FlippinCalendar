@@ -136,7 +136,7 @@ Want to build apps like this from scratch? Learn how to **code with AI the right
 - 💳 **Clerk B2B Billing** — Plans and features defined in [`clerk.billing.json`](clerk.billing.json), a custom pricing page, and checkout/plan changes/invoices handled entirely by Clerk (no Stripe to write)
 - 🔐 **Billing resolved from Clerk, always** — Authorization comes from `auth().has()` (signed-in dashboard) or the **Clerk Backend Billing SDK** (anonymous public page). **There is no billing webhook and no local subscription mirror**
 - 🚦 **Entitlement gating on the concierge** — Creating a public agent session checks the org's live Clerk Billing features: text chat requires `web_agent`, browser audio requires `browser_voice`; unentitled requests return **HTTP 402**
-- 🛂 **Custom RBAC** — An idempotent script provisions a custom `org:operations_hub:manage` permission and `org:operator` role so operational staff can run the workspace without full admin rights
+- 🛂 **Hobby RBAC** — An idempotent script provisions a free custom `org:operations_hub:manage` permission on Clerk’s built-in `org:admin` and `org:member` roles (no custom roles / B2B add-on)
 - ⏱️ **Rate limiting** — Convex-backed rate limits protect both the public booking surface and public agent-session creation
 
 ### Pricing Tiers
@@ -287,7 +287,7 @@ clerk config patch --file clerk.convex.json
 pnpm run clerk:rbac
 ```
 
-   This idempotent command creates the `org:operations_hub:manage` permission and `org:operator` role, grants the permission to both operators and admins, and adds operators to Clerk's primary role set — without changing the admin creator role or member default role. Plain members cannot read workspace operational data; assign operational staff the **Operator** role in Clerk. Organization settings and billing remain administrator-controlled.
+   This idempotent command creates the `org:operations_hub:manage` permission and grants it to both `org:admin` and `org:member` so invited teammates can run the workspace on Clerk Hobby. Organization settings and billing remain administrator-controlled in app code. Custom roles / role sets are not used.
 
 ### 5. Set up Convex
 
@@ -342,7 +342,7 @@ Open [http://localhost:3000](http://localhost:3000), sign up, create an organiza
 - [ ] Clerk Organizations enabled
 - [ ] Clerk `convex` JWT template active with `org_id` / `org_slug` / `org_role` claims
 - [ ] `clerk config patch` applied for `clerk.billing.json` and `clerk.convex.json`
-- [ ] `pnpm run clerk:rbac` run to create the Operator role/permission
+- [ ] `pnpm run clerk:rbac` run to attach `org:operations_hub:manage` to admin + member
 - [ ] Convex project linked and `npx convex dev` running
 - [ ] ElevenLabs agent pushed (`agents push`) and `ELEVENLABS_API_KEY` / `ELEVENLABS_DEFAULT_AGENT_ID` set
 - [ ] `pnpm dev:all` runs without errors
@@ -412,7 +412,7 @@ Then re-apply the Clerk config against your **production** Clerk instance (`cler
 - [ ] All environment variables set in Vercel (including `NEXT_PUBLIC_` vars)
 - [ ] Convex deployed to production and its env configured
 - [ ] Clerk **production** API keys used (not development keys)
-- [ ] Clerk Organizations, the `convex` JWT template, Billing plans/features, and the Operator role configured on the production instance
+- [ ] Clerk Organizations, Billing plans/features, and Hobby RBAC (`pnpm run clerk:rbac`) configured on the production instance
 - [ ] ElevenLabs agent pushed and `ELEVENLABS_DEFAULT_AGENT_ID` points at the production agent
 - [ ] Test sign-up → create org → publish page → concierge booking → dashboard update, end-to-end
 
@@ -434,7 +434,7 @@ Then re-apply the Clerk config against your **production** Clerk instance (`cler
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | "Not authenticated" errors from Convex | The JWT template must be named exactly `convex`, and its issuer must match [`convex/auth.config.ts`](convex/auth.config.ts). |
 | Sent to "choose organization"          | The JWT template needs `org_id` / `org_slug` / `org_role` claims and you must have an **active organization** selected.  |
-| "Access required" screen               | Your Clerk role isn't Operator/Admin — run `pnpm run clerk:rbac` and assign the **Operator** role to the member.         |
+| "Access required" screen               | Missing `org:operations_hub:manage` — run `pnpm run clerk:rbac` so admin/member roles receive the permission.            |
 
 ### Billing & Concierge
 
@@ -487,7 +487,7 @@ Already have the base app running? Here are some ideas to make it your own:
 | `pnpm run typecheck`      | Type-check with `tsc --noEmit`                            |
 | `pnpm run lint`           | Lint with ESLint                                          |
 | `pnpm run check`          | Typecheck **and** lint                                    |
-| `pnpm run clerk:rbac`     | Provision the Operator role/permission in Clerk           |
+| `pnpm run clerk:rbac`     | Grant `org:operations_hub:manage` to admin + member       |
 | `clerk config patch --file <f>` | Apply versioned Clerk billing / JWT config          |
 | `agents push --no-ui`     | Push the versioned ElevenLabs agent                       |
 | `agents status --no-ui`   | Show the pushed agent's status                            |

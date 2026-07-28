@@ -11,6 +11,26 @@ const isBillingCheckout = createRouteMatcher([
   "/app/(.*)/billing",
 ]);
 
+function authorizedParties(): string[] | undefined {
+  const fromEnv = process.env.CLERK_AUTHORIZED_PARTIES?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  if (fromEnv?.length) {
+    return fromEnv;
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (!appUrl) {
+    return undefined;
+  }
+
+  try {
+    return [new URL(appUrl).origin];
+  } catch {
+    return undefined;
+  }
+}
+
 export default clerkMiddleware(
   async (auth, req) => {
     // Clerk sometimes lands choose-organization with redirect_url pointing at
@@ -61,9 +81,14 @@ export default clerkMiddleware(
     }
 
     if (isAppRoute(req)) {
-      // Pending choose-organization sessions can already have an active org
-      // selected; treating them as signed-out traps users on the task screen.
-      await auth.protect({ treatPendingAsSignedOut: false });
+      // Production: pending sessions are signed-out (default).
+      // Development only: allow pending so local choose-organization debugging
+      // is not trapped when Clerk leaves the session pending after org select.
+      await auth.protect(
+        process.env.NODE_ENV === "production"
+          ? undefined
+          : { treatPendingAsSignedOut: false },
+      );
     }
 
     return response;
@@ -71,6 +96,7 @@ export default clerkMiddleware(
   {
     signInUrl: "/sign-in",
     signUpUrl: "/sign-up",
+    authorizedParties: authorizedParties(),
   },
 );
 

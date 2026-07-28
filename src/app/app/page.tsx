@@ -15,7 +15,11 @@ type AppIndexPageProps = {
 };
 
 export default async function AppIndexPage({ searchParams }: AppIndexPageProps) {
-  const { orgSlug } = await auth.protect({ treatPendingAsSignedOut: false });
+  const { orgSlug } = await auth.protect(
+    process.env.NODE_ENV === "production"
+      ? undefined
+      : { treatPendingAsSignedOut: false },
+  );
   const { plan } = await searchParams;
   const planIntent =
     normalizePlanIntent(plan) ?? (await readPlanIntentCookie());
