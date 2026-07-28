@@ -75,7 +75,8 @@ export default async function PricingPage() {
                 variant={plan.featured ? "secondary" : "outline"}
                 className="mt-auto shadow-none"
               >
-                <Link
+                {/* Hard navigation: /go/plan is a Route Handler redirect. */}
+                <a
                   href={buildPlanChoiceHref({
                     planKey: plan.key,
                     signedIn: Boolean(userId),
@@ -83,7 +84,7 @@ export default async function PricingPage() {
                   })}
                 >
                   Choose {plan.name}
-                </Link>
+                </a>
               </Button>
             </article>
           ))}

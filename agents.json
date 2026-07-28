@@ -2,9 +2,9 @@
     "agents": [
         {
             "config": "agent_configs/flippinCalendar-Concierge.json",
-            "id": "agent_9401kxjrvjepf7nrj2f8j73v1jz1",
-      "version_id": "agtvrsn_2201kxp7pnkdf8rr2hppyys36y4v",
-            "branch_id": "agtbrch_9501kxjrvkdrfh4bq7wt9gf9hcmr"
+            "id": "agent_5101kyk31534e7bb4vp8v2x4dae3",
+            "version_id": "agtvrsn_7101kyk5zp3teg3b4zc6jk1jv1t4",
+            "branch_id": "agtbrch_8801kyk316t2e9kvnxakzbk13ptf"
         }
     ]
 }

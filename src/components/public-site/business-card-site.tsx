@@ -123,7 +123,10 @@ export function BusinessCardSite({
       />
 
       <motion.article
-        className="relative z-10 w-full max-w-md overflow-hidden rounded-[2rem] border border-black/8 bg-[var(--card)] text-[var(--foreground)] shadow-[0_28px_80px_rgba(20,18,14,0.22)]"
+        className={cn(
+          "relative z-10 w-full max-w-md rounded-[2rem] border border-black/8 bg-[var(--card)] text-[var(--foreground)] shadow-[0_28px_80px_rgba(20,18,14,0.22)]",
+          panel ? "overflow-visible" : "overflow-hidden",
+        )}
         initial={reduceMotion ? false : { opacity: 0, y: 28, scale: 0.94 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={
@@ -399,34 +402,25 @@ export function BusinessCardSite({
 
         {agentVisible ? (
           <div className="relative border-t border-black/8 px-5 py-5 sm:px-6">
-            <AnimatePresence>
-              {panel === "chat" ? (
-                <motion.div
-                  key="chat"
-                  className="mb-4 overflow-hidden rounded-2xl border border-black/10 bg-white"
-                  initial={
-                    reduceMotion ? false : { opacity: 0, y: 16, scale: 0.96 }
-                  }
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={
-                    reduceMotion
-                      ? undefined
-                      : { opacity: 0, y: 12, scale: 0.98 }
-                  }
-                  transition={transitions.spring}
+            <div
+              className={cn(
+                "mb-4 overflow-hidden rounded-2xl border border-black/10 bg-white",
+                panel !== "chat" && "hidden",
+              )}
+              aria-hidden={panel !== "chat"}
+            >
+              <div className="flex items-center justify-between border-b border-black/8 px-4 py-3">
+                <p className="text-sm font-semibold">Ask anything</p>
+                <button
+                  type="button"
+                  className="grid size-8 place-items-center rounded-full hover:bg-black/5"
+                  onClick={() => setPanel(null)}
+                  aria-label="Close chat"
                 >
-                  <div className="flex items-center justify-between border-b border-black/8 px-4 py-3">
-                    <p className="text-sm font-semibold">Ask anything</p>
-                    <button
-                      type="button"
-                      className="grid size-8 place-items-center rounded-full hover:bg-black/5"
-                      onClick={() => setPanel(null)}
-                      aria-label="Close chat"
-                    >
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                  <div className="max-h-[min(28rem,55dvh)] overflow-y-auto p-3">
+                  <X className="size-4" />
+                </button>
+              </div>
+                  <div className="max-h-[min(36rem,70dvh)] overflow-y-auto overscroll-contain p-3">
                     <AgentLauncher
                       siteSlug={siteSlug}
                       businessName={config.businessName}
@@ -439,9 +433,7 @@ export function BusinessCardSite({
                       locale={organization.locale}
                     />
                   </div>
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
+            </div>
 
             <motion.button
               type="button"
@@ -452,6 +444,7 @@ export function BusinessCardSite({
                 color: primaryFg,
               }}
               aria-label={panel === "chat" ? "Close AI chat" : "Open AI chat"}
+              aria-expanded={panel === "chat"}
               whileTap={reduceMotion ? undefined : { scale: 0.94 }}
               animate={
                 reduceMotion || panel === "chat"
@@ -489,6 +482,7 @@ export function BusinessCardSite({
           teamMembers={publishedSite.teamMembers}
           timezone={organization.timezone}
           locale={organization.locale}
+          textInputEnabled={textAgentEnabled}
         />
       ) : null}
     </div>

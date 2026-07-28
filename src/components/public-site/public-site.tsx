@@ -721,6 +721,7 @@ export function PublicSite({
           teamMembers={teamMembers}
           timezone={organization.timezone}
           locale={organization.locale}
+          textInputEnabled={textAgentEnabled}
         />
       ) : null}
     </div>

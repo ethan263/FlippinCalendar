@@ -5,7 +5,7 @@ import "server-only";
  * Used when env still has the README placeholder.
  */
 export const SHARED_CONCIERGE_AGENT_ID =
-  "agent_9401kxjrvjepf7nrj2f8j73v1jz1";
+  "agent_5101kyk31534e7bb4vp8v2x4dae3";
 
 const PLACEHOLDER_AGENT_IDS = new Set([
   "agent_your_shared_concierge",

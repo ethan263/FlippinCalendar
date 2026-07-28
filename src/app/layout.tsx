@@ -69,9 +69,6 @@ export default function RootLayout({
           signInFallbackRedirectUrl="/app"
           signUpFallbackRedirectUrl="/app"
           afterSignOutUrl="/"
-          taskUrls={{
-            "choose-organization": "/session-tasks/choose-organization",
-          }}
         >
           <Providers>{children}</Providers>
         </ClerkProvider>

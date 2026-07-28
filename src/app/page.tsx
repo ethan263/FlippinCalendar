@@ -165,7 +165,8 @@ export default async function Home() {
                 ))}
               </div>
               <Button asChild variant={plan.featured ? "secondary" : "outline"} className="mt-auto h-11 justify-between rounded-md shadow-none">
-                <Link
+                {/* Hard navigation: /go/plan is a Route Handler redirect. */}
+                <a
                   href={buildPlanChoiceHref({
                     planKey: plan.key,
                     signedIn: Boolean(userId),
@@ -174,7 +175,7 @@ export default async function Home() {
                 >
                   Choose {plan.name}
                   <ArrowRight className="size-4" />
-                </Link>
+                </a>
               </Button>
             </article>
           ))}
@@ -188,9 +189,9 @@ export default async function Home() {
             <h2 className="mt-6 max-w-3xl font-heading text-5xl font-medium leading-[0.94] tracking-tighter sm:text-7xl">Give your team their time back.</h2>
           </div>
           <Button asChild size="lg" className="h-12 shrink-0 gap-2 rounded-md px-6 shadow-none">
-            <Link href={buildPlanChoiceHref({ planKey: "core" })}>
+            <a href={buildPlanChoiceHref({ planKey: "core" })}>
               Start with Core <ArrowRight className="size-4" />
-            </Link>
+            </a>
           </Button>
         </div>
       </section>

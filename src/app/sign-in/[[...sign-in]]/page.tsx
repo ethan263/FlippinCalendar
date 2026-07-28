@@ -1,4 +1,5 @@
 import { SignIn } from "@clerk/nextjs";
+import { ContinueWhenOrganizationReady } from "@/components/auth/continue-when-organization-ready";
 import { AuthShell } from "@/components/auth-shell";
 import {
   buildAppEntryUrl,
@@ -18,6 +19,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
   return (
     <AuthShell eyebrow="Welcome back" title="Open your workspace">
+      <ContinueWhenOrganizationReady />
       <SignIn
         routing="path"
         path="/sign-in"

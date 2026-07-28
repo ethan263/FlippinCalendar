@@ -4,9 +4,13 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createAgentDynamicVariables } from "@/lib/agent-context";
 import { organizationHasFeature } from "@/lib/clerk-billing";
-import { requestPublicSession } from "@/lib/data/agents";
+import {
+  consumePublicSessionRateLimit,
+  requestPublicSession,
+} from "@/lib/data/agents";
 import { resolveElevenLabsAgentId } from "@/lib/elevenlabs/config";
 import { getPublishedBySlug } from "@/lib/data/public-site";
+import { DEFAULT_TERMINOLOGY } from "@/lib/data/shared";
 
 export const runtime = "nodejs";
 
@@ -45,7 +49,6 @@ export async function POST(
   try {
     const sessionConfig = await requestPublicSession({
       siteSlug,
-      clientKey: clientKey(request),
       mode,
     });
 
@@ -64,16 +67,19 @@ export async function POST(
       );
     }
 
+    const [textEntitled, voiceEntitled, published] = await Promise.all([
+      organizationHasFeature(sessionConfig.clerkOrgId, "web_agent"),
+      organizationHasFeature(sessionConfig.clerkOrgId, "browser_voice"),
+      getPublishedBySlug(sessionConfig.siteSlug),
+    ]);
+
     const requiredFeature = mode === "text" ? "web_agent" : "browser_voice";
-    const entitled = await organizationHasFeature(
-      sessionConfig.clerkOrgId,
-      requiredFeature,
-    );
+    const entitled = mode === "text" ? textEntitled : voiceEntitled;
     if (!entitled) {
       return NextResponse.json(
         {
           error:
-            mode === "text"
+            requiredFeature === "web_agent"
               ? "This organization’s plan does not include AI text chat."
               : "This organization’s plan does not include browser audio.",
         },
@@ -81,7 +87,6 @@ export async function POST(
       );
     }
 
-    const published = await getPublishedBySlug(sessionConfig.siteSlug);
     if (!published) {
       return NextResponse.json(
         { error: "This public page is unavailable." },
@@ -89,12 +94,34 @@ export async function POST(
       );
     }
 
+    // Fail closed: never mint a session when published toggles disagree with mode.
+    const agentToggles = published.site.config.agent;
+    const toggleOk =
+      mode === "text"
+        ? agentToggles.showWebChat
+        : mode === "voice"
+          ? agentToggles.showVoiceChat
+          : agentToggles.showElevenLabsWidget;
+    if (!toggleOk) {
+      return NextResponse.json(
+        { error: "The concierge is not enabled for this page." },
+        { status: 404 },
+      );
+    }
+
+    await consumePublicSessionRateLimit({
+      organizationId: sessionConfig.organizationId,
+      publicSiteId: sessionConfig.publicSiteId,
+      clientKey: clientKey(request),
+    });
+
     const elevenlabs = new ElevenLabsClient({ apiKey });
     const { signedUrl } =
       await elevenlabs.conversationalAi.conversations.getSignedUrl({
         agentId,
       });
 
+    // Signed URL only — never return the API key or raw agent id to the browser.
     return NextResponse.json(
       {
         signedUrl,
@@ -105,9 +132,17 @@ export async function POST(
           timezone: published.organization.timezone,
           locale: published.organization.locale,
           currency: published.organization.currency,
-          terminology: published.organization.terminology,
+          terminology: {
+            ...DEFAULT_TERMINOLOGY,
+            ...published.organization.terminology,
+          },
           offerings: published.offerings,
           knowledgeItems: published.knowledgeItems,
+          weeklyHours: published.weeklyHours,
+          organizationId: published.organization.id,
+          externalUserId: published.organization.clerkOrgId,
+          textChatEnabled: textEntitled,
+          voiceChatEnabled: voiceEntitled,
         }),
       },
       {

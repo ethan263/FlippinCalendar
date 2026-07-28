@@ -11,7 +11,10 @@ import {
   getAgentSessionConfig,
   getPublishedBySlug,
 } from "@/lib/data/public-site";
-import { requestPublicSession } from "@/lib/data/agents";
+import {
+  consumePublicSessionRateLimit,
+  requestPublicSession,
+} from "@/lib/data/agents";
 
 export async function getPublishedBySlugAction(siteSlug: string) {
   return getPublishedBySlug(siteSlug);
@@ -75,5 +78,23 @@ export async function requestPublicSessionAction(args: {
   clientKey: string;
   mode: "text" | "voice" | "widget";
 }) {
-  return requestPublicSession(args);
+  try {
+    const session = await requestPublicSession({
+      siteSlug: args.siteSlug,
+      mode: args.mode,
+    });
+    if (!session) return null;
+
+    await consumePublicSessionRateLimit({
+      organizationId: session.organizationId,
+      publicSiteId: session.publicSiteId,
+      clientKey: args.clientKey,
+    });
+    return session;
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unable to start a concierge session.";
+    // Re-throw as a stable Error so client callers can surface the message.
+    throw new Error(message);
+  }
 }

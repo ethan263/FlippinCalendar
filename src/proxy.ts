@@ -6,13 +6,39 @@ import {
   normalizePlanIntent,
 } from "@/lib/marketing/plan-intent";
 
-const isAppRoute = createRouteMatcher(["/app(.*)", "/session-tasks(.*)"]);
+const isAppRoute = createRouteMatcher(["/app(.*)"]);
 const isBillingCheckout = createRouteMatcher([
   "/app/(.*)/billing",
 ]);
 
 export default clerkMiddleware(
   async (auth, req) => {
+    // Clerk sometimes lands choose-organization with redirect_url pointing at
+    // the task page itself. Rewrite that to /app so selecting an org can finish.
+    if (
+      req.nextUrl.pathname === "/sign-in/tasks/choose-organization" ||
+      req.nextUrl.pathname === "/sign-up/tasks/choose-organization"
+    ) {
+      const redirectUrl = req.nextUrl.searchParams.get("redirect_url");
+      const isCircular =
+        !redirectUrl ||
+        redirectUrl.includes("/sign-in/tasks/choose-organization") ||
+        redirectUrl.includes("/sign-up/tasks/choose-organization") ||
+        redirectUrl.includes("/session-tasks/choose-organization");
+
+      if (isCircular) {
+        const target = req.nextUrl.clone();
+        target.searchParams.set(
+          "redirect_url",
+          new URL("/app", req.nextUrl.origin).toString(),
+        );
+        return NextResponse.redirect(target);
+      }
+    }
+
+    // Do not auth.protect() /session-tasks — pending choose-organization
+    // sessions must reach that page if it is still used; protect() treats
+    // pending as signed-out and bounces users into a redirect loop.
     const planParam = req.nextUrl.searchParams.get("plan");
     const planIntent = normalizePlanIntent(planParam);
     const response = NextResponse.next();
@@ -35,7 +61,9 @@ export default clerkMiddleware(
     }
 
     if (isAppRoute(req)) {
-      await auth.protect();
+      // Pending choose-organization sessions can already have an active org
+      // selected; treating them as signed-out traps users on the task screen.
+      await auth.protect({ treatPendingAsSignedOut: false });
     }
 
     return response;

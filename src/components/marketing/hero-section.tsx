@@ -74,7 +74,7 @@ export function HeroSection() {
             variants={copyVariants}
             initial={reduceMotion ? false : "hidden"}
             animate="show"
-            className="mt-9 flex flex-wrap items-center gap-3"
+            className="relative z-10 mt-9 flex flex-wrap items-center gap-3"
           >
             <Button asChild size="lg" className="h-12 gap-2 rounded-md px-6 shadow-none">
               <Link href="/sign-up">

@@ -3,32 +3,32 @@
         {
             "type": "client",
             "config": "tool_configs/get_business_info.json",
-            "id": "tool_6901kxp2v5jter9vv1290yy07eyz"
+            "id": "tool_6901kyk5zjrme3mbhr5fwy3txs9w"
         },
         {
             "type": "client",
             "config": "tool_configs/get_availability.json",
-            "id": "tool_1801kxp2vra6ewnarh5chm5jtn58"
+            "id": "tool_0501kyk5zk35frc8ye5f78knx9rj"
         },
         {
             "type": "client",
             "config": "tool_configs/book_appointment.json",
-            "id": "tool_7101kxp2vs9rfjatdscjtac5rvrd"
+            "id": "tool_0001kyk5zkdbeac8e6e1gq7b1h7h"
         },
         {
             "type": "client",
             "config": "tool_configs/lookup_appointment.json",
-            "id": "tool_8701kxp2vtb4fy4swttwhbapyap7"
+            "id": "tool_5301kyk5zkq7e5as82ncaw1qj2dd"
         },
         {
             "type": "client",
             "config": "tool_configs/reschedule_appointment.json",
-            "id": "tool_9501kxp2vvbyfrdv7e3rrxn51kcf"
+            "id": "tool_7201kyk5zm17ecn8hxhphq2gzg0d"
         },
         {
             "type": "client",
             "config": "tool_configs/cancel_appointment.json",
-            "id": "tool_3601kxp2vwdmf4zbm74zjzmawrk0"
+            "id": "tool_9701kyk5zmbbf0yawmpz2vp0a3h9"
         }
     ]
 }

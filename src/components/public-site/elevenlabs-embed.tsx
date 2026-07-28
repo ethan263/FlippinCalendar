@@ -16,7 +16,7 @@ import type {
   PublicTeamMember,
 } from "@/components/public-site/types";
 
-type DynamicValue = string | number | boolean;
+type DynamicValue = string;
 
 type WidgetSession = {
   signedUrl: string;
@@ -38,12 +38,7 @@ function isDynamicVariables(
   value: unknown,
 ): value is Record<string, DynamicValue> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  return Object.values(value).every(
-    (entry) =>
-      typeof entry === "string" ||
-      typeof entry === "number" ||
-      typeof entry === "boolean",
-  );
+  return Object.values(value).every((entry) => typeof entry === "string");
 }
 
 function isSignedUrl(value: unknown): value is string {
@@ -65,6 +60,7 @@ export function ElevenLabsEmbed({
   teamMembers,
   timezone,
   locale,
+  textInputEnabled = true,
 }: {
   siteSlug: string;
   businessName: string;
@@ -74,6 +70,8 @@ export function ElevenLabsEmbed({
   teamMembers: PublicTeamMember[];
   timezone: string;
   locale: string;
+  /** Pro (web_agent) unlocks typed replies inside the Voice widget. */
+  textInputEnabled?: boolean;
 }) {
   const [embedLoaded, setEmbedLoaded] = useState(false);
   const [session, setSession] = useState<WidgetSession | null>(null);
@@ -224,6 +222,8 @@ export function ElevenLabsEmbed({
     };
   }, [clientTools, refreshSession]);
 
+  // Client-only: wait for the embed script + signed session so SSR never
+  // emits an agent-id / API-key based widget (signed-url only).
   if (!embedLoaded || !session) return null;
 
   return (
@@ -234,7 +234,7 @@ export function ElevenLabsEmbed({
       variant="compact"
       placement="bottom-right"
       dismissible="true"
-      text-input="true"
+      text-input={textInputEnabled ? "true" : "false"}
       avatar-orb-color-1={primaryColor}
       avatar-orb-color-2={secondaryColor}
       aria-label={`${businessName} AI concierge`}

@@ -141,6 +141,14 @@ export type Conversation = {
   updatedAt?: number;
 };
 
+export type ConversationAnalytics = {
+  last7Days: number;
+  last30Days: number;
+  last30DaysIsCapped: boolean;
+  averageDurationSeconds: number | null;
+  outcomes: Array<{ outcome: string; count: number }>;
+};
+
 export type AgentConfiguration = {
   provider: "elevenlabs";
   integration: {

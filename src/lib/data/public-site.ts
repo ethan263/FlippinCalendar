@@ -132,6 +132,7 @@ export async function getPublishedBySlug(siteSlugRaw: string) {
       publishedAt: ms(siteRow.published_at)!,
     },
     organization: {
+      id: org.id,
       clerkOrgId: org.clerk_org_id,
       name: org.name,
       slug: org.slug,

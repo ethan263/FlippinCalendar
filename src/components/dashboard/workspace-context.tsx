@@ -126,6 +126,9 @@ export function WorkspaceProvider({
   const value = useMemo<WorkspaceContextValue>(
     () => ({
       orgSlug,
+      // Keep null only when bootstrapping is finished and no org exists.
+      // While loading (undefined), expose null AND isBootstrapping=true so
+      // consumers can skip server actions until the workspace is ready.
       organization: organization ?? null,
       terminology: organization
         ? normalizeTerminology(organization.terminology)

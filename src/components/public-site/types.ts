@@ -8,6 +8,7 @@ export type PublishedSite = {
     publishedAt: number;
   };
   organization: {
+    id: string;
     clerkOrgId: string;
     name: string;
     slug: string;

@@ -40,7 +40,6 @@ import { cn } from "@/lib/utils";
 
 type SessionResponse = {
   signedUrl?: string;
-  conversationToken?: string;
   dynamicVariables?: Record<string, string>;
 };
 
@@ -171,17 +170,50 @@ function AgentLauncherInner({
   addUserMessage: (text: string) => void;
 }) {
   const [isRequestingSession, setIsRequestingSession] = useState(false);
+  const [isEndingSession, setIsEndingSession] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [sessionKind, setSessionKind] = useState<"text" | "voice" | null>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
   const followLatestRef = useRef(true);
-  const { startSession, endSession, sendUserMessage } = useConversationControls();
+  const recordedConversationRef = useRef<string | null>(null);
+  const actionLockRef = useRef(false);
+  const { startSession, endSession, sendUserMessage, getId } =
+    useConversationControls();
   const { status, message: statusMessage } = useConversationStatus();
   const { mode } = useConversationMode();
 
+  const recordConversation = useCallback(async () => {
+    const conversationId = getId()?.trim();
+    if (!conversationId || recordedConversationRef.current === conversationId) {
+      return;
+    }
+    try {
+      const response = await fetch(
+        `/api/public/${encodeURIComponent(siteSlug)}/agent-conversation`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ conversationId }),
+          keepalive: true,
+        },
+      );
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(payload?.error || "Unable to record conversation.");
+      }
+      recordedConversationRef.current = conversationId;
+    } catch (error) {
+      recordedConversationRef.current = null;
+      console.error("Unable to record public agent conversation", error);
+    }
+  }, [getId, siteSlug]);
+
   const isConnected = status === "connected";
   const isConnecting = status === "connecting" || isRequestingSession;
+  const sessionBusy = isConnecting || isEndingSession;
 
   useEffect(() => {
     const transcript = transcriptRef.current;
@@ -192,101 +224,146 @@ function AgentLauncherInner({
     return () => cancelAnimationFrame(frame);
   }, [timeline]);
 
-  function handleTranscriptScroll() {
+  const handleTranscriptScroll = useCallback(() => {
     const transcript = transcriptRef.current;
     if (!transcript) return;
     followLatestRef.current =
       transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight <
       48;
-  }
+  }, []);
 
-  async function start(kind: "text" | "voice") {
-    setSessionError(null);
-    setIsRequestingSession(true);
-    setSessionKind(kind);
-    followLatestRef.current = true;
-    clearTimeline();
+  const start = useCallback(
+    async (kind: "text" | "voice") => {
+      if (isConnected || sessionBusy || actionLockRef.current) return;
+      if (kind === "text" && !textEnabled) return;
+      if (kind === "voice" && !voiceEnabled) return;
 
-    try {
-      const response = await fetch(
-        `/api/public/${encodeURIComponent(siteSlug)}/agent-session`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ mode: kind }),
-        },
-      );
-      const payload = (await response.json().catch(() => ({}))) as
-        | SessionResponse
-        | { error?: string };
+      actionLockRef.current = true;
+      setSessionError(null);
+      setIsRequestingSession(true);
+      setSessionKind(kind);
+      followLatestRef.current = true;
+      recordedConversationRef.current = null;
+      clearTimeline();
 
-      if (!response.ok) {
-        throw new Error(
-          "error" in payload && payload.error
-            ? payload.error
-            : "The AI concierge is unavailable right now.",
+      try {
+        const response = await fetch(
+          `/api/public/${encodeURIComponent(siteSlug)}/agent-session`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ mode: kind }),
+          },
         );
-      }
+        const payload = (await response.json().catch(() => ({}))) as
+          | SessionResponse
+          | { error?: string };
 
-      const session = payload as SessionResponse;
-      const sharedOptions = {
-        dynamicVariables: {
-          site_slug: siteSlug,
-          business_name: businessName,
-          ...session.dynamicVariables,
-        },
-      };
-
-      if (session.conversationToken) {
-        if (kind === "text") {
-          throw new Error("Secure text chat is temporarily unavailable.");
+        if (!response.ok) {
+          throw new Error(
+            "error" in payload && payload.error
+              ? payload.error
+              : "The AI concierge is unavailable right now.",
+          );
         }
+
+        const session = payload as SessionResponse;
+        if (!session.signedUrl) {
+          throw new Error("The AI concierge session could not be started.");
+        }
+
+        if (kind === "voice") {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          stream.getTracks().forEach((track) => track.stop());
+        }
+
+        // Public sessions are signed-URL only — never agent-id / API-key based.
         await startSession({
-          ...sharedOptions,
-          conversationToken: session.conversationToken,
-          connectionType: "webrtc",
-          textOnly: false,
-        });
-      } else if (session.signedUrl) {
-        await startSession({
-          ...sharedOptions,
+          dynamicVariables: session.dynamicVariables ?? {
+            site_slug: siteSlug,
+            business_name: businessName,
+          },
           signedUrl: session.signedUrl,
           connectionType: "websocket",
           textOnly: kind === "text",
+          onDisconnect: () => {
+            void recordConversation();
+          },
         });
-      } else {
-        throw new Error("The AI concierge session could not be started.");
+      } catch (error) {
+        const nextMessage =
+          error instanceof Error
+            ? error.message
+            : "The AI concierge is unavailable right now.";
+        setSessionError(
+          kind === "voice" && /microphone|permission|audio|NotAllowed/i.test(nextMessage)
+            ? "Microphone access was blocked. Allow access in your browser or start a text chat instead."
+            : nextMessage,
+        );
+        setSessionKind(null);
+      } finally {
+        setIsRequestingSession(false);
+        actionLockRef.current = false;
       }
+    },
+    [
+      businessName,
+      clearTimeline,
+      isConnected,
+      recordConversation,
+      sessionBusy,
+      siteSlug,
+      startSession,
+      textEnabled,
+      voiceEnabled,
+    ],
+  );
+
+  const stop = useCallback(async () => {
+    if (!isConnected || isEndingSession || actionLockRef.current) return;
+    actionLockRef.current = true;
+    setSessionError(null);
+    setIsEndingSession(true);
+    try {
+      await recordConversation();
+      await endSession();
+      setMessage("");
+      setSessionKind(null);
     } catch (error) {
-      const message =
+      setSessionError(
         error instanceof Error
           ? error.message
-          : "The AI concierge is unavailable right now.";
-      setSessionError(
-        kind === "voice" && /microphone|permission|audio/i.test(message)
-          ? "Microphone access was blocked. Allow access in your browser or start a text chat instead."
-          : message,
+          : "Unable to end this conversation right now.",
       );
     } finally {
-      setIsRequestingSession(false);
+      setIsEndingSession(false);
+      actionLockRef.current = false;
     }
-  }
+  }, [endSession, isConnected, isEndingSession, recordConversation]);
 
-  async function stop() {
-    await endSession();
-    setMessage("");
-    setSessionKind(null);
-  }
-
-  function submitMessage(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const text = message.trim();
-    if (!text || !isConnected) return;
-    followLatestRef.current = true;
-    addUserMessage(text);
-    sendUserMessage(text);
-    setMessage("");
-  }
+  const submitMessage = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const text = message.trim();
+      if (!text || !isConnected || isEndingSession) return;
+      followLatestRef.current = true;
+      addUserMessage(text);
+      try {
+        await sendUserMessage(text);
+      } catch (error) {
+        setSessionError(
+          error instanceof Error
+            ? error.message
+            : "Your message could not be sent. Please try again.",
+        );
+        return;
+      }
+      setMessage("");
+    },
+    [addUserMessage, isConnected, isEndingSession, message, sendUserMessage],
+  );
 
   return (
     <Card
@@ -441,7 +518,7 @@ function AgentLauncherInner({
             <Button
               type="submit"
               size="icon-lg"
-              disabled={!message.trim()}
+              disabled={!message.trim() || isEndingSession}
               aria-label="Send message"
             >
               <Send />
@@ -459,7 +536,7 @@ function AgentLauncherInner({
                 type="button"
                 size="lg"
                 onClick={() => void start("text")}
-                disabled={isConnecting}
+                disabled={sessionBusy}
                 className="h-12"
               >
                 {isConnecting && sessionKind === "text" ? (
@@ -476,7 +553,7 @@ function AgentLauncherInner({
                 variant={textEnabled ? "outline" : "default"}
                 size="lg"
                 onClick={() => void start("voice")}
-                disabled={isConnecting}
+                disabled={sessionBusy}
                 className="h-12"
               >
                 {isConnecting && sessionKind === "voice" ? (
@@ -495,10 +572,11 @@ function AgentLauncherInner({
             type="button"
             variant="outline"
             onClick={() => void stop()}
+            disabled={isEndingSession}
             className="h-11 w-full"
           >
             <Square data-icon="inline-start" />
-            End conversation
+            {isEndingSession ? "Ending conversation…" : "End conversation"}
           </Button>
         ) : (
           <p className="text-center text-[0.68rem] leading-4 text-muted-foreground">
@@ -527,6 +605,23 @@ export function AgentLauncher(props: AgentLauncherProps) {
       next[index] = nextItem;
       return next;
     });
+  }, []);
+
+  const clearTimeline = useCallback(() => {
+    setTimeline([]);
+    setToolActivity(null);
+  }, []);
+
+  const addUserMessage = useCallback((text: string) => {
+    setTimeline((current) => [
+      ...current,
+      {
+        kind: "message",
+        id: `user-local-${Date.now()}-${Math.random()}`,
+        role: "user",
+        text,
+      },
+    ]);
   }, []);
 
   return (
@@ -586,21 +681,8 @@ export function AgentLauncher(props: AgentLauncherProps) {
         voiceEnabled={props.voiceEnabled}
         timeline={timeline}
         toolActivity={toolActivity}
-        clearTimeline={() => {
-          setTimeline([]);
-          setToolActivity(null);
-        }}
-        addUserMessage={(text) =>
-          setTimeline((current) => [
-            ...current,
-            {
-              kind: "message",
-              id: `user-local-${Date.now()}-${Math.random()}`,
-              role: "user",
-              text,
-            },
-          ])
-        }
+        clearTimeline={clearTimeline}
+        addUserMessage={addUserMessage}
       />
     </ConversationProvider>
   );

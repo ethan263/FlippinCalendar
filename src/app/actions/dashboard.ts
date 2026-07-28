@@ -1,6 +1,12 @@
 "use server";
 
-import { getCurrentAgent, listRecentConversations } from "@/lib/data/agents";
+import {
+  getConversationAnalytics,
+  getConversationDetail,
+  getCurrentAgent,
+  listRecentConversations,
+  syncRecentConversationsFromElevenLabs,
+} from "@/lib/data/agents";
 import {
   listRules,
   replaceMemberRules,
@@ -170,6 +176,18 @@ export async function listRecentConversationsAction(args: {
   channel?: "web";
 } = {}) {
   return listRecentConversations(args);
+}
+
+export async function getConversationAnalyticsAction() {
+  return getConversationAnalytics();
+}
+
+export async function getConversationDetailAction(conversationId: string) {
+  return getConversationDetail(conversationId);
+}
+
+export async function syncRecentConversationsAction() {
+  return syncRecentConversationsFromElevenLabs();
 }
 
 export async function listKnowledgeAction(args: {

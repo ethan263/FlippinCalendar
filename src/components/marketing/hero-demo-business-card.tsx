@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import {
   AnimatePresence,
   motion,
@@ -464,7 +470,55 @@ export function HeroDemoCardTrigger({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const overlay = mounted
+    ? createPortal(
+        <AnimatePresence>
+          {open ? (
+            <motion.div
+              // Portal to body so sticky header (z-50) cannot intercept clicks.
+              // Stay above Clerk drawers (z-index 10000) as well.
+              className="fixed inset-0 z-[11000]"
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={reduceMotion ? undefined : { opacity: 0 }}
+              transition={transitions.smooth}
+            >
+              <button
+                type="button"
+                className="absolute inset-0 bg-[#14201A]/55 backdrop-blur-[2px]"
+                aria-label="Close demo overlay"
+                onClick={() => setOpen(false)}
+              />
+              <div className="absolute inset-0 overflow-y-auto">
+                <DemoBusinessCard onClose={() => setOpen(false)} />
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>,
+        document.body,
+      )
+    : null;
 
   return (
     <>
@@ -481,28 +535,7 @@ export function HeroDemoCardTrigger({
         Visit a demo card
         <MoveUpRight className="size-4" />
       </Button>
-
-      <AnimatePresence>
-        {open ? (
-          <motion.div
-            className="fixed inset-0 z-10000"
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={reduceMotion ? undefined : { opacity: 0 }}
-            transition={transitions.smooth}
-          >
-            <button
-              type="button"
-              className="absolute inset-0 bg-[#14201A]/55 backdrop-blur-[2px]"
-              aria-label="Close demo overlay"
-              onClick={() => setOpen(false)}
-            />
-            <div className="absolute inset-0 overflow-y-auto">
-              <DemoBusinessCard onClose={() => setOpen(false)} />
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      {overlay}
     </>
   );
 }

@@ -79,7 +79,10 @@ export function buildPlanChoiceHref(args: {
   signedIn?: boolean;
   orgSlug?: string | null;
 }): string {
-  // Always go through the plan router so the intent cookie is set reliably
-  // (Server Components cannot write cookies during render).
+  // Always go through the plan Route Handler so the intent cookie is set.
+  // Callers MUST use a plain <a href> (hard navigation), not next/link —
+  // App Router soft navigations do not reliably follow Route Handler redirects.
+  void args.signedIn;
+  void args.orgSlug;
   return `/go/plan/${encodeURIComponent(args.planKey)}`;
 }
