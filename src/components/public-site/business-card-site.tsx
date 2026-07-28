@@ -25,6 +25,7 @@ import { AgentLauncher } from "@/components/public-site/agent-launcher";
 import { BookingFlow } from "@/components/public-site/booking-flow";
 import { ElevenLabsEmbed } from "@/components/public-site/elevenlabs-embed";
 import type { PublishedSite } from "@/components/public-site/types";
+import { ConciergeOrbButton } from "@/components/ui/orb-demo";
 import { transitions } from "@/lib/motion/transitions";
 
 type Panel =
@@ -296,16 +297,7 @@ export function BusinessCardSite({
           </div>
 
           {agentVisible ? (
-            <motion.button
-              type="button"
-              onClick={() => open("chat")}
-              className="grid size-11 shrink-0 place-items-center rounded-full shadow-[0_10px_28px_rgba(0,0,0,0.28)] ring-1 ring-white/25"
-              style={{
-                background: config.theme.accentColor,
-                color: primaryFg,
-              }}
-              aria-label="Open AI concierge"
-              aria-expanded={panel === "chat"}
+            <motion.div
               whileTap={reduceMotion ? undefined : { scale: 0.94 }}
               animate={
                 reduceMotion || panel === "chat"
@@ -320,8 +312,17 @@ export function BusinessCardSite({
                     }
               }
             >
-              <MessageCircle className="size-5" />
-            </motion.button>
+              <ConciergeOrbButton
+                colors={[
+                  config.theme.accentColor,
+                  config.theme.mutedColor || "#A0B9D1",
+                ]}
+                agentState={panel === "chat" ? "listening" : null}
+                onClick={() => open("chat")}
+                aria-label="Open AI concierge"
+                aria-expanded={panel === "chat"}
+              />
+            </motion.div>
           ) : null}
         </header>
 
