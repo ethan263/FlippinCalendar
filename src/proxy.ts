@@ -5,31 +5,12 @@ import {
   PLAN_INTENT_COOKIE,
   normalizePlanIntent,
 } from "@/lib/marketing/plan-intent";
+import { getClerkAuthorizedParties } from "@/lib/site";
 
 const isAppRoute = createRouteMatcher(["/app(.*)"]);
 const isBillingCheckout = createRouteMatcher([
   "/app/(.*)/billing",
 ]);
-
-function authorizedParties(): string[] | undefined {
-  const fromEnv = process.env.CLERK_AUTHORIZED_PARTIES?.split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-  if (fromEnv?.length) {
-    return fromEnv;
-  }
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (!appUrl) {
-    return undefined;
-  }
-
-  try {
-    return [new URL(appUrl).origin];
-  } catch {
-    return undefined;
-  }
-}
 
 export default clerkMiddleware(
   async (auth, req) => {
@@ -99,7 +80,7 @@ export default clerkMiddleware(
   {
     signInUrl: "/sign-in",
     signUpUrl: "/sign-up",
-    authorizedParties: authorizedParties(),
+    authorizedParties: getClerkAuthorizedParties(),
   },
 );
 

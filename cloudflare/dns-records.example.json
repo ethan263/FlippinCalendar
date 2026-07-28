@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Cloudflare DNS prep for flippincalendar.co.za. Apply in Cloudflare dashboard when ready — do NOT change registrar nameservers or orange-cloud proxy until cutover is approved.",
+  "zone": "flippincalendar.co.za",
+  "architecture": {
+    "dns_cdn_waf": "Cloudflare",
+    "app_hosting": "Vercel (Next.js)",
+    "auth": "Clerk Production instance",
+    "data": "Supabase",
+    "voice": "ElevenLabs"
+  },
+  "cloudflare_settings_before_cutover": {
+    "ssl_mode": "full_strict",
+    "always_use_https": true,
+    "automatic_https_rewrites": true,
+    "min_tls": "1.2",
+    "proxy_note": "Keep records DNS-only (grey cloud) until Vercel domain is verified, then optionally enable proxy."
+  },
+  "records": [
+    {
+      "type": "A",
+      "name": "@",
+      "content": "76.76.21.21",
+      "proxied": false,
+      "ttl": "auto",
+      "note": "Vercel apex. Confirm in Vercel → Domains after adding flippincalendar.co.za."
+    },
+    {
+      "type": "CNAME",
+      "name": "www",
+      "content": "cname.vercel-dns.com",
+      "proxied": false,
+      "ttl": "auto",
+      "note": "Vercel www. Replace with project-specific target if Vercel shows a different CNAME."
+    }
+  ],
+  "redirects": [
+    {
+      "from": "https://www.flippincalendar.co.za/*",
+      "to": "https://flippincalendar.co.za/$1",
+      "status": 308,
+      "via": "Cloudflare Bulk Redirects or Vercel domain redirect — pick one, not both."
+    }
+  ],
+  "cutover_blockers": [
+    "Clerk Production keys + domains allowlist",
+    "Vercel Production env NEXT_PUBLIC_APP_URL + secrets",
+    "Supabase Auth redirect URLs / CORS if applicable",
+    "ElevenLabs webhook URL + agent domain allowlist",
+    "Registrar nameserver change to Cloudflare (only at cutover)"
+  ]
+}

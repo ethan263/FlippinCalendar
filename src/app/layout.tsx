@@ -9,6 +9,7 @@ import { ui } from "@clerk/ui";
 import { shadcn } from "@clerk/ui/themes";
 import { Analytics } from "@vercel/analytics/next";
 import { Providers } from "@/components/providers";
+import { getMetadataBase } from "@/lib/site";
 import "./globals.css";
 
 const plexSans = IBM_Plex_Sans({
@@ -32,12 +33,31 @@ const newsreader = Newsreader({
 });
 
 export const metadata: Metadata = {
+  metadataBase: getMetadataBase(),
   title: {
     default: "flippinCalendar — AI front desk for modern teams",
     template: "%s · flippinCalendar",
   },
   description:
     "Run bookings, customer conversations, and a text-and-audio web concierge from one multi-tenant workspace.",
+  applicationName: "flippinCalendar",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_ZA",
+    siteName: "flippinCalendar",
+    title: "flippinCalendar — AI front desk for modern teams",
+    description:
+      "Run bookings, customer conversations, and a text-and-audio web concierge from one multi-tenant workspace.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "flippinCalendar — AI front desk for modern teams",
+    description:
+      "Run bookings, customer conversations, and a text-and-audio web concierge from one multi-tenant workspace.",
+  },
   icons: {
     icon: [{ url: "/icon.png", type: "image/png" }],
     apple: [{ url: "/apple-icon.png", type: "image/png" }],
