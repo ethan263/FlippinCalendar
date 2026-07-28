@@ -549,7 +549,7 @@ function SiteEditor({
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,0.78fr)_minmax(26rem,1.22fr)]">
       <form onSubmit={handleSave}>
-        <Card className="bg-white xl:sticky xl:top-20">
+        <Card className="bg-white xl:sticky xl:top-20 xl:max-h-[calc(100svh-5.5rem)] xl:overflow-y-auto">
           <CardHeader className="border-b border-black/8 pb-4">
             <div className="flex items-center gap-2">
               <ImageIcon className="size-4 text-primary" />

@@ -35,21 +35,28 @@ Keep Supabase + ElevenLabs secrets. ElevenLabs webhook:
 
 `https://flippincalendar.co.za/api/webhooks/elevenlabs`
 
-## 3. Google Cloud OAuth (Web client)
+## 3. Google Cloud OAuth (Web client) — **still required**
 
-Authorized redirect URIs:
+Clerk Production has `connection_oauth_google` **disabled** (empty client_id/secret). Dev shared credentials do **not** work in Production.
 
-- `https://clerk.flippincalendar.co.za/v1/oauth_callback`
-- `https://accounts.flippincalendar.co.za/v1/oauth_callback`
+1. Open [Google Cloud Credentials](https://console.cloud.google.com/apis/credentials?project=saas1-503519) (project `saas1-503519`).
+2. Configure OAuth consent screen if prompted (External / Testing is fine for soft launch).
+3. Create **OAuth client ID** → Application type **Web application** → name `flippinCalendar Clerk Production`.
+4. Authorized redirect URIs:
+   - `https://clerk.flippincalendar.co.za/v1/oauth_callback`
+   - `https://accounts.flippincalendar.co.za/v1/oauth_callback`
+5. Authorized JavaScript origins:
+   - `https://flippincalendar.co.za`
+   - `https://www.flippincalendar.co.za`
+   - `https://clerk.flippincalendar.co.za`
+   - `https://accounts.flippincalendar.co.za`
+6. Paste Client ID + Secret into chat (or set via):
 
-Authorized JavaScript origins:
+```bash
+clerk config patch --instance prod --json "{\"connection_oauth_google\":{\"enabled\":true,\"authenticatable\":true,\"client_id\":\"YOUR_ID.apps.googleusercontent.com\",\"client_secret\":\"YOUR_SECRET\"}}"
+```
 
-- `https://flippincalendar.co.za`
-- `https://www.flippincalendar.co.za`
-- `https://clerk.flippincalendar.co.za`
-- `https://accounts.flippincalendar.co.za`
-
-Paste Client ID + Secret into Clerk Dashboard → Production → Social connections → Google.
+Or Clerk Dashboard → Production → Social connections → Google.
 
 ## 4. Verify
 

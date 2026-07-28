@@ -26,18 +26,20 @@ export function ScreenHeader({
 }) {
   return (
     <div className="mb-7 flex flex-col gap-5 border-b border-black/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
-      <div className="max-w-3xl">
-        <p className="text-[10px] font-semibold tracking-[0.2em] text-primary uppercase">
+      <div className="min-w-0 max-w-3xl">
+        <p className="text-[11px] font-semibold tracking-[0.2em] text-primary uppercase">
           {eyebrow}
         </p>
-        <h1 className="mt-2 font-heading text-3xl leading-none font-semibold tracking-[-0.035em] sm:text-4xl">
+        <h1 className="mt-2 font-heading text-3xl leading-[1.08] font-semibold tracking-[-0.035em] text-balance sm:text-4xl">
           {title}
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground text-pretty">
           {description}
         </p>
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {action && (
+        <div className="w-full min-w-0 shrink-0 sm:w-auto">{action}</div>
+      )}
     </div>
   );
 }
@@ -68,21 +70,33 @@ export function SectionHeading({
   );
 }
 
-export function LoadingPanel({ rows = 4 }: { rows?: number }) {
+export function LoadingPanel({
+  rows = 4,
+  bare = false,
+}: {
+  rows?: number;
+  bare?: boolean;
+}) {
+  const body = (
+    <div className={cn("space-y-3", !bare && "pt-1")}>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <LoaderCircle className="size-3.5 animate-spin" />
+        Syncing live workspace…
+      </div>
+      {Array.from({ length: rows }).map((_, index) => (
+        <Skeleton
+          key={index}
+          className={cn("h-12 w-full", index === rows - 1 && "w-4/5")}
+        />
+      ))}
+    </div>
+  );
+
+  if (bare) return body;
+
   return (
     <Card className="bg-white">
-      <CardContent className="space-y-3 pt-1">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <LoaderCircle className="size-3.5 animate-spin" />
-          Syncing live workspace
-        </div>
-        {Array.from({ length: rows }).map((_, index) => (
-          <Skeleton
-            key={index}
-            className={cn("h-12 w-full", index === rows - 1 && "w-4/5")}
-          />
-        ))}
-      </CardContent>
+      <CardContent>{body}</CardContent>
     </Card>
   );
 }
@@ -113,7 +127,7 @@ export function EmptyState({
       <p className="mt-4 font-heading text-lg font-semibold tracking-tight">
         {title}
       </p>
-      <p className="mt-1.5 max-w-sm text-xs leading-5 text-muted-foreground">
+      <p className="mt-1.5 max-w-sm text-sm leading-5 text-muted-foreground text-pretty">
         {description}
       </p>
       {action && <div className="mt-4">{action}</div>}

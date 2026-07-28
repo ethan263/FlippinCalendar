@@ -35,11 +35,17 @@ export function FlippingWord({
       </span>
 
       {reduceMotion ? (
-        <span className={cn(faceClass, "col-start-1 row-start-1")}>{word}</span>
+        <span
+          className={cn(faceClass, "col-start-1 row-start-1")}
+          aria-hidden="true"
+        >
+          {word}
+        </span>
       ) : (
         <motion.span
           className="relative col-start-1 row-start-1 inline-grid transform-3d"
           style={{ transformStyle: "preserve-3d" }}
+          aria-hidden="true"
           animate={{ rotateX: [0, -180, -360] }}
           transition={{
             duration: flipDuration,
@@ -57,7 +63,6 @@ export function FlippingWord({
           </span>
           <span
             className={cn(faceClass, "col-start-1 row-start-1")}
-            aria-hidden
             style={{
               transform: "rotateX(180deg)",
               backfaceVisibility: "hidden",

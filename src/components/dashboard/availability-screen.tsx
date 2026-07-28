@@ -150,7 +150,7 @@ function WeeklyEditor({
               return (
                 <div
                   key={day.value}
-                  className="grid min-h-16 grid-cols-[4.25rem_1fr] items-center gap-3 py-3 sm:grid-cols-[8rem_1fr_auto]"
+                  className="grid min-h-16 grid-cols-1 items-start gap-3 py-3.5 sm:grid-cols-[8rem_1fr_auto] sm:items-center"
                 >
                   <div className="flex items-center gap-2.5">
                     <Switch

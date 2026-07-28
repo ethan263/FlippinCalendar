@@ -58,15 +58,15 @@ for (const [k, v] of Object.entries(values)) {
 }
 
 function vercelEnvSet(key, value) {
-  // Remove existing production value if present (ignore errors).
+  // Use the logged-in local CLI (npx vercel@41 has a separate empty auth store).
   spawnSync(
     "npx",
-    ["--yes", "vercel@41", "env", "rm", key, "production", "-y"],
+    ["--yes", "vercel", "env", "rm", key, "production", "-y"],
     { stdio: "ignore", shell: true },
   );
   const result = spawnSync(
     "npx",
-    ["--yes", "vercel@41", "env", "add", key, "production"],
+    ["--yes", "vercel", "env", "add", key, "production"],
     { input: value, encoding: "utf8", shell: true },
   );
   if (result.status !== 0) {

@@ -1,4 +1,5 @@
 import { TaskChooseOrganization } from "@clerk/nextjs";
+import { ContinueWhenOrganizationReady } from "@/components/auth/continue-when-organization-ready";
 import { AuthShell } from "@/components/auth-shell";
 import {
   buildAppEntryUrl,
@@ -19,6 +20,7 @@ export default async function ChooseOrganizationPage({
 
   return (
     <AuthShell eyebrow="One last step" title="Choose where you’re working">
+      <ContinueWhenOrganizationReady />
       <TaskChooseOrganization
         redirectUrlComplete={buildAppEntryUrl(planIntent)}
         appearance={{

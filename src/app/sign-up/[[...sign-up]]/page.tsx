@@ -1,6 +1,6 @@
 import { SignUp } from "@clerk/nextjs";
+import { ContinueWhenOrganizationReady } from "@/components/auth/continue-when-organization-ready";
 import { AuthShell } from "@/components/auth-shell";
-import { FlippingWord } from "@/components/marketing/flipping-word";
 import {
   buildAppEntryUrl,
   normalizePlanIntent,
@@ -18,16 +18,8 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   const redirectUrl = buildAppEntryUrl(planIntent);
 
   return (
-    <AuthShell
-      eyebrow="Start with the essentials"
-      showMobileHeadline={false}
-      title={
-        <>
-          Just book it on the <FlippingWord word="flippin'" intervalMs={2000} />{" "}
-          calendar.
-        </>
-      }
-    >
+    <AuthShell eyebrow="Start with the essentials" title="Create your workspace">
+      <ContinueWhenOrganizationReady />
       <SignUp
         routing="path"
         path="/sign-up"

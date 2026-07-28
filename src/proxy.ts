@@ -62,16 +62,11 @@ export default clerkMiddleware(
     }
 
     if (isAppRoute(req)) {
-      // Production: pending sessions are signed-out (auth.protect default).
-      // Development: allow pending via auth() so choose-organization can finish.
-      // auth.protect() no longer accepts treatPendingAsSignedOut.
-      if (process.env.NODE_ENV === "production") {
+      // Pending sessions must reach /app after org selection; protect() alone
+      // treats pending as signed-out and loops choose-organization forever.
+      const session = await auth({ treatPendingAsSignedOut: false });
+      if (!session.userId) {
         await auth.protect();
-      } else {
-        const session = await auth({ treatPendingAsSignedOut: false });
-        if (!session.userId) {
-          await auth.protect();
-        }
       }
     }
 

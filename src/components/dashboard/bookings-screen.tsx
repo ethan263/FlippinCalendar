@@ -317,18 +317,19 @@ export function BookingsScreen() {
           </div>
 
           {!bookings ? (
-            <LoadingPanel rows={6} />
+            <LoadingPanel bare rows={6} />
           ) : filtered.length ? (
+            <div className="-mx-1 overflow-x-auto overscroll-x-contain">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead>Date & time</TableHead>
                   <TableHead>{terminology.customer}</TableHead>
-                  <TableHead>{terminology.offering}</TableHead>
+                  <TableHead className="hidden md:table-cell">{terminology.offering}</TableHead>
                   <TableHead className="hidden lg:table-cell">{terminology.teamMember}</TableHead>
                   <TableHead className="hidden md:table-cell">Source</TableHead>
                   <TableHead className="hidden sm:table-cell">Price</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="hidden sm:table-cell">Status</TableHead>
                   <TableHead className="text-right">Change</TableHead>
                 </TableRow>
               </TableHeader>
@@ -341,16 +342,19 @@ export function BookingsScreen() {
                 itemClassName="border-b transition-colors hover:bg-muted/50"
                 renderItem={(booking) => (
                   <>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="font-mono text-xs whitespace-nowrap">
                       {formatDateTime(booking.startAt, organization?.timezone)}
                     </TableCell>
-                    <TableCell>
-                      <p className="font-medium">{booking.contactName}</p>
-                      <p className="mt-0.5 max-w-40 truncate text-[11px] text-muted-foreground">
+                    <TableCell className="min-w-0">
+                      <p className="truncate font-medium">{booking.contactName}</p>
+                      <p className="mt-0.5 max-w-40 truncate text-xs text-muted-foreground">
                         {booking.contactEmail ?? booking.contactPhone ?? "No contact details"}
                       </p>
+                      <p className="mt-1 truncate text-xs text-muted-foreground md:hidden">
+                        {booking.offeringName}
+                      </p>
                     </TableCell>
-                    <TableCell>{booking.offeringName}</TableCell>
+                    <TableCell className="hidden md:table-cell">{booking.offeringName}</TableCell>
                     <TableCell className="hidden text-muted-foreground lg:table-cell">
                       {booking.teamMemberName ?? "Unassigned"}
                     </TableCell>
@@ -366,7 +370,7 @@ export function BookingsScreen() {
                         organization?.locale,
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <StatusBadge status={booking.status} />
                     </TableCell>
                     <TableCell className="text-right">
@@ -376,6 +380,7 @@ export function BookingsScreen() {
                 )}
               />
             </Table>
+            </div>
           ) : (
             <EmptyState
               icon={CalendarDays}

@@ -327,7 +327,7 @@ function ShellChrome({
 
       <SidebarInset className="min-w-0 bg-[#faf9f5]">
         <header className="sticky top-0 z-30 flex h-14 items-center border-b border-black/10 bg-[#faf9f5]/95 px-4 supports-backdrop-filter:bg-[#faf9f5]/85 supports-backdrop-filter:backdrop-blur-md sm:px-6">
-          <SidebarTrigger className="mr-3 md:hidden" />
+          <SidebarTrigger className="mr-3" />
 
           <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
             <span className="hidden truncate text-muted-foreground sm:inline">
@@ -352,14 +352,28 @@ function ShellChrome({
                 Open public page
               </Link>
             </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="icon-sm"
+              className="sm:hidden"
+            >
+              <Link
+                href={`/p/${publicSite?.site.siteSlug ?? orgSlug}`}
+                target="_blank"
+                aria-label="Open public page"
+              >
+                <PanelsTopLeft className="size-4" />
+              </Link>
+            </Button>
             <UserButton
               appearance={{ elements: { avatarBox: "size-8 rounded-md" } }}
             />
           </div>
         </header>
 
-        <main className="min-h-[calc(100svh-3.5rem)] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          <div className="mx-auto w-full max-w-360">
+        <main className="min-h-[calc(100svh-3.5rem)] px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="mx-auto w-full max-w-7xl">
             {bootstrapError && !organization && !isBootstrapping ? (
               <div className="rounded-xl border border-rose-200 bg-rose-50 px-5 py-6 text-sm text-rose-900">
                 <p className="font-heading text-lg font-semibold tracking-tight">

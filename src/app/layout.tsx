@@ -79,6 +79,9 @@ export default function RootLayout({
         <ClerkProvider
           dynamic
           ui={ui}
+          taskUrls={{
+            "choose-organization": "/session-tasks/choose-organization",
+          }}
           appearance={{
             theme: shadcn,
             elements: {

@@ -11,9 +11,15 @@ const signals = [
   { icon: Sparkles, label: "Every organization, its own" },
 ];
 
-function AuthHeadline({ className }: { className?: string }) {
+function AuthHeadline({
+  className,
+  as: Tag = "p",
+}: {
+  className?: string;
+  as?: "h1" | "p";
+}) {
   return (
-    <h1
+    <Tag
       className={
         className ??
         "font-heading text-6xl font-medium leading-[0.94] tracking-[-0.05em] text-balance"
@@ -21,7 +27,7 @@ function AuthHeadline({ className }: { className?: string }) {
     >
       Just book it on the <FlippingWord word="flippin'" intervalMs={2000} />{" "}
       calendar.
-    </h1>
+    </Tag>
   );
 }
 
@@ -37,7 +43,7 @@ export function AuthShell({
   showMobileHeadline?: boolean;
 }) {
   return (
-    <main className="grid min-h-dvh bg-card lg:grid-cols-[minmax(0,0.95fr)_minmax(560px,1.05fr)]">
+    <main className="grid min-h-dvh bg-card lg:grid-cols-[minmax(0,0.95fr)_minmax(min(100%,28rem),1.05fr)]">
       <section className="relative hidden min-h-dvh overflow-hidden bg-[#151923] px-12 py-10 text-white lg:flex lg:flex-col">
         <div className="absolute inset-0 hairline-grid opacity-[0.09]" />
         <div className="absolute -right-44 top-1/4 size-[460px] rounded-full border border-blue-300/20" />
@@ -48,7 +54,8 @@ export function AuthShell({
           <p className="mb-5 font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-blue-300">
             One workspace. Every front door.
           </p>
-          <AuthHeadline />
+          {/* Decorative brand line — form column owns the document h1 via Clerk/title */}
+          <AuthHeadline as="p" />
 
           <div className="mt-10">
             <AuthShellMotionVideo />
@@ -63,7 +70,7 @@ export function AuthShell({
                 <span className="font-mono text-[10px] text-white/35">
                   0{index + 1}
                 </span>
-                <Icon className="size-4 text-blue-300" />
+                <Icon className="size-4 text-blue-300" aria-hidden="true" />
                 <span className="text-sm text-white/78">{label}</span>
               </div>
             ))}
@@ -77,29 +84,32 @@ export function AuthShell({
       </section>
 
       <section className="flex min-h-dvh flex-col bg-background">
-        <header className="flex items-center justify-between px-6 py-6 sm:px-10">
+        <header className="flex items-center justify-between px-6 py-5 sm:px-10 sm:py-6">
           <Brand className="lg:hidden" />
           <Link
             href="/"
             className="ml-auto inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            <ArrowLeft className="size-3.5" />
+            <ArrowLeft className="size-3.5" aria-hidden="true" />
             Back to the site
           </Link>
         </header>
-        <div className="flex flex-1 items-center justify-center px-6 pb-16 pt-4 sm:px-10">
+        <div className="flex flex-1 items-center justify-center px-6 pb-[max(4rem,env(safe-area-inset-bottom))] pt-4 sm:px-10">
           <div className="w-full max-w-[440px]">
             {showMobileHeadline ? (
               <div className="mb-8 lg:hidden">
-                <AuthHeadline className="font-heading text-4xl font-medium leading-[0.96] tracking-[-0.04em] text-balance" />
+                <AuthHeadline
+                  as="p"
+                  className="font-heading text-4xl font-medium leading-[0.96] tracking-[-0.04em] text-balance"
+                />
               </div>
             ) : null}
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
               {eyebrow}
             </p>
-            <h2 className="mb-8 mt-3 font-heading text-4xl font-medium tracking-[-0.04em]">
+            <h1 className="mb-8 mt-3 font-heading text-4xl font-medium tracking-[-0.04em] text-balance">
               {title}
-            </h2>
+            </h1>
             {children}
           </div>
         </div>
