@@ -40,6 +40,7 @@ import {
 } from "@/lib/elevenlabs/free-plan-presets";
 
 type StepId =
+  | "presets"
   | "persona"
   | "voice"
   | "pace"
@@ -48,7 +49,54 @@ type StepId =
   | "greeting"
   | "review";
 
-const STEPS: StepId[] = [
+const PRESET_CONFIGS: Array<{
+  id: string;
+  label: string;
+  hint: string;
+  draft: AgentConfigureDraft;
+}> = [
+  {
+    id: "quick",
+    label: "Quick Start",
+    hint: "Friendly front desk, Eric voice, English, text chat — ready in one click",
+    draft: {
+      persona: "front_desk",
+      voice: "eric",
+      pace: "normal",
+      language: "en",
+      surface: "chat",
+      greetingId: "welcome",
+    },
+  },
+  {
+    id: "booking",
+    label: "Booking Pro",
+    hint: "Booking specialist, Sarah voice, eager pace — helps visitors book fast",
+    draft: {
+      persona: "booking_specialist",
+      voice: "sarah",
+      pace: "eager",
+      language: "en",
+      surface: "chat",
+      greetingId: "book",
+    },
+  },
+  {
+    id: "knowledge",
+    label: "Knowledge Expert",
+    hint: "Leads with FAQs and policies, George voice, patient pace — answers first, books second",
+    draft: {
+      persona: "knowledge_guide",
+      voice: "george",
+      pace: "patient",
+      language: "en",
+      surface: "chat",
+      greetingId: "short",
+    },
+  },
+];
+
+const CUSTOMIZE_STEPS: StepId[] = [
   "persona",
   "voice",
   "pace",
@@ -56,6 +104,11 @@ const STEPS: StepId[] = [
   "surface",
   "greeting",
   "review",
+];
+
+const STEPS: StepId[] = [
+  "presets",
+  ...CUSTOMIZE_STEPS,
 ];
 
 type Entitlements = {
@@ -163,7 +216,7 @@ export function AgentConfigureWizard({
             ? "voice"
             : "chat"),
   });
-  const [step, setStep] = useState<StepId>("persona");
+  const [step, setStep] = useState<StepId>("presets");
   const [direction, setDirection] = useState<StackDirection>(1);
   const [error, setError] = useState<string | null>(null);
 
@@ -222,7 +275,9 @@ export function AgentConfigureWizard({
             Configure · ElevenLabs Free-compatible
           </p>
           <p className="mt-1 text-sm font-medium">
-            Step {stepIndex + 1} of {STEPS.length}
+            {step === "presets"
+              ? "Choose a preset or customize"
+              : `Step ${CUSTOMIZE_STEPS.indexOf(step) + 1} of ${CUSTOMIZE_STEPS.length}`}
           </p>
         </div>
         <p className="max-w-xs break-words text-[11px] leading-5 text-muted-foreground">
@@ -239,6 +294,60 @@ export function AgentConfigureWizard({
             depth={2}
             className="min-w-0"
           >
+            {step === "presets" ? (
+              <div>
+                <StepHeading
+                  eyebrow="Get started"
+                  title="Choose a preset"
+                  description="Pick a ready-made configuration to publish instantly, or customize step by step."
+                />
+                <div className="space-y-2">
+                  {PRESET_CONFIGS.map((preset) => (
+                    <OptionCard
+                      key={preset.id}
+                      selected={false}
+                      title={preset.label}
+                      hint={preset.hint}
+                      icon={<Sparkles className="size-4" />}
+                      onSelect={() => {
+                        setDraft({
+                          ...preset.draft,
+                          surface:
+                            entitlements.browserVoice && entitlements.webAgent
+                              ? "both"
+                              : entitlements.webAgent
+                                ? "chat"
+                                : entitlements.browserVoice
+                                  ? "voice"
+                                  : preset.draft.surface,
+                        });
+                        void onApply({
+                          ...preset.draft,
+                          surface:
+                            entitlements.browserVoice && entitlements.webAgent
+                              ? "both"
+                              : entitlements.webAgent
+                                ? "chat"
+                                : entitlements.browserVoice
+                                  ? "voice"
+                                  : preset.draft.surface,
+                        });
+                      }}
+                    />
+                  ))}
+                  <div className="pt-2">
+                    <OptionCard
+                      selected={false}
+                      title="Customize"
+                      hint="Choose persona, voice, pace, language, surface, and greeting step by step"
+                      icon={<ArrowRight className="size-4" />}
+                      onSelect={() => goTo("persona")}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
             {step === "persona" ? (
               <div>
                 <StepHeading
@@ -503,15 +612,16 @@ export function AgentConfigureWizard({
             </p>
           ) : null}
 
+          {step !== "presets" ? (
           <div className="mt-6 flex shrink-0 items-center justify-between gap-3 border-t border-black/8 pt-4">
             <Button
               type="button"
               variant="ghost"
               onClick={goBack}
-              disabled={stepIndex === 0 || saving}
+              disabled={saving}
             >
               <ArrowLeft data-icon="inline-start" />
-              Back
+              {CUSTOMIZE_STEPS.indexOf(step) === 0 ? "Presets" : "Back"}
             </Button>
             {step === "review" ? (
               <Button type="button" onClick={() => void apply()} disabled={saving}>
@@ -525,6 +635,7 @@ export function AgentConfigureWizard({
               </Button>
             )}
           </div>
+          ) : null}
         </div>
 
         <aside className="min-w-0 border-t border-black/8 bg-[#20201e] p-4 text-white sm:p-5 lg:overflow-y-auto lg:border-t-0 lg:border-l lg:border-black/20">

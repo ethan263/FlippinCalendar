@@ -135,19 +135,11 @@ describe("dashboard voice-agent action buttons", () => {
     vi.unstubAllGlobals();
   });
 
-  it("locks the full AI Agent screen on Core (no web_agent / browser_voice)", () => {
+  it("shows configure wizard on Core (web_agent included on all plans)", () => {
     setServerDataResponses({ webEnabled: true });
     render(<VoiceAgentScreen />);
-    expect(screen.getByTestId("ai-agent-plan-lock")).toBeInTheDocument();
-    expect(
-      screen.getByText("AI Agent is on Pro and Voice"),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Start voice test" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByTestId("agent-configure-wizard"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("ai-agent-plan-lock")).not.toBeInTheDocument();
+    expect(screen.getByTestId("agent-configure-wizard")).toBeInTheDocument();
   });
 
   it(

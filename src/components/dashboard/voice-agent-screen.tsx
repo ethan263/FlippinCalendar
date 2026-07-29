@@ -433,8 +433,8 @@ export function VoiceAgentScreen() {
   );
 
   async function applyAgentConfigure(draft: AgentConfigureDraft) {
-    if (!entitlements.hasAiAgent) {
-      throw new Error("AI Agent requires a Pro or Voice plan.");
+    if (!entitlements.isLoaded) {
+      throw new Error("Plan entitlements are still loading.");
     }
     if (!siteDraft?.site.draft) {
       throw new Error("Public site draft is not ready yet.");
@@ -484,7 +484,7 @@ export function VoiceAgentScreen() {
     setDetailOpen(true);
   }
 
-  const aiLocked = entitlements.isLoaded && !entitlements.hasAiAgent;
+  const aiLocked = false;
   const aiChecking = !entitlements.isLoaded;
 
   return (
@@ -493,9 +493,7 @@ export function VoiceAgentScreen() {
         eyebrow="AI channel control"
         title="AI Agent"
         description={
-          aiLocked
-            ? "AI Agent is included on Pro and Voice — not on Core."
-            : "Configure your concierge with simple presets, then test and review conversations."
+          "Pick a preset to launch your AI concierge, or customize step by step."
         }
         action={
           aiLocked ? (

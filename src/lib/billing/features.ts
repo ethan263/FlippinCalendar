@@ -8,7 +8,7 @@ export type BillingFeature =
 export type BillingPlanKey = "core" | "pro" | "voice";
 
 const planFeatures: Record<BillingPlanKey, readonly BillingFeature[]> = {
-  core: ["operations_hub", "custom_public_page"],
+  core: ["operations_hub", "custom_public_page", "web_agent"],
   pro: ["operations_hub", "custom_public_page", "web_agent"],
   voice: [
     "operations_hub",

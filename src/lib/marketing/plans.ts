@@ -25,6 +25,7 @@ export const marketingPlans: MarketingPlan[] = [
       "Bookings and availability",
       "Offerings and team",
       "Custom public page",
+      "AI text chat concierge",
     ],
   },
   {
