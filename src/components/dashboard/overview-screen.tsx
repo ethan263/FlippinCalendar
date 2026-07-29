@@ -77,7 +77,7 @@ export function OverviewScreen() {
         <ScreenHeader
           eyebrow="Live operations"
           title="Your day, at a glance."
-          description={`${terminology.bookingPlural}, conversations, and channel health update here as your organization works.`}
+          description={`${terminology.bookingPlural}, conversations, and channel health update here as your business works.`}
         />
         <LoadingPanel rows={6} />
       </>

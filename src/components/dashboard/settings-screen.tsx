@@ -27,9 +27,9 @@ export function SettingsScreen() {
   return (
     <>
       <ScreenHeader
-        eyebrow="Workspace administration"
+        eyebrow="Business administration"
         title="Settings"
-        description="Configure organization identity, workspace language, members, and access for this tenant."
+        description="Configure your business name, language, members, and access."
       />
 
       <section className="grid gap-6 xl:grid-cols-[minmax(18rem,0.65fr)_minmax(0,1.35fr)]">
@@ -38,7 +38,7 @@ export function SettingsScreen() {
             <div className="flex items-center gap-2">
               <Building2 className="size-4 text-primary" />
               <CardTitle className="font-heading text-xl tracking-tight">
-                Organization profile
+                Business profile
               </CardTitle>
             </div>
           </CardHeader>
@@ -92,7 +92,7 @@ export function SettingsScreen() {
       <section className="mt-8 space-y-4">
         <SectionHeading
           title="Members & access"
-          description="Manage Clerk organization details, members, roles, and invitations."
+          description="Manage business details, members, roles, and invitations."
         />
         <div className="min-w-0 overflow-hidden rounded-xl border border-black/10 bg-white p-2 sm:p-4">
           <OrganizationProfile

@@ -65,7 +65,7 @@ export function WorkspaceProvider({
     if (!orgId) {
       setOrganization(null);
       setBootstrapError(
-        "Select an organization in the switcher to open this workspace.",
+        "Select a business to continue.",
       );
       return;
     }
@@ -81,7 +81,7 @@ export function WorkspaceProvider({
         if (!cancelled) {
           setOrganization(null);
           setBootstrapError(
-            error instanceof Error ? error.message : "Failed to load workspace.",
+            error instanceof Error ? error.message : "Failed to load business.",
           );
         }
       });
@@ -117,7 +117,7 @@ export function WorkspaceProvider({
         setBootstrapError(
           error instanceof Error
             ? error.message
-            : "Failed to initialize workspace.",
+            : "Failed to set up business.",
         );
       })
       .finally(() => setIsCreating(false));

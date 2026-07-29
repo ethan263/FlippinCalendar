@@ -81,7 +81,7 @@ export function LoadingPanel({
     <div className={cn("space-y-3", !bare && "pt-1")}>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <LoaderCircle className="size-3.5 animate-spin" />
-        Syncing live workspace…
+        Syncing your business…
       </div>
       {Array.from({ length: rows }).map((_, index) => (
         <Skeleton

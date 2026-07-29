@@ -241,7 +241,7 @@ export function WorkspaceLanguageEditor({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canEdit) {
-      toast.error("An organization admin must update workspace language.");
+      toast.error("A business admin must update these labels.");
       return;
     }
     if (!isComplete) {
@@ -256,12 +256,12 @@ export function WorkspaceLanguageEditor({
       });
       setDraft({ ...updated.terminology });
       setBaseline({ ...updated.terminology });
-      toast.success("Workspace language updated");
+      toast.success("Business language updated");
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Could not update workspace language",
+          : "Could not update business language",
       );
     } finally {
       setSaving(false);
@@ -274,16 +274,16 @@ export function WorkspaceLanguageEditor({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <CardTitle className="font-heading text-xl tracking-tight">
-              Workspace language
+              Business language
             </CardTitle>
             <CardDescription className="mt-1 max-w-2xl text-xs leading-5">
               Choose a business preset or write your own labels. Changes flow
               through navigation, forms, schedules, the public page, and new
-              agent sessions for this organization only.
+              agent sessions for this business only.
             </CardDescription>
           </div>
           <Badge variant={canEdit ? "outline" : "secondary"}>
-            {canEdit ? "Organization-specific" : "Admin only"}
+            {canEdit ? "Business-specific" : "Admin only"}
           </Badge>
         </div>
       </CardHeader>
@@ -411,7 +411,7 @@ export function WorkspaceLanguageEditor({
                     Live preview
                   </p>
                   <p className="mt-1 font-heading text-xl tracking-tight">
-                    In your workspace
+                    In your business
                   </p>
                 </div>
                 <span className="grid size-8 place-items-center rounded-full bg-primary text-white">
@@ -460,14 +460,14 @@ export function WorkspaceLanguageEditor({
         <CardFooter className="flex-wrap justify-between gap-3">
           <p className="text-xs text-muted-foreground" aria-live="polite">
             {!canEdit
-              ? "Ask an organization admin to change these labels."
+              ? "Ask a business admin to change these labels."
               : hasNewerServerLanguage
                 ? "Another admin changed these labels. Load their version, or save yours to replace it."
                 : !isComplete
                   ? "Every label needs both a singular and plural form."
                   : isDirty
                     ? "You have unsaved language changes."
-                    : "Workspace language is up to date."}
+                    : "Business language is up to date."}
           </p>
           <div className="flex items-center gap-2">
             <Button

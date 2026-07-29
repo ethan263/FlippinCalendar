@@ -194,7 +194,7 @@ describe("dashboard voice-agent action buttons", () => {
     expect(
       screen.queryByRole("link", { name: "Compare plans" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Checking organization plan…")).toBeInTheDocument();
+    expect(screen.getByText("Checking business plan…")).toBeInTheDocument();
   });
 
   it("shows actionable error when microphone access fails", async () => {

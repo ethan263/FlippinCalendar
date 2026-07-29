@@ -20,7 +20,7 @@ export const marketingPlans: MarketingPlan[] = [
     clerkPlanSlug: "free_org",
     name: "Core",
     price: "R0",
-    copy: "The operational home for a new organization.",
+    copy: "The operational home for a new business.",
     description: "Bookings, operations, and a custom public page.",
     features: [
       "Bookings and availability",

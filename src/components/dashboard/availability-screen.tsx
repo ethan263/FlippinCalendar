@@ -136,7 +136,7 @@ function WeeklyEditor({
                 </h2>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Weekly repeating hours · {organization?.timezone ?? "Organization timezone"}
+                Weekly repeating hours · {organization?.timezone ?? "Business timezone"}
               </p>
             </div>
             <Badge variant="outline" className="w-fit bg-white">
@@ -279,7 +279,7 @@ export function AvailabilityScreen() {
 
       <div className="mt-4 flex items-start gap-2 rounded-lg border border-black/10 bg-white p-3 text-[11px] leading-5 text-muted-foreground">
         <Clock3 className="mt-0.5 size-3.5 shrink-0 text-primary" />
-        Times are stored against {organization?.timezone ?? "the organization timezone"},
+        Times are stored against {organization?.timezone ?? "the business timezone"},
         keeping public-page, AI-assisted, and internal {terminology.booking.toLowerCase()} flows
         consistent for distributed teams.
       </div>

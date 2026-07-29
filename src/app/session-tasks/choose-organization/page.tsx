@@ -19,7 +19,7 @@ export default async function ChooseOrganizationPage({
     normalizePlanIntent(plan) ?? (await readPlanIntentCookie());
 
   return (
-    <AuthShell eyebrow="One last step" title="Choose where you’re working">
+    <AuthShell eyebrow="One last step" title="Name your business">
       <ContinueWhenOrganizationReady />
       <TaskChooseOrganization
         redirectUrlComplete={buildAppEntryUrl(planIntent)}

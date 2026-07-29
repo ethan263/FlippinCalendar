@@ -199,7 +199,7 @@ function MemberDialog({ member }: { member?: TeamMember }) {
               <div>
                 <Label htmlFor={`member-active-${member?._id ?? "new"}`}>Active</Label>
                 <p className="mt-0.5 text-[11px] text-muted-foreground">
-                  Keep this person visible in the workspace.
+                  Keep this person visible for the business.
                 </p>
               </div>
               <Switch
@@ -245,7 +245,7 @@ export function TeamScreen() {
       <ScreenHeader
         eyebrow="Who does the work"
         title={terminology.teamMemberPlural}
-        description={`Manage the people who deliver ${terminology.offeringPlural.toLowerCase()}, answer requests, or appear on the public page. Roles stay flexible across every type of organization.`}
+        description={`Manage the people who deliver ${terminology.offeringPlural.toLowerCase()}, answer requests, or appear on the public page. Roles stay flexible across every type of business.`}
         action={<MemberDialog />}
       />
 

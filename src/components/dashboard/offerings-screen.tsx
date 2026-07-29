@@ -107,7 +107,7 @@ function OfferingDialog({ offering }: { offering?: Offering }) {
           <DialogDescription>
             Keep this flexible: a {terminology.offering.toLowerCase()} can be an
             appointment, support session, consultation, class, or any unit your
-            organization delivers.
+            business delivers.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -212,7 +212,7 @@ export function OfferingsScreen() {
       <ScreenHeader
         eyebrow="What you deliver"
         title={terminology.offeringPlural}
-        description={`Define the bookable or requestable work your organization provides. ${terminology.offeringPlural} can carry time, price, or simply act as a service category.`}
+        description={`Define the bookable or requestable work your business provides. ${terminology.offeringPlural} can carry time, price, or simply act as a service category.`}
         action={<OfferingDialog />}
       />
 

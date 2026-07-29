@@ -828,7 +828,7 @@ function SiteEditor({
                   <Label htmlFor="showWebAgent">Show AI text chat</Label>
                   {!entitlements.isLoaded ? (
                     <p className="mt-0.5 text-[10px] text-muted-foreground">
-                      Checking organization plan…
+                      Checking business plan…
                     </p>
                   ) : !entitlements.webAgent ? (
                     <p className="mt-0.5 text-[10px] text-primary">
@@ -853,7 +853,7 @@ function SiteEditor({
                   <Label htmlFor="showVoiceAgent">Show browser audio</Label>
                   {!entitlements.isLoaded ? (
                     <p className="mt-0.5 text-[10px] text-muted-foreground">
-                      Checking organization plan…
+                      Checking business plan…
                     </p>
                   ) : !entitlements.browserVoice ? (
                     <p className="mt-0.5 text-[10px] text-primary">
@@ -884,7 +884,7 @@ function SiteEditor({
                   </Label>
                   {!entitlements.isLoaded ? (
                     <p className="mt-0.5 text-[10px] text-muted-foreground">
-                      Checking organization plan…
+                      Checking business plan…
                     </p>
                   ) : !entitlements.browserVoice ? (
                     <p className="mt-0.5 text-[10px] text-primary">
@@ -1044,7 +1044,7 @@ export function PublicSiteScreen() {
       <ScreenHeader
         eyebrow="Public experience"
         title="Public Site"
-        description={`Shape a branded ${terminology.booking.toLowerCase()} page for this organization. Its ${terminology.offeringPlural.toLowerCase()}, ${terminology.teamMemberPlural.toLowerCase()}, availability, and optional agent channels stay live from the same workspace.`}
+        description={`Shape a branded ${terminology.booking.toLowerCase()} page for this business. Its ${terminology.offeringPlural.toLowerCase()}, ${terminology.teamMemberPlural.toLowerCase()}, availability, and optional agent channels stay live from the same place.`}
         action={
           current ? (
             <Button asChild variant="outline" className="bg-white">

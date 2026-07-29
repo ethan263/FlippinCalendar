@@ -40,24 +40,24 @@ export default async function AccessRequiredPage() {
           </div>
           <div>
             <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-              Workspace access required
+              Business access required
             </p>
             <h1 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
-              You’re signed in, but this workspace isn’t ready for you yet.
+              You’re signed in, but this business isn’t ready for you yet.
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
-              Ask an organization administrator to confirm your membership, or
+              Ask a business administrator to confirm your membership, or
               run{" "}
               <code className="rounded bg-black/5 px-1.5 py-0.5 text-[0.85em]">
                 pnpm run clerk:rbac
               </code>{" "}
               so admins and members receive the operations permission. You can
-              also switch to another workspace you already belong to.
+              also switch to another business you already belong to.
             </p>
             <Button asChild variant="outline" className="mt-7">
               <Link href="/app">
                 <ArrowLeft className="size-4" />
-                Choose another workspace
+                Choose another business
               </Link>
             </Button>
           </div>

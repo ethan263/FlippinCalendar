@@ -44,9 +44,9 @@ export function BillingScreen({
         />
       ) : null}
       <ScreenHeader
-        eyebrow="Organization subscription"
+        eyebrow="Business subscription"
         title="Billing"
-        description={`Plans, features, and billing belong to ${organization?.name ?? "this organization"}—not to individual members. Upgrades take effect across the active workspace.`}
+        description={`Plans, features, and billing belong to ${organization?.name ?? "this business"}—not to individual members. Upgrades take effect across the whole business.`}
       />
 
       <section className="grid gap-4 md:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.2fr)]">
@@ -68,13 +68,13 @@ export function BillingScreen({
                 {isLoaded ? currentTier : "—"}
               </p>
               <p className="mt-3 text-xs leading-5 text-white/50">
-                Feature access is checked from the active Clerk organization on
+                Feature access is checked from the active business on
                 every authenticated session.
               </p>
             </div>
             <div className="mt-8 space-y-2 border-t border-white/10 pt-4 text-[11px] text-white/60">
               <p className="flex items-center gap-2">
-                <ShieldCheck className="size-3.5 text-emerald-400" /> Organization-scoped billing
+                <ShieldCheck className="size-3.5 text-emerald-400" /> Business-scoped billing
               </p>
               <p className="flex items-center gap-2">
                 <UsersRound className="size-3.5 text-sky-400" /> Seat limits enforced by Clerk

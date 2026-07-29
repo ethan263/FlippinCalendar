@@ -8,7 +8,7 @@ import { FlippingWord } from "@/components/marketing/flipping-word";
 const signals = [
   { icon: Headphones, label: "Every conversation, answered" },
   { icon: CalendarCheck, label: "Every request, organized" },
-  { icon: Sparkles, label: "Every organization, its own" },
+  { icon: Sparkles, label: "Every business, its own" },
 ];
 
 function AuthHeadline({
@@ -52,7 +52,7 @@ export function AuthShell({
 
         <div className="relative z-10 my-auto max-w-xl py-16">
           <p className="mb-5 font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-blue-300">
-            One workspace. Every front door.
+            One business. Every front door.
           </p>
           {/* Decorative brand line — form column owns the document h1 via Clerk/title */}
           <AuthHeadline as="p" />

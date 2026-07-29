@@ -9,6 +9,7 @@ import { ui } from "@clerk/ui";
 import { shadcn } from "@clerk/ui/themes";
 import { Analytics } from "@vercel/analytics/next";
 import { Providers } from "@/components/providers";
+import { clerkBusinessLocalization } from "@/lib/clerk-business-localization";
 import { getMetadataBase } from "@/lib/site";
 import "./globals.css";
 
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
     template: "%s · flippinCalendar",
   },
   description:
-    "Run bookings, customer conversations, and a text-and-audio web concierge from one multi-tenant workspace.",
+    "Run bookings, customer conversations, and a text-and-audio web concierge for your business.",
   applicationName: "flippinCalendar",
   alternates: {
     canonical: "/",
@@ -50,13 +51,13 @@ export const metadata: Metadata = {
     siteName: "flippinCalendar",
     title: "flippinCalendar — AI front desk for modern teams",
     description:
-      "Run bookings, customer conversations, and a text-and-audio web concierge from one multi-tenant workspace.",
+      "Run bookings, customer conversations, and a text-and-audio web concierge for your business.",
   },
   twitter: {
     card: "summary_large_image",
     title: "flippinCalendar — AI front desk for modern teams",
     description:
-      "Run bookings, customer conversations, and a text-and-audio web concierge from one multi-tenant workspace.",
+      "Run bookings, customer conversations, and a text-and-audio web concierge for your business.",
   },
   icons: {
     icon: [{ url: "/icon.png", type: "image/png" }],
@@ -79,6 +80,7 @@ export default function RootLayout({
         <ClerkProvider
           dynamic
           ui={ui}
+          localization={clerkBusinessLocalization}
           taskUrls={{
             "choose-organization": "/session-tasks/choose-organization",
           }}

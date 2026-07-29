@@ -18,7 +18,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   const redirectUrl = buildAppEntryUrl(planIntent);
 
   return (
-    <AuthShell eyebrow="Start with the essentials" title="Create your workspace">
+    <AuthShell eyebrow="Start with the essentials" title="Create your account">
       <ContinueWhenOrganizationReady />
       <SignUp
         routing="path"

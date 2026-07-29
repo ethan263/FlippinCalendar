@@ -222,7 +222,7 @@ function WebAgentSession({ onRecorded }: { onRecorded?: () => void }) {
           Talk to the same agent your visitors meet.
         </h2>
         <p className="mt-3 max-w-lg text-xs leading-5 text-white/55">
-          This live browser check uses the organization’s current ElevenLabs agent.
+          This live browser check uses the business’s current ElevenLabs agent.
           Test the greeting, knowledge, and {terminology.booking.toLowerCase()} flow
           before sharing the public page.
         </p>
@@ -524,7 +524,7 @@ export function VoiceAgentScreen() {
           <CardContent className="grid min-h-48 place-items-center py-10 text-center text-sm text-muted-foreground">
             <div>
               <Activity className="mx-auto mb-3 size-5 animate-pulse text-primary" />
-              Checking organization plan…
+              Checking business plan…
             </div>
           </CardContent>
         </Card>
@@ -582,9 +582,9 @@ export function VoiceAgentScreen() {
                 <div className="text-center">
                   <Activity className="mx-auto mb-3 size-5 animate-pulse text-primary" />
                   {!workspaceReady
-                    ? "Preparing workspace…"
+                    ? "Setting up…"
                     : !entitlements.isLoaded
-                      ? "Checking organization plan…"
+                      ? "Checking business plan…"
                       : "Loading agent configuration…"}
                 </div>
               </div>
@@ -604,7 +604,7 @@ export function VoiceAgentScreen() {
                   <p className="mt-2 text-xs leading-5 text-white/50">
                     {agent.integration?.webEnabled
                       ? "Add browser audio to test the live microphone experience. Text chat can still run independently on the public page."
-                      : "Connect an ElevenLabs agent to this organization before starting a live test."}
+                      : "Connect an ElevenLabs agent to this business before starting a live test."}
                   </p>
                   <Button asChild className="mt-5 bg-primary text-primary-foreground hover:bg-primary/85">
                     <Link
@@ -762,7 +762,7 @@ export function VoiceAgentScreen() {
                 {isSyncing ? "Syncing…" : "Sync"}
               </Button>
               <Badge variant="outline" className="bg-white font-mono text-[10px]">
-                Workspace records
+                Business records
               </Badge>
             </div>
           </CardAction>

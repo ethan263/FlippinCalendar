@@ -92,7 +92,7 @@ function navigationFor(
       ],
     },
     {
-      label: "Workspace",
+      label: "Business",
       items: [
         { label: "Billing", segment: "billing", icon: CreditCard },
         { label: "Settings", segment: "settings", icon: Settings2 },
@@ -220,7 +220,7 @@ function ShellChrome({
   );
   const segment = pathname.split("/").filter(Boolean)[2] ?? "";
   const pageLabel = routeLabels[segment] ?? "Overview";
-  const organizationName = organization?.name ?? "Your organization";
+  const organizationName = organization?.name ?? "Your business";
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -274,7 +274,7 @@ function ShellChrome({
           <div className="rounded-lg border border-black/10 bg-white/55 p-3 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2">
             <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:hidden">
               <p className="text-[10px] font-semibold tracking-[0.14em] text-sidebar-foreground/50 uppercase">
-                Live workspace
+                Your business
               </p>
               <span
                 className={`inline-flex items-center gap-1 text-[10px] font-medium ${
@@ -302,7 +302,7 @@ function ShellChrome({
               </span>
             </div>
             <p className="mt-2 truncate text-xs font-medium group-data-[collapsible=icon]:hidden">
-              {isBootstrapping ? "Preparing workspace…" : organizationName}
+              {isBootstrapping ? "Setting up…" : organizationName}
             </p>
             <span
               className={`hidden size-2 rounded-full group-data-[collapsible=icon]:block ${
@@ -377,7 +377,7 @@ function ShellChrome({
             {bootstrapError && !organization && !isBootstrapping ? (
               <div className="rounded-xl border border-rose-200 bg-rose-50 px-5 py-6 text-sm text-rose-900">
                 <p className="font-heading text-lg font-semibold tracking-tight">
-                  Workspace could not sync
+                  Business could not sync
                 </p>
                 <p className="mt-2 max-w-2xl text-xs leading-5 text-rose-800/90">
                   {bootstrapError}

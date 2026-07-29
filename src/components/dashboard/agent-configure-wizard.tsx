@@ -194,7 +194,7 @@ export function AgentConfigureWizard({
       );
       if (missing.length) {
         setError(
-          "That channel needs a plan upgrade. Pick a surface your organization already includes.",
+          "That channel needs a plan upgrade. Pick a surface your business already includes.",
         );
         return;
       }
