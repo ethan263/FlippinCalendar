@@ -39,7 +39,7 @@ export default async function BillingPage({
 
   if (checkoutStatus === "success") {
     try {
-      await reconcilePendingCheckoutAction();
+      await reconcilePendingCheckoutAction(orgSlug);
     } catch {
       // Client polling will retry reconciliation if the webhook is delayed.
     }

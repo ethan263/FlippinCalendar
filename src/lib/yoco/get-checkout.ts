@@ -36,6 +36,7 @@ export async function getYocoCheckout(
     id?: string;
     status?: string;
     paymentId?: string | null;
+    amount?: number | null;
     processingMode?: string | null;
     metadata?: Record<string, string> | null;
   };
@@ -48,6 +49,7 @@ export async function getYocoCheckout(
     id: data.id,
     status: data.status,
     paymentId: data.paymentId ?? null,
+    amount: data.amount ?? null,
     processingMode: data.processingMode ?? null,
     metadata: data.metadata ?? null,
   };

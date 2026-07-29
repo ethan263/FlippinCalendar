@@ -2,6 +2,7 @@ export type YocoCheckoutStatus = {
   id: string;
   status: string;
   paymentId: string | null;
+  amount: number | null;
   processingMode: string | null;
   metadata: Record<string, string> | null;
 };

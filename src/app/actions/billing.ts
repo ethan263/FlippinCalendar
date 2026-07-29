@@ -14,7 +14,7 @@ import {
   setPendingCheckout,
   type OrganizationSubscription,
 } from "@/lib/billing/subscriptions";
-import { requireCurrentOrganizationAdmin } from "@/lib/data/auth";
+import { requireCurrentOrganizationAdminForRouteSlug } from "@/lib/data/auth";
 import { reconcilePendingCheckout } from "@/lib/billing/reconcile-checkout";
 import { createYocoCheckout } from "@/lib/yoco/checkout";
 
@@ -59,13 +59,22 @@ export async function fetchEntitlementsAction() {
   };
 }
 
-export async function createYocoCheckoutAction(planKey: string) {
+export async function createYocoCheckoutAction(
+  planKey: string,
+  orgSlug: string,
+) {
   const plan = normalizeBillingPlanKey(planKey);
   if (!plan || plan === "core") {
     throw new Error("Choose a paid plan to checkout.");
   }
 
-  const { auth: clerkAuth, organization } = await requireCurrentOrganizationAdmin();
+  const routeOrgSlug = orgSlug.trim();
+  if (!routeOrgSlug) {
+    throw new Error("Business slug is required to start checkout.");
+  }
+
+  const { auth: clerkAuth, organization } =
+    await requireCurrentOrganizationAdminForRouteSlug(routeOrgSlug);
 
   await assertBillingCheckoutRateLimit({
     organizationId: organization.id,
@@ -90,7 +99,13 @@ export async function createYocoCheckoutAction(planKey: string) {
   return { redirectUrl, checkoutId };
 }
 
-export async function reconcilePendingCheckoutAction() {
-  const { organization } = await requireCurrentOrganizationAdmin();
+export async function reconcilePendingCheckoutAction(orgSlug: string) {
+  const routeOrgSlug = orgSlug.trim();
+  if (!routeOrgSlug) {
+    throw new Error("Business slug is required to reconcile checkout.");
+  }
+
+  const { organization } =
+    await requireCurrentOrganizationAdminForRouteSlug(routeOrgSlug);
   return reconcilePendingCheckout(organization.id);
 }

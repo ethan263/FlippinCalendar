@@ -75,7 +75,7 @@ export function BillingScreen({
         attempts += 1;
         try {
           if (attempts === 1 || attempts % 3 === 0) {
-            await reconcilePendingCheckoutAction();
+            await reconcilePendingCheckoutAction(resolvedSlug);
           }
           const entitlements = await refreshEntitlements();
           if (
@@ -105,7 +105,7 @@ export function BillingScreen({
     return () => {
       cancelled = true;
     };
-  }, [checkoutStatus, refreshEntitlements]);
+  }, [checkoutStatus, refreshEntitlements, resolvedSlug]);
 
   const statusLabel = pendingPlan
     ? `Upgrading to ${planDisplayName(pendingPlan)}`
@@ -114,7 +114,10 @@ export function BillingScreen({
   return (
     <>
       {autoCheckoutPlanKey && !isFreePlan(autoCheckoutPlanKey) ? (
-        <BillingCheckoutLauncher planKey={autoCheckoutPlanKey} />
+        <BillingCheckoutLauncher
+          planKey={autoCheckoutPlanKey}
+          orgSlug={resolvedSlug}
+        />
       ) : null}
       <ScreenHeader
         eyebrow="Business subscription"

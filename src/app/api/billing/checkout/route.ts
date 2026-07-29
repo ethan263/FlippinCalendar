@@ -5,20 +5,24 @@ import { createYocoCheckoutAction } from "@/app/actions/billing";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  let body: { planKey?: string };
+  let body: { planKey?: string; orgSlug?: string };
   try {
-    body = (await request.json()) as { planKey?: string };
+    body = (await request.json()) as { planKey?: string; orgSlug?: string };
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
   const planKey = body.planKey?.trim();
+  const orgSlug = body.orgSlug?.trim();
   if (!planKey) {
     return NextResponse.json({ error: "planKey is required." }, { status: 400 });
   }
+  if (!orgSlug) {
+    return NextResponse.json({ error: "orgSlug is required." }, { status: 400 });
+  }
 
   try {
-    const result = await createYocoCheckoutAction(planKey);
+    const result = await createYocoCheckoutAction(planKey, orgSlug);
     return NextResponse.json(result);
   } catch (error) {
     const message =

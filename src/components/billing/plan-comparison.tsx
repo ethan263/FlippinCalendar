@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { createYocoCheckoutAction } from "@/app/actions/billing";
 import { Button } from "@/components/ui/button";
+import { useEnsureActiveOrganization } from "@/lib/clerk/ensure-active-organization";
 import { cn } from "@/lib/utils";
 import { planDisplayName, type BillingPlanKey } from "@/lib/billing/features";
 import {
@@ -26,12 +27,14 @@ export function PlanComparison({
   orgSlug,
 }: PlanComparisonProps) {
   const [isPending, startTransition] = useTransition();
+  const ensureActiveOrganization = useEnsureActiveOrganization();
 
   function startCheckout(planKey: MarketingPlanKey) {
-    if (planKey === "core") return;
+    if (planKey === "core" || !orgSlug) return;
     startTransition(async () => {
       try {
-        const { redirectUrl } = await createYocoCheckoutAction(planKey);
+        await ensureActiveOrganization();
+        const { redirectUrl } = await createYocoCheckoutAction(planKey, orgSlug);
         window.location.href = redirectUrl;
       } catch (error) {
         toast.error(

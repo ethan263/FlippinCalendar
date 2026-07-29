@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { YocoPaymentEvent } from "@/lib/yoco/verify-webhook";
+import { billingPlanAmountCents } from "@/lib/billing/plans";
 import { readYocoPaymentMetadata } from "@/lib/billing/yoco-metadata";
 import {
   abortPendingCheckout,
@@ -27,6 +28,26 @@ export async function processYocoPaymentSucceeded(
     existing.yocoPaymentId === paymentId
   ) {
     return { activated: false, reason: "already_activated" };
+  }
+
+  const expectedAmount = billingPlanAmountCents[plan];
+  const paidAmount = event.payload?.amount;
+  if (
+    typeof paidAmount === "number" &&
+    paidAmount > 0 &&
+    paidAmount !== expectedAmount
+  ) {
+    return { activated: false, reason: "amount_mismatch" };
+  }
+
+  const checkoutId = event.payload?.checkoutId ?? null;
+  if (
+    existing?.status === "pending" &&
+    existing.yocoCheckoutId &&
+    checkoutId &&
+    existing.yocoCheckoutId !== checkoutId
+  ) {
+    return { activated: false, reason: "checkout_mismatch" };
   }
 
   await activatePaidSubscription({

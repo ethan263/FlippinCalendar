@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createClerkClient } from "@clerk/backend";
 import { auth } from "@clerk/nextjs/server";
 
 import type { BackendTerminology, Organization } from "@/components/dashboard/data";
@@ -101,6 +102,105 @@ export async function requireCurrentOrganization() {
 
 export async function requireCurrentOrganizationAdmin() {
   const current = await requireCurrentOrganization();
+  if (current.auth.role !== "admin" && current.auth.role !== "owner") {
+    throw new Error("An organization admin role is required for this action.");
+  }
+  return current;
+}
+
+function normalizeClerkRole(role: string | null | undefined): string | undefined {
+  if (!role) return undefined;
+  return role.startsWith("org:") ? role.slice(4) : role;
+}
+
+async function verifyClerkOrganizationMembership(args: {
+  userId: string;
+  clerkOrgId: string;
+}): Promise<{ role: string }> {
+  const secretKey = process.env.CLERK_SECRET_KEY?.trim();
+  if (!secretKey) {
+    throw new Error("CLERK_SECRET_KEY is not configured.");
+  }
+
+  const clerk = createClerkClient({ secretKey });
+  const memberships = await clerk.users.getOrganizationMembershipList({
+    userId: args.userId,
+    limit: 100,
+  });
+  const membership = memberships.data.find(
+    (entry) => entry.organization.id === args.clerkOrgId,
+  );
+  if (!membership) {
+    throw new Error("You are not a member of this business.");
+  }
+
+  const role = normalizeClerkRole(membership.role);
+  if (!role) {
+    throw new Error("Could not resolve your role for this business.");
+  }
+
+  return { role };
+}
+
+/**
+ * Resolve the workspace from the URL slug when Clerk's session token briefly
+ * lacks an organization claim (common during server-action transitions).
+ */
+export async function requireCurrentOrganizationForRouteSlug(routeOrgSlug: string) {
+  const session = await auth();
+  if (!session.userId) {
+    throw new Error("Authentication required.");
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("organizations")
+    .select("*")
+    .eq("slug", routeOrgSlug)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) {
+    throw new Error("This business was not found.");
+  }
+
+  const organization = data as OrganizationRow;
+  const clerkOrgId = organization.clerk_org_id;
+  let role: string | undefined;
+  const permissions: string[] = [];
+
+  if (session.orgId) {
+    if (session.orgId !== clerkOrgId) {
+      throw new Error("Switch to this business before continuing.");
+    }
+    role = normalizeClerkRole(session.orgRole);
+    if (session.has?.({ permission: "org:operations_hub:manage" })) {
+      permissions.push("org:operations_hub:manage");
+    }
+  } else {
+    const membership = await verifyClerkOrganizationMembership({
+      userId: session.userId,
+      clerkOrgId,
+    });
+    role = membership.role;
+  }
+
+  return {
+    auth: {
+      clerkOrgId,
+      clerkOrgSlug: routeOrgSlug,
+      role,
+      userId: session.userId,
+      permissions,
+    } satisfies ActiveClerkOrganization,
+    organization,
+    supabase,
+  };
+}
+
+export async function requireCurrentOrganizationAdminForRouteSlug(
+  routeOrgSlug: string,
+) {
+  const current = await requireCurrentOrganizationForRouteSlug(routeOrgSlug);
   if (current.auth.role !== "admin" && current.auth.role !== "owner") {
     throw new Error("An organization admin role is required for this action.");
   }

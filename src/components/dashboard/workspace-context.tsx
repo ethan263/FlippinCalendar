@@ -49,11 +49,19 @@ export function WorkspaceProvider({
   const [isCreating, setIsCreating] = useState(false);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const requestedBootstrap = useRef(false);
+  const hadOrganization = useRef(false);
+  const loadedOrgSlug = useRef<string | null>(null);
 
   const refreshOrganization = useCallback(async () => {
     const current = await fetchCurrentOrganizationAction();
     setOrganization(current);
   }, []);
+
+  useEffect(() => {
+    if (organization) {
+      hadOrganization.current = true;
+    }
+  }, [organization]);
 
   useEffect(() => {
     // Prefer session orgId from useAuth — useOrganization() can lag behind the
@@ -63,19 +71,35 @@ export function WorkspaceProvider({
     requestedBootstrap.current = false;
 
     if (!orgId) {
-      setOrganization(null);
-      setBootstrapError(
-        "Select a business to continue.",
-      );
+      // Clerk can briefly clear orgId during server-action transitions (e.g.
+      // starting Yoco checkout). Do not replace a loaded workspace with a false
+      // sync error while that happens.
+      if (!hadOrganization.current) {
+        setOrganization(null);
+        setBootstrapError("Select a business to continue.");
+      }
+      return;
+    }
+
+    // Already synced for this route — skip refetch during transient orgId flicker.
+    if (loadedOrgSlug.current === orgSlug && hadOrganization.current) {
       return;
     }
 
     let cancelled = false;
-    setOrganization(undefined);
+    if (loadedOrgSlug.current !== orgSlug) {
+      setOrganization(undefined);
+    }
     setBootstrapError(null);
     void fetchCurrentOrganizationAction()
       .then((current) => {
-        if (!cancelled) setOrganization(current);
+        if (!cancelled) {
+          setOrganization(current);
+          if (current) {
+            loadedOrgSlug.current = orgSlug;
+            hadOrganization.current = true;
+          }
+        }
       })
       .catch((error) => {
         if (!cancelled) {

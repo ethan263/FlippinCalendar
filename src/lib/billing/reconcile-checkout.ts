@@ -6,6 +6,7 @@ import {
   getSubscriptionByOrganizationId,
 } from "@/lib/billing/subscriptions";
 import { readYocoPaymentMetadata } from "@/lib/billing/yoco-metadata";
+import { billingPlanAmountCents } from "@/lib/billing/plans";
 import {
   checkoutIndicatesFailure,
   checkoutIndicatesPayment,
@@ -43,6 +44,15 @@ export async function reconcilePendingCheckout(
   const metadataPlan =
     readYocoPaymentMetadata(checkout.metadata ?? undefined).plan ??
     subscription.pendingPlan;
+
+  const expectedAmount = billingPlanAmountCents[metadataPlan];
+  if (
+    typeof checkout.amount === "number" &&
+    checkout.amount > 0 &&
+    checkout.amount !== expectedAmount
+  ) {
+    return { activated: false, reason: "amount_mismatch" };
+  }
 
   await activatePaidSubscription({
     organizationId,
