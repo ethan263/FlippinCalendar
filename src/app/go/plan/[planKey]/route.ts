@@ -7,6 +7,7 @@ import {
   buildSignUpUrl,
   normalizePlanIntent,
 } from "@/lib/marketing/plan-intent";
+import { isFreePlan } from "@/lib/marketing/plans";
 
 type RouteContext = {
   params: Promise<{ planKey: string }>;
@@ -41,7 +42,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const response = NextResponse.redirect(new URL(destination, _request.url));
 
-  if (planIntent.clerkPlanSlug === "free_org") {
+  if (isFreePlan(planIntent.key)) {
     response.cookies.delete(PLAN_INTENT_COOKIE);
   } else {
     response.cookies.set(planCookie(planIntent.key));

@@ -1,10 +1,10 @@
 export type MarketingPlanKey = "core" | "pro" | "voice";
 
-export type ClerkPlanSlug = "free_org" | "engage" | "voice";
+/** @deprecated Use MarketingPlanKey — Clerk Billing removed; Yoco + Supabase owns plans. */
+export type ClerkPlanSlug = MarketingPlanKey;
 
 export type MarketingPlan = {
   key: MarketingPlanKey;
-  clerkPlanSlug: ClerkPlanSlug;
   name: string;
   price: string;
   description?: string;
@@ -17,7 +17,6 @@ export type MarketingPlan = {
 export const marketingPlans: MarketingPlan[] = [
   {
     key: "core",
-    clerkPlanSlug: "free_org",
     name: "Core",
     price: "R0",
     copy: "The operational home for a new business.",
@@ -30,7 +29,6 @@ export const marketingPlans: MarketingPlan[] = [
   },
   {
     key: "pro",
-    clerkPlanSlug: "engage",
     name: "Pro",
     price: "R249",
     copy: "Give every visitor an AI concierge on the web.",
@@ -44,7 +42,6 @@ export const marketingPlans: MarketingPlan[] = [
   },
   {
     key: "voice",
-    clerkPlanSlug: "voice",
     name: "Voice",
     price: "R699",
     copy: "Let clients speak with your AI front desk from any browser.",
@@ -58,3 +55,7 @@ export const marketingPlans: MarketingPlan[] = [
 ];
 
 export const pricingPeriodLabel = "/mo";
+
+export function isFreePlan(planKey: MarketingPlanKey): boolean {
+  return planKey === "core";
+}

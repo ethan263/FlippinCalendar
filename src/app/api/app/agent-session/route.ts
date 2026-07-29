@@ -3,6 +3,7 @@ import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { NextResponse } from "next/server";
 
 import { createAgentDynamicVariables } from "@/lib/agent-context";
+import { organizationHasFeature } from "@/lib/billing/subscriptions";
 import { listRules } from "@/lib/data/availability";
 import { getCurrentAgent } from "@/lib/data/agents";
 import { listOfferings } from "@/lib/data/catalog";
@@ -71,23 +72,26 @@ function weeklyHoursFromRules(
 }
 
 export async function POST() {
-  const { has, isAuthenticated, orgId } = await auth();
+  const { isAuthenticated, orgId } = await auth();
   if (!isAuthenticated) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   }
   if (!orgId) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   }
-  if (!has({ feature: "browser_voice" })) {
+  const hasBrowserVoice = await organizationHasFeature(orgId, "browser_voice");
+  if (!hasBrowserVoice) {
     return NextResponse.json(
-      { error: "This organization’s plan does not include browser audio." },
+      { error: "This business plan does not include browser audio." },
       { status: 403 },
     );
   }
+  const hasWebAgent = await organizationHasFeature(orgId, "web_agent");
+  const session = await auth();
   if (
-    !has({ permission: "org:operations_hub:manage" }) &&
-    !has({ role: "org:admin" }) &&
-    !has({ role: "org:owner" })
+    !session.has?.({ permission: "org:operations_hub:manage" }) &&
+    !session.has?.({ role: "org:admin" }) &&
+    !session.has?.({ role: "org:owner" })
   ) {
     return NextResponse.json(
       { error: "Organization operator access is required." },
@@ -156,7 +160,7 @@ export async function POST() {
           weeklyHours,
           organizationId: organization._id,
           externalUserId: organization.clerkOrgId,
-          textChatEnabled: Boolean(has({ feature: "web_agent" })),
+          textChatEnabled: hasWebAgent,
           voiceChatEnabled: true,
           personaGuidance: persona
             ? resolvePersonaGuidance(persona)

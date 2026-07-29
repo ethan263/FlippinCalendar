@@ -35,6 +35,17 @@ Keep Supabase + ElevenLabs secrets. ElevenLabs webhook:
 
 `https://flippincalendar.co.za/api/webhooks/elevenlabs`
 
+## 2b. Clerk ↔ Supabase (third-party auth)
+
+Production Clerk FAPI: **`clerk.flippincalendar.co.za`**
+
+1. [Clerk → Activate Supabase integration](https://dashboard.clerk.com/setup/supabase) (Production instance)
+2. [Supabase → Auth → Third-party → Clerk](https://supabase.com/dashboard/project/labvbngxfkzeepyyyjov/auth/third-party) — domain `clerk.flippincalendar.co.za`
+3. `supabase login && supabase config push --project-ref labvbngxfkzeepyyyjov`
+4. `node --env-file-if-exists=.env.local scripts/verify-clerk-supabase.mjs`
+
+Full guide: [`docs/clerk-supabase-integration.md`](clerk-supabase-integration.md)
+
 ## 3. Google Cloud OAuth (Web client) — **still required**
 
 Clerk Production has `connection_oauth_google` **disabled** (empty client_id/secret). Dev shared credentials do **not** work in Production.

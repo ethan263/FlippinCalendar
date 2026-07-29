@@ -52,7 +52,7 @@ export async function requireActiveClerkOrganization(): Promise<ActiveClerkOrgan
   }
   if (!session.orgId) {
     throw new Error(
-      "Select an organization before using the workspace. The active Clerk session has no organization claim.",
+      "Select a business before continuing. The active Clerk session has no organization claim.",
     );
   }
 

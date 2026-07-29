@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "check": "pnpm run typecheck && pnpm run lint",
-    "clerk:rbac": "node --env-file-if-exists=.env.local scripts/configure-clerk-rbac.mjs"
+    "clerk:rbac": "node --env-file-if-exists=.env.local scripts/configure-clerk-rbac.mjs",
+    "verify:clerk-supabase": "node --env-file-if-exists=.env.local scripts/verify-clerk-supabase.mjs"
   },
   "packageManager": "pnpm@11.1.2",
   "dependencies": {

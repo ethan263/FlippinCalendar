@@ -5,6 +5,7 @@ import {
   PLAN_INTENT_COOKIE,
   normalizePlanIntent,
 } from "@/lib/marketing/plan-intent";
+import { isFreePlan } from "@/lib/marketing/plans";
 import { getClerkAuthorizedParties } from "@/lib/site";
 
 const isAppRoute = createRouteMatcher(["/app(.*)"]);
@@ -44,7 +45,7 @@ export default clerkMiddleware(
     const planIntent = normalizePlanIntent(planParam);
     const response = NextResponse.next();
 
-    if (planIntent && planIntent.clerkPlanSlug !== "free_org") {
+  if (planIntent && !isFreePlan(planIntent.key)) {
       response.cookies.set(PLAN_INTENT_COOKIE, planIntent.key, {
         httpOnly: true,
         sameSite: "lax",

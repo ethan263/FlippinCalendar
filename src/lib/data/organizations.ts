@@ -13,6 +13,7 @@ import {
   type BackendTerminology,
 } from "@/lib/data/shared";
 import { resolveElevenLabsAgentId } from "@/lib/elevenlabs/config";
+import { ensureCoreSubscription } from "@/lib/billing/subscriptions";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type OrganizationRow = {
@@ -108,6 +109,7 @@ export async function bootstrapCurrentOrganization(args: {
   const existing = await getCurrentOrganization();
   if (existing) {
     await ensureWorkspaceRows(existing._id, existing.name, existing.slug);
+    await ensureCoreSubscription(existing._id);
     return existing;
   }
 
@@ -178,6 +180,7 @@ export async function bootstrapCurrentOrganization(args: {
 
   const orgRow = organization as OrganizationRow;
   await ensureWorkspaceRows(orgRow.id, name, slug, defaultAgentId);
+  await ensureCoreSubscription(orgRow.id);
 
   return viewOrganization(orgRow, clerkAuth.role);
 }

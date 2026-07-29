@@ -1,24 +1,13 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import { PricingTable } from "@clerk/nextjs";
 import { ArrowLeft, Check } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { marketingPlans, pricingPeriodLabel } from "@/lib/marketing/plans";
 import { buildPlanChoiceHref } from "@/lib/marketing/plan-intent";
 
-const publicPlans = marketingPlans.map((plan) => ({
-  key: plan.key,
-  name: plan.name,
-  price: plan.price,
-  description: plan.description ?? plan.copy ?? "",
-  features: plan.features,
-  featured: plan.featured,
-  clerkPlanSlug: plan.clerkPlanSlug,
-}));
-
 export default async function PricingPage() {
-  const { userId, orgId, orgSlug } = await auth();
+  const { userId, orgSlug } = await auth();
 
   return (
     <main className="min-h-dvh bg-background">
@@ -42,13 +31,13 @@ export default async function PricingPage() {
             Run the desk for free. Add AI where it matters.
           </h1>
           <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground">
-            Each plan belongs to an organization, so every workspace can choose
-            the capabilities it needs.
+            Each plan belongs to a business. Paid upgrades checkout securely
+            through Yoco in ZAR.
           </p>
         </div>
 
         <div className="grid border-l border-t lg:grid-cols-3">
-          {publicPlans.map((plan) => (
+          {marketingPlans.map((plan) => (
             <article
               key={plan.name}
               className={`flex min-h-102.5 flex-col border-b border-r p-8 ${plan.featured ? "bg-primary text-primary-foreground" : "bg-card"}`}
@@ -75,7 +64,6 @@ export default async function PricingPage() {
                 variant={plan.featured ? "secondary" : "outline"}
                 className="mt-auto shadow-none"
               >
-                {/* Hard navigation: /go/plan is a Route Handler redirect. */}
                 <a
                   href={buildPlanChoiceHref({
                     planKey: plan.key,
@@ -90,23 +78,17 @@ export default async function PricingPage() {
           ))}
         </div>
 
-        {orgId ? (
-          <div className="mt-14 rounded-lg border bg-card p-2 sm:p-6">
-            <p className="mb-4 px-2 pt-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Or manage your organization subscription
-            </p>
-            <PricingTable
-              for="organization"
-              highlightedPlan="engage"
-              newSubscriptionRedirectUrl={
-                orgSlug ? `/app/${orgSlug}/billing` : "/app"
-              }
-            />
-          </div>
+        {userId && orgSlug ? (
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            Manage your current plan in{" "}
+            <Link href={`/app/${orgSlug}/billing`} className="text-primary underline">
+              Billing
+            </Link>
+            .
+          </p>
         ) : (
           <p className="mt-5 text-center text-xs text-muted-foreground">
-            Create your organization first, then manage its subscription
-            securely with Clerk.
+            Create your account first, then upgrade from the in-app billing screen.
           </p>
         )}
       </section>

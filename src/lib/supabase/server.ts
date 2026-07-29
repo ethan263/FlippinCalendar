@@ -2,6 +2,11 @@ import { auth } from "@clerk/nextjs/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+/**
+ * Supabase client authenticated with the active Clerk session token.
+ * Requires Supabase third-party auth for `clerk.flippincalendar.co.za`
+ * (or your dev *.clerk.accounts.dev domain). See docs/clerk-supabase-integration.md.
+ */
 export async function createClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;

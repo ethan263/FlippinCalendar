@@ -17,6 +17,9 @@
     },
     "cloudflare-observability": {
       "url": "https://observability.mcp.cloudflare.com/mcp"
+    },
+    "yoco": {
+      "url": "https://mcp.yoco.com/mcp"
     }
   }
 }

@@ -1,53 +1,38 @@
 "use client";
 
-import { CheckoutButton } from "@clerk/nextjs/experimental";
-import { useAuth } from "@clerk/nextjs";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useTransition } from "react";
+import { toast } from "sonner";
 
-import type { ClerkPlanSlug } from "@/lib/marketing/plans";
+import { createYocoCheckoutAction } from "@/app/actions/billing";
+import type { MarketingPlanKey } from "@/lib/marketing/plans";
+import { isFreePlan } from "@/lib/marketing/plans";
 
 type BillingCheckoutLauncherProps = {
-  planSlug: ClerkPlanSlug;
-  redirectUrl: string;
+  planKey: MarketingPlanKey;
 };
 
-export function BillingCheckoutLauncher({
-  planSlug,
-  redirectUrl,
-}: BillingCheckoutLauncherProps) {
-  const { isLoaded, orgId } = useAuth();
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const openedRef = useRef(false);
+export function BillingCheckoutLauncher({ planKey }: BillingCheckoutLauncherProps) {
+  const launchedRef = useRef(false);
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
-    if (!isLoaded || !orgId || openedRef.current) {
+    if (launchedRef.current || isFreePlan(planKey)) {
       return;
     }
 
-    openedRef.current = true;
-    buttonRef.current?.click();
-  }, [isLoaded, orgId]);
+    launchedRef.current = true;
+    startTransition(async () => {
+      try {
+        const { redirectUrl } = await createYocoCheckoutAction(planKey);
+        window.location.href = redirectUrl;
+      } catch (error) {
+        launchedRef.current = false;
+        toast.error(
+          error instanceof Error ? error.message : "Could not start checkout.",
+        );
+      }
+    });
+  }, [planKey]);
 
-  if (planSlug === "free_org") {
-    return null;
-  }
-
-  return (
-    <CheckoutButton
-      planId={planSlug}
-      planPeriod="month"
-      for="organization"
-      newSubscriptionRedirectUrl={redirectUrl}
-    >
-      <button
-        ref={buttonRef}
-        type="button"
-        className="sr-only"
-        tabIndex={-1}
-        aria-hidden
-      >
-        Open checkout
-      </button>
-    </CheckoutButton>
-  );
+  return null;
 }

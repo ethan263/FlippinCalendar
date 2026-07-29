@@ -9,18 +9,18 @@ import {
 } from "@/lib/marketing/plan-intent";
 
 describe("plan choice routing intent", () => {
-  it("normalizes known plan keys and clerk slugs", () => {
+  it("normalizes known plan keys and legacy clerk slugs", () => {
     expect(normalizePlanIntent("pro")).toMatchObject({
       key: "pro",
-      clerkPlanSlug: "engage",
+      name: "Pro",
     });
     expect(normalizePlanIntent("voice")).toMatchObject({
       key: "voice",
-      clerkPlanSlug: "voice",
+      name: "Voice",
     });
     expect(normalizePlanIntent("free_org")).toMatchObject({
       key: "core",
-      clerkPlanSlug: "free_org",
+      name: "Core",
     });
   });
 
@@ -34,7 +34,6 @@ describe("plan choice routing intent", () => {
   });
 
   it("documents that plan choice hrefs require hard navigation", () => {
-    // Soft next/link navigations do not reliably follow Route Handler redirects.
     const href = buildPlanChoiceHref({ planKey: "pro" });
     expect(href.startsWith("/go/plan/")).toBe(true);
   });

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 import {
   AudioLines,
   ArrowUpRight,
@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { fetchEntitlementsAction } from "@/app/actions/billing";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -40,19 +41,24 @@ const featureCopy = {
 >;
 
 export function useFeatureEntitlements() {
-  const { has, isLoaded } = useAuth();
-  const webAgent = Boolean(has?.({ feature: "web_agent" }));
-  const browserVoice = Boolean(has?.({ feature: "browser_voice" }));
-  return {
-    isLoaded,
-    webAgent,
-    browserVoice,
-    /** Pro (`web_agent`) or Voice (`browser_voice`). Core / free_org has neither. */
-    hasAiAgent: webAgent || browserVoice,
-  };
+  const { organization } = useWorkspace();
+  const [state, setState] = useState({
+    isLoaded: false,
+    webAgent: false,
+    browserVoice: false,
+    hasAiAgent: false,
+  });
+
+  useEffect(() => {
+    void fetchEntitlementsAction()
+      .then(setState)
+      .catch(() => setState((current) => ({ ...current, isLoaded: true })));
+  }, [organization?._id]);
+
+  return state;
 }
 
-/** Full-page lock when Core (free) tries to open AI Agent. */
+/** Full-page lock when Core tries to open AI Agent. */
 export function AiAgentPlanLock({
   orgSlug,
   className,
@@ -90,9 +96,9 @@ export function FeatureEntitlementCard({
   feature: ProductFeature;
   compact?: boolean;
 }) {
-  const { has, isLoaded } = useAuth();
   const { orgSlug } = useWorkspace();
-  const entitled = Boolean(has?.({ feature }));
+  const { isLoaded, webAgent, browserVoice } = useFeatureEntitlements();
+  const entitled = feature === "web_agent" ? webAgent : browserVoice;
   const copy = featureCopy[feature];
   const Icon = copy.icon;
 
@@ -104,7 +110,7 @@ export function FeatureEntitlementCard({
         compact && "gap-3 py-3",
       )}
     >
-      <CardHeader className={cn("gap-3", compact && "px-3") }>
+      <CardHeader className={cn("gap-3", compact && "px-3")}>
         <div className="flex items-start justify-between gap-3">
           <span
             className={cn(

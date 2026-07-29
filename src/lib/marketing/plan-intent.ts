@@ -2,9 +2,10 @@ import {
   marketingPlans,
   type MarketingPlan,
   type MarketingPlanKey,
+  isFreePlan,
 } from "@/lib/marketing/plans";
 
-export type PlanIntent = Pick<MarketingPlan, "key" | "name" | "clerkPlanSlug">;
+export type PlanIntent = Pick<MarketingPlan, "key" | "name">;
 
 export const PLAN_INTENT_COOKIE = "fc_plan_intent";
 
@@ -12,9 +13,11 @@ const planByKey = new Map(
   marketingPlans.map((plan) => [plan.key, plan] as const),
 );
 
-const planByClerkSlug = new Map(
-  marketingPlans.map((plan) => [plan.clerkPlanSlug, plan] as const),
-);
+/** Accept legacy Clerk slugs during transition. */
+const legacySlugMap: Record<string, MarketingPlanKey> = {
+  free_org: "core",
+  engage: "pro",
+};
 
 export function normalizePlanIntent(
   value?: string | null,
@@ -26,7 +29,7 @@ export function normalizePlanIntent(
   const trimmed = value.trim().toLowerCase();
   const plan =
     planByKey.get(trimmed as MarketingPlanKey) ??
-    planByClerkSlug.get(trimmed as MarketingPlan["clerkPlanSlug"]);
+    planByKey.get(legacySlugMap[trimmed]);
 
   if (!plan) {
     return null;
@@ -35,7 +38,6 @@ export function normalizePlanIntent(
   return {
     key: plan.key,
     name: plan.name,
-    clerkPlanSlug: plan.clerkPlanSlug,
   };
 }
 
@@ -56,7 +58,7 @@ export function buildAppEntryUrl(planIntent: PlanIntent | null): string {
 }
 
 export function buildAfterOrganizationUrl(planIntent: PlanIntent | null): string {
-  if (!planIntent || planIntent.clerkPlanSlug === "free_org") {
+  if (!planIntent || isFreePlan(planIntent.key)) {
     return "/app/:slug";
   }
 
@@ -67,7 +69,7 @@ export function buildBillingCheckoutUrl(
   orgSlug: string,
   planIntent: PlanIntent,
 ): string {
-  if (planIntent.clerkPlanSlug === "free_org") {
+  if (isFreePlan(planIntent.key)) {
     return `/app/${orgSlug}`;
   }
 
@@ -79,9 +81,6 @@ export function buildPlanChoiceHref(args: {
   signedIn?: boolean;
   orgSlug?: string | null;
 }): string {
-  // Always go through the plan Route Handler so the intent cookie is set.
-  // Callers MUST use a plain <a href> (hard navigation), not next/link —
-  // App Router soft navigations do not reliably follow Route Handler redirects.
   void args.signedIn;
   void args.orgSlug;
   return `/go/plan/${encodeURIComponent(args.planKey)}`;

@@ -22,4 +22,6 @@ enable_signup = false
 
 [auth.third_party.clerk]
 enabled = true
-domain = "deep-alien-66.clerk.accounts.dev"
+# Production FAPI — must match Supabase Dashboard → Auth → Third-party → Clerk.
+# Local dev with Clerk test keys: temporarily use your *.clerk.accounts.dev domain.
+domain = "clerk.flippincalendar.co.za"
