@@ -14,6 +14,7 @@ import {
 } from "@/lib/data/shared";
 import { resolveElevenLabsAgentId } from "@/lib/elevenlabs/config";
 import { ensureCoreSubscription } from "@/lib/billing/subscriptions";
+import { requireCurrentOrganizationForRouteSlug } from "@/lib/data/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type OrganizationRow = {
@@ -93,6 +94,13 @@ export async function getCurrentOrganization(): Promise<Organization | null> {
   if (error) throw new Error(error.message);
   if (!data) return null;
   return viewOrganization(data as OrganizationRow, clerkAuth.role);
+}
+
+export async function getOrganizationForRouteSlug(
+  routeOrgSlug: string,
+): Promise<Organization | null> {
+  const current = await requireCurrentOrganizationForRouteSlug(routeOrgSlug);
+  return viewOrganization(current.organization as OrganizationRow, current.auth.role);
 }
 
 export async function bootstrapCurrentOrganization(args: {

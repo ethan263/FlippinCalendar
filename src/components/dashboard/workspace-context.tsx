@@ -53,9 +53,9 @@ export function WorkspaceProvider({
   const loadedOrgSlug = useRef<string | null>(null);
 
   const refreshOrganization = useCallback(async () => {
-    const current = await fetchCurrentOrganizationAction();
+    const current = await fetchCurrentOrganizationAction(orgSlug);
     setOrganization(current);
-  }, []);
+  }, [orgSlug]);
 
   useEffect(() => {
     if (organization) {
@@ -91,7 +91,7 @@ export function WorkspaceProvider({
       setOrganization(undefined);
     }
     setBootstrapError(null);
-    void fetchCurrentOrganizationAction()
+    void fetchCurrentOrganizationAction(orgSlug)
       .then((current) => {
         if (!cancelled) {
           setOrganization(current);

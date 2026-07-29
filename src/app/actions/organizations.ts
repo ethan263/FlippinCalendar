@@ -3,11 +3,16 @@
 import {
   bootstrapCurrentOrganization,
   getCurrentOrganization,
+  getOrganizationForRouteSlug,
   updateCurrentOrganization,
 } from "@/lib/data/organizations";
 import type { BackendTerminology } from "@/lib/data/shared";
 
-export async function fetchCurrentOrganizationAction() {
+export async function fetchCurrentOrganizationAction(orgSlug?: string) {
+  const routeOrgSlug = orgSlug?.trim();
+  if (routeOrgSlug) {
+    return getOrganizationForRouteSlug(routeOrgSlug);
+  }
   return getCurrentOrganization();
 }
 
