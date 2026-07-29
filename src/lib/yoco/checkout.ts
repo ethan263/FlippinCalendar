@@ -8,6 +8,14 @@ type YocoCheckoutResponse = {
   id: string;
   redirectUrl: string;
   status?: string;
+  processingMode?: "live" | "test" | string;
+  paymentId?: string | null;
+};
+
+export type YocoCheckoutResult = {
+  checkoutId: string;
+  redirectUrl: string;
+  processingMode: string | null;
 };
 
 export async function createYocoCheckout(args: {
@@ -16,7 +24,7 @@ export async function createYocoCheckout(args: {
   orgSlug: string;
   plan: BillingPlanKey;
   idempotencyKey: string;
-}): Promise<{ checkoutId: string; redirectUrl: string }> {
+}): Promise<YocoCheckoutResult> {
   if (!isPaidPlan(args.plan)) {
     throw new Error("Core is free — no checkout required.");
   }
@@ -50,6 +58,7 @@ export async function createYocoCheckout(args: {
       successUrl,
       cancelUrl,
       failureUrl,
+      clientReferenceId: args.organizationId,
       externalId: args.organizationId,
       metadata: {
         organizationId: args.organizationId,
@@ -79,5 +88,9 @@ export async function createYocoCheckout(args: {
     throw new Error("Yoco checkout response missing id or redirectUrl.");
   }
 
-  return { checkoutId: data.id, redirectUrl: data.redirectUrl };
+  return {
+    checkoutId: data.id,
+    redirectUrl: data.redirectUrl,
+    processingMode: data.processingMode ?? null,
+  };
 }

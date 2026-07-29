@@ -14,7 +14,7 @@ Architecture: **Clerk** for sign-in and business (org) RBAC. **Yoco** for hosted
 ## Env vars
 
 ```bash
-YOCO_CHECKOUT_SECRET_KEY=sk_test_...   # sk_test_* for test cards; sk_live_* for production
+YOCO_CHECKOUT_SECRET_KEY=yoco_live_...   # or sk_test_* / sk_live_* from Yoco Checkout API
 YOCO_WEBHOOK_SECRET=whsec_...          # from Yoco webhook registration
 NEXT_PUBLIC_APP_URL=https://...        # must be publicly reachable (not localhost) for Yoco redirects
 CRON_SECRET=...                        # Vercel Cron auth (Authorization: Bearer)
@@ -32,7 +32,9 @@ Use the **www** hostname (not the bare apex) so POST requests are not redirected
 
 For **local testing**, expose your dev server with ngrok and set `NEXT_PUBLIC_APP_URL` to the ngrok URL. Register the ngrok webhook URL in Yoco test mode.
 
-## Test cards (sk_test_* key)
+## Test cards (test / `processingMode: "test"` only)
+
+Live keys (`yoco_live_*`) charge real cards — there is no test-card banner on the hosted page.
 
 | Card | Outcome |
 |------|---------|
