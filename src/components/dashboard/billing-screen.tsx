@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Check, CreditCard, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 
-import { fetchEntitlementsAction } from "@/app/actions/billing";
+import { fetchEntitlementsAction, reconcilePendingCheckoutAction } from "@/app/actions/billing";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { FeatureEntitlementCard } from "@/components/dashboard/feature-gates";
@@ -74,6 +74,9 @@ export function BillingScreen({
       while (!cancelled && attempts < POLL_MAX_ATTEMPTS) {
         attempts += 1;
         try {
+          if (attempts === 1 || attempts % 3 === 0) {
+            await reconcilePendingCheckoutAction();
+          }
           const entitlements = await refreshEntitlements();
           if (
             entitlements.pendingPlan === null &&

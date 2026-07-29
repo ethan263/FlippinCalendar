@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 
 import { buildCheckoutIdempotencyKey } from "@/lib/billing/yoco-metadata";
 import { readYocoPaymentMetadata } from "@/lib/billing/yoco-metadata";
+import {
+  checkoutIndicatesFailure,
+  checkoutIndicatesPayment,
+} from "@/lib/yoco/checkout-status";
 import { verifyYocoWebhook } from "@/lib/yoco/verify-webhook";
 
 function signWebhookBody(
@@ -79,5 +83,35 @@ describe("Yoco billing helpers", () => {
         webhookSignature: "v1,invalid",
       }),
     ).toThrow();
+  });
+
+  it("detects paid checkout sessions from paymentId or status", () => {
+    expect(
+      checkoutIndicatesPayment({
+        id: "ch_1",
+        status: "created",
+        paymentId: "p_1",
+        processingMode: "test",
+        metadata: null,
+      }),
+    ).toBe(true);
+    expect(
+      checkoutIndicatesPayment({
+        id: "ch_1",
+        status: "completed",
+        paymentId: null,
+        processingMode: "test",
+        metadata: null,
+      }),
+    ).toBe(true);
+    expect(
+      checkoutIndicatesFailure({
+        id: "ch_1",
+        status: "failed",
+        paymentId: null,
+        processingMode: "test",
+        metadata: null,
+      }),
+    ).toBe(true);
   });
 });

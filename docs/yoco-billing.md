@@ -9,6 +9,7 @@ Architecture: **Clerk** for sign-in and business (org) RBAC. **Yoco** for hosted
 3. User pays on Yoco's hosted page (redirect).
 4. Yoco sends `payment.succeeded` to `/api/webhooks/yoco`.
 5. Webhook activates the plan in Supabase (`organization_subscriptions`).
+6. If the webhook is delayed, returning to billing with `?checkout=success` reconciles via `GET /api/checkouts/{id}`.
 
 ## Env vars
 
@@ -23,9 +24,11 @@ RESEND_FROM_EMAIL=billing@flippincalendar.co.za
 
 ## Webhook URL
 
-`https://flippincalendar.co.za/api/webhooks/yoco`
+`https://www.flippincalendar.co.za/api/webhooks/yoco`
 
 Register via Yoco App → Checkout API → Webhooks, or `POST https://payments.yoco.com/api/webhooks`.
+
+Use the **www** hostname (not the bare apex) so POST requests are not redirected before signature verification.
 
 For **local testing**, expose your dev server with ngrok and set `NEXT_PUBLIC_APP_URL` to the ngrok URL. Register the ngrok webhook URL in Yoco test mode.
 

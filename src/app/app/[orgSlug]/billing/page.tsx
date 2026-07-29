@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 
+import { reconcilePendingCheckoutAction } from "@/app/actions/billing";
 import { BillingScreen } from "@/components/dashboard/billing-screen";
 import { normalizePlanIntent } from "@/lib/marketing/plan-intent";
 import { isFreePlan } from "@/lib/marketing/plans";
@@ -34,6 +35,14 @@ export default async function BillingPage({
 
   if (autoCheckout) {
     await clearPlanIntentCookie();
+  }
+
+  if (checkoutStatus === "success") {
+    try {
+      await reconcilePendingCheckoutAction();
+    } catch {
+      // Client polling will retry reconciliation if the webhook is delayed.
+    }
   }
 
   return (

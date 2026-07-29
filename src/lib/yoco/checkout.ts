@@ -27,6 +27,11 @@ export async function createYocoCheckout(args: {
   }
 
   const origin = getAppOrigin();
+  if (process.env.NODE_ENV === "production" && !origin.startsWith("https://")) {
+    throw new Error(
+      "NEXT_PUBLIC_APP_URL must be a public https URL for Yoco checkout redirects.",
+    );
+  }
   const amount = billingPlanAmountCents[args.plan];
   const successUrl = `${origin}/app/${args.orgSlug}/billing?checkout=success&plan=${args.plan}`;
   const cancelUrl = `${origin}/app/${args.orgSlug}/billing?checkout=cancelled`;
@@ -45,7 +50,7 @@ export async function createYocoCheckout(args: {
       successUrl,
       cancelUrl,
       failureUrl,
-      clientReferenceId: args.organizationId,
+      externalId: args.organizationId,
       metadata: {
         organizationId: args.organizationId,
         clerkOrgId: args.clerkOrgId,

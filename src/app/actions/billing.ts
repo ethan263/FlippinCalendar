@@ -15,6 +15,7 @@ import {
   type OrganizationSubscription,
 } from "@/lib/billing/subscriptions";
 import { requireCurrentOrganizationAdmin } from "@/lib/data/auth";
+import { reconcilePendingCheckout } from "@/lib/billing/reconcile-checkout";
 import { createYocoCheckout } from "@/lib/yoco/checkout";
 
 export async function fetchSubscriptionAction(): Promise<OrganizationSubscription | null> {
@@ -87,4 +88,9 @@ export async function createYocoCheckoutAction(planKey: string) {
   });
 
   return { redirectUrl, checkoutId };
+}
+
+export async function reconcilePendingCheckoutAction() {
+  const { organization } = await requireCurrentOrganizationAdmin();
+  return reconcilePendingCheckout(organization.id);
 }
