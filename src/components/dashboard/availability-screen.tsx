@@ -33,7 +33,7 @@ import {
   LoadingPanel,
   ScreenHeader,
 } from "@/components/dashboard/screen-kit";
-import { useWorkspace } from "@/components/dashboard/workspace-context";
+import { useWorkspace, useWorkspaceReady } from "@/components/dashboard/workspace-context";
 
 const days = [
   { value: 1, long: "Monday", short: "Mon" },
@@ -217,8 +217,13 @@ function WeeklyEditor({
 
 export function AvailabilityScreen() {
   const { organization, terminology } = useWorkspace();
-  const members = useServerData(() => listMembersAction({}), [organization?._id]);
-  const rules = useServerData(() => listRulesAction({}), [organization?._id]);
+  const workspaceReady = useWorkspaceReady();
+  const members = useServerData(() => listMembersAction({}), [organization?._id], {
+    enabled: workspaceReady,
+  });
+  const rules = useServerData(() => listRulesAction({}), [organization?._id], {
+    enabled: workspaceReady,
+  });
   const bookableMembers = useMemo(
     () =>
       (members ?? []).filter(
@@ -262,7 +267,7 @@ export function AvailabilityScreen() {
       />
 
       {!members || !rules ? (
-        <LoadingPanel rows={7} />
+        <LoadingPanel rows={7} label="Loading availability…" />
       ) : member ? (
         <WeeklyEditor
           key={`${member._id}-${rules.length}`}

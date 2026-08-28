@@ -1,14 +1,15 @@
 import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 import { reconcilePendingCheckoutAction } from "@/app/actions/billing";
 import { BillingScreen } from "@/components/dashboard/billing-screen";
 import { normalizePlanIntent } from "@/lib/marketing/plan-intent";
 import { isFreePlan } from "@/lib/marketing/plans";
-import { clearPlanIntentCookie } from "@/lib/marketing/plan-intent-cookie";
+import { getPayfastMode } from "@/lib/payfast/config";
 
 type BillingPageProps = {
   params: Promise<{ orgSlug: string }>;
-  searchParams: Promise<{ plan?: string; checkout?: string }>;
+  searchParams: Promise<{ plan?: string; checkout?: string; upgrade?: string }>;
 };
 
 function normalizeCheckoutStatus(
@@ -27,15 +28,20 @@ export default async function BillingPage({
   await auth.protect();
 
   const { orgSlug } = await params;
-  const { plan, checkout } = await searchParams;
+  const { plan, checkout, upgrade } = await searchParams;
   const planIntent = normalizePlanIntent(plan);
-  const checkoutStatus = normalizeCheckoutStatus(checkout);
-  const autoCheckout =
-    checkout === "1" && planIntent !== null && !isFreePlan(planIntent.key);
 
-  if (autoCheckout) {
-    await clearPlanIntentCookie();
+  if (checkout === "1" && planIntent && !isFreePlan(planIntent.key)) {
+    redirect(
+      `/app/${orgSlug}/billing?plan=${encodeURIComponent(planIntent.key)}&upgrade=1`,
+    );
   }
+
+  const checkoutStatus = normalizeCheckoutStatus(checkout);
+  const openCheckoutPanel =
+    upgrade === "1" &&
+    planIntent !== null &&
+    !isFreePlan(planIntent.key);
 
   if (checkoutStatus === "success") {
     try {
@@ -49,7 +55,8 @@ export default async function BillingPage({
     <BillingScreen
       orgSlug={orgSlug}
       highlightedPlan={planIntent?.key}
-      autoCheckoutPlanKey={autoCheckout ? planIntent.key : undefined}
+      payfastMode={getPayfastMode()}
+      openCheckoutPanel={openCheckoutPanel}
       checkoutStatus={checkoutStatus}
     />
   );

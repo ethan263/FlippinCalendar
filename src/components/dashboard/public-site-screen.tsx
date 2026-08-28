@@ -66,7 +66,7 @@ import {
   ScreenHeader,
   StatusBadge,
 } from "@/components/dashboard/screen-kit";
-import { useWorkspace } from "@/components/dashboard/workspace-context";
+import { useWorkspace, useWorkspaceReady } from "@/components/dashboard/workspace-context";
 import { cn } from "@/lib/utils";
 
 const accentPalettes = [
@@ -1035,9 +1035,16 @@ function SiteEditor({
 
 export function PublicSiteScreen() {
   const { organization, terminology } = useWorkspace();
-  const current = useServerData(() => getCurrentDraftAction(), [organization?._id]);
-  const offerings = useServerData(() => listOfferingsAction({}), [organization?._id]);
-  const members = useServerData(() => listMembersAction({}), [organization?._id]);
+  const workspaceReady = useWorkspaceReady();
+  const current = useServerData(() => getCurrentDraftAction(), [organization?._id], {
+    enabled: workspaceReady,
+  });
+  const offerings = useServerData(() => listOfferingsAction({}), [organization?._id], {
+    enabled: workspaceReady,
+  });
+  const members = useServerData(() => listMembersAction({}), [organization?._id], {
+    enabled: workspaceReady,
+  });
 
   return (
     <>
@@ -1057,7 +1064,7 @@ export function PublicSiteScreen() {
       />
 
       {!current || !offerings || !members ? (
-        <LoadingPanel rows={7} />
+        <LoadingPanel rows={7} label="Loading your public site…" />
       ) : (
         <SiteEditor
           key={`${current.site._id}-${current.site.updatedAt}`}

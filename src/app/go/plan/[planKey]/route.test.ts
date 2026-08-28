@@ -21,7 +21,7 @@ describe("GET /go/plan/[planKey]", () => {
     expect(response.headers.get("location")).toBe("https://example.com/pricing");
   });
 
-  it("redirects signed-out users to sign-up and stores paid plan intent cookie", async () => {
+  it("redirects signed-out users to sign-in and stores paid plan intent cookie", async () => {
     authMock.mockResolvedValue({ userId: null, orgSlug: null });
     const { GET } = await import("./route");
     const response = await GET(new Request("https://example.com/go/plan/pro"), {
@@ -29,12 +29,12 @@ describe("GET /go/plan/[planKey]", () => {
     });
 
     expect(response.headers.get("location")).toBe(
-      "https://example.com/sign-up?plan=pro",
+      "https://example.com/sign-in?plan=pro",
     );
     expect(response.headers.get("set-cookie")).toContain("fc_plan_intent=pro");
   });
 
-  it("redirects signed-in users with org to billing checkout", async () => {
+  it("redirects legacy voice plan to pro billing checkout", async () => {
     authMock.mockResolvedValue({ userId: "user_123", orgSlug: "acme" });
     const { GET } = await import("./route");
     const response = await GET(
@@ -45,9 +45,9 @@ describe("GET /go/plan/[planKey]", () => {
     );
 
     expect(response.headers.get("location")).toBe(
-      "https://example.com/app/acme/billing?plan=voice&checkout=1",
+      "https://example.com/app/acme/billing?plan=pro&upgrade=1",
     );
-    expect(response.headers.get("set-cookie")).toContain("fc_plan_intent=voice");
+    expect(response.headers.get("set-cookie")).toContain("fc_plan_intent=pro");
   });
 
   it("redirects signed-in users without org to app entry with plan", async () => {

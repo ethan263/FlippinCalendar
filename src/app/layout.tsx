@@ -10,6 +10,7 @@ import { shadcn } from "@clerk/ui/themes";
 import { Analytics } from "@vercel/analytics/next";
 import { Providers } from "@/components/providers";
 import { clerkBusinessLocalization } from "@/lib/clerk-business-localization";
+import { buildAuthCompleteUrl } from "@/lib/marketing/plan-intent";
 import { getMetadataBase } from "@/lib/site";
 import "./globals.css";
 
@@ -95,8 +96,8 @@ export default function RootLayout({
           }}
           signInUrl="/sign-in"
           signUpUrl="/sign-up"
-          signInFallbackRedirectUrl="/app"
-          signUpFallbackRedirectUrl="/app"
+          signInFallbackRedirectUrl={buildAuthCompleteUrl(null)}
+          signUpFallbackRedirectUrl={buildAuthCompleteUrl(null)}
           afterSignOutUrl="/"
         >
           <Providers>{children}</Providers>

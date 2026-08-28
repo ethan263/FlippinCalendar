@@ -2,7 +2,8 @@ import { TaskChooseOrganization } from "@clerk/nextjs";
 import { ContinueWhenOrganizationReady } from "@/components/auth/continue-when-organization-ready";
 import { AuthShell } from "@/components/auth-shell";
 import {
-  buildAppEntryUrl,
+  buildAfterOrganizationUrl,
+  buildPostOrganizationUrl,
   normalizePlanIntent,
 } from "@/lib/marketing/plan-intent";
 import { readPlanIntentCookie } from "@/lib/marketing/plan-intent-cookie";
@@ -19,10 +20,12 @@ export default async function ChooseOrganizationPage({
     normalizePlanIntent(plan) ?? (await readPlanIntentCookie());
 
   return (
-    <AuthShell eyebrow="One last step" title="Name your business">
-      <ContinueWhenOrganizationReady />
+    <AuthShell title="Choose a business">
+      <ContinueWhenOrganizationReady
+        getDestination={(slug) => buildPostOrganizationUrl(slug, planIntent)}
+      />
       <TaskChooseOrganization
-        redirectUrlComplete={buildAppEntryUrl(planIntent)}
+        redirectUrlComplete={buildAfterOrganizationUrl(planIntent)}
         appearance={{
           elements: {
             rootBox: "w-full",

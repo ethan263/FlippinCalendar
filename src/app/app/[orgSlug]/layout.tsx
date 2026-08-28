@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell/app-shell";
 import { requireAppSession } from "@/lib/auth/require-app-session";
+import { getOrganizationForRouteSlug } from "@/lib/data/organizations";
 
 export default async function OrganizationLayout({
   children,
@@ -30,5 +31,13 @@ export default async function OrganizationLayout({
     redirect("/app/access-required");
   }
 
-  return <AppShell orgSlug={routeOrgSlug}>{children}</AppShell>;
+  const initialOrganization = await getOrganizationForRouteSlug(routeOrgSlug).catch(
+    () => null,
+  );
+
+  return (
+    <AppShell orgSlug={routeOrgSlug} initialOrganization={initialOrganization}>
+      {children}
+    </AppShell>
+  );
 }

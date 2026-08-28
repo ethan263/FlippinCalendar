@@ -4,10 +4,14 @@ import {
   type MarketingPlanKey,
   isFreePlan,
 } from "@/lib/marketing/plans";
+import { getAppOrigin } from "@/lib/site";
 
 export type PlanIntent = Pick<MarketingPlan, "key" | "name">;
 
 export const PLAN_INTENT_COOKIE = "fc_plan_intent";
+
+/** Always show the Google account picker on OAuth sign-in. */
+export const CLERK_OIDC_ACCOUNT_PROMPT = "select_account" as const;
 
 const planByKey = new Map(
   marketingPlans.map((plan) => [plan.key, plan] as const),
@@ -17,6 +21,7 @@ const planByKey = new Map(
 const legacySlugMap: Record<string, MarketingPlanKey> = {
   free_org: "core",
   engage: "pro",
+  voice: "pro",
 };
 
 export function normalizePlanIntent(
@@ -57,12 +62,28 @@ export function buildAppEntryUrl(planIntent: PlanIntent | null): string {
   return `/app?plan=${encodeURIComponent(planIntent.key)}`;
 }
 
+/** Absolute URL for Clerk OAuth redirectUrl / forceRedirectUrl. */
+export function buildAuthCompleteUrl(planIntent: PlanIntent | null): string {
+  return new URL(buildAppEntryUrl(planIntent), getAppOrigin()).href;
+}
+
+export function buildPostOrganizationUrl(
+  orgSlug: string,
+  planIntent: PlanIntent | null,
+): string {
+  if (!planIntent || isFreePlan(planIntent.key)) {
+    return `/app/${orgSlug}`;
+  }
+
+  return buildBillingCheckoutUrl(orgSlug, planIntent);
+}
+
 export function buildAfterOrganizationUrl(planIntent: PlanIntent | null): string {
   if (!planIntent || isFreePlan(planIntent.key)) {
     return "/app/:slug";
   }
 
-  return `/app/:slug/billing?plan=${encodeURIComponent(planIntent.key)}&checkout=1`;
+  return `/app/:slug/billing?plan=${encodeURIComponent(planIntent.key)}&upgrade=1`;
 }
 
 export function buildBillingCheckoutUrl(
@@ -73,7 +94,7 @@ export function buildBillingCheckoutUrl(
     return `/app/${orgSlug}`;
   }
 
-  return `/app/${orgSlug}/billing?plan=${encodeURIComponent(planIntent.key)}&checkout=1`;
+  return `/app/${orgSlug}/billing?plan=${encodeURIComponent(planIntent.key)}&upgrade=1`;
 }
 
 export function buildPlanChoiceHref(args: {

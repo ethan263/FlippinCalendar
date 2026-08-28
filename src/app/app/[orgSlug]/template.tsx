@@ -10,9 +10,9 @@ export default function DashboardTemplate({ children }: { children: ReactNode })
 
   return (
     <motion.div
-      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      initial={reduceMotion ? false : { opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={reduceMotion ? { duration: 0 } : transitions.page}
+      transition={reduceMotion ? { duration: 0 } : transitions.snappy}
     >
       {children}
     </motion.div>

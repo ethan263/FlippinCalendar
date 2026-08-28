@@ -20,15 +20,15 @@
       "type": "A",
       "name": "@",
       "content": "76.76.21.21",
-      "proxied": false,
+      "proxied": true,
       "ttl": "auto",
-      "note": "Vercel apex"
+      "note": "Vercel apex — orange cloud via Cloudflare"
     },
     {
       "type": "CNAME",
       "name": "www",
       "content": "cname.vercel-dns.com",
-      "proxied": false,
+      "proxied": true,
       "ttl": "auto",
       "note": "Vercel www"
     },
@@ -73,6 +73,11 @@
       "note": "Clerk DKIM2"
     }
   ],
+  "webhooks": {
+    "payfast": "https://flippincalendar.co.za/api/webhooks/payfast",
+    "elevenlabs": "https://flippincalendar.co.za/api/webhooks/elevenlabs",
+    "setup": "CLOUDFLARE_API_TOKEN=... node scripts/setup-cloudflare-dns.mjs"
+  },
   "google_oauth_callbacks": [
     "https://clerk.flippincalendar.co.za/v1/oauth_callback",
     "https://accounts.flippincalendar.co.za/v1/oauth_callback"

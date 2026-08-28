@@ -35,6 +35,8 @@ Keep Supabase + ElevenLabs secrets. ElevenLabs webhook:
 
 `https://flippincalendar.co.za/api/webhooks/elevenlabs`
 
+Enable Cloudflare proxy on apex/www: `node scripts/setup-cloudflare-dns.mjs`
+
 ## 2b. Clerk ↔ Supabase (third-party auth)
 
 Production Clerk FAPI: **`clerk.flippincalendar.co.za`**

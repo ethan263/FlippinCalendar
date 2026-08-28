@@ -17,12 +17,15 @@ import {
 } from "@/components/dashboard/screen-kit";
 import { getCurrentDraftAction } from "@/app/actions/dashboard";
 import { useServerData } from "@/hooks/use-server-data";
-import { useWorkspace } from "@/components/dashboard/workspace-context";
+import { useWorkspace, useWorkspaceReady } from "@/components/dashboard/workspace-context";
 import { WorkspaceLanguageEditor } from "@/components/dashboard/workspace-language-editor";
 
 export function SettingsScreen() {
   const { organization } = useWorkspace();
-  const publicSite = useServerData(() => getCurrentDraftAction(), [organization?._id]);
+  const workspaceReady = useWorkspaceReady();
+  const publicSite = useServerData(() => getCurrentDraftAction(), [organization?._id], {
+    enabled: workspaceReady,
+  });
 
   return (
     <>
@@ -85,7 +88,7 @@ export function SettingsScreen() {
             organization={organization}
           />
         ) : (
-          <LoadingPanel rows={6} />
+          <LoadingPanel rows={6} label="Loading workspace settings…" />
         )}
       </section>
 

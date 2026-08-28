@@ -1,14 +1,36 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AnimatedContainer } from "@/components/motion/animated-container";
-import { HeroDemoCardTrigger } from "@/components/marketing/hero-demo-business-card";
-import { HeroMotionVideo } from "@/components/marketing/hero-motion-video";
+import { Skeleton } from "@/components/ui/skeleton";
 import { transitions } from "@/lib/motion/transitions";
+
+const HeroDemoCardTrigger = dynamic(
+  () =>
+    import("@/components/marketing/hero-demo-business-card").then(
+      (mod) => mod.HeroDemoCardTrigger,
+    ),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-12 w-36 rounded-md" />,
+  },
+);
+
+const HeroMotionVideo = dynamic(
+  () =>
+    import("@/components/marketing/hero-motion-video").then(
+      (mod) => mod.HeroMotionVideo,
+    ),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="aspect-video w-full rounded-none" />,
+  },
+);
 
 const copyVariants = {
   hidden: { opacity: 0, y: 18 },

@@ -2,7 +2,8 @@
 
 import type { ReactNode } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { LoaderCircle } from "lucide-react";
+
+import { AuthFormSkeleton } from "@/components/loading/auth-form-skeleton";
 
 export function ClerkAuthPanel({
   children,
@@ -14,16 +15,7 @@ export function ClerkAuthPanel({
   const { isLoaded } = useAuth();
 
   if (!isLoaded) {
-    return (
-      <div
-        className="flex min-h-[280px] items-center justify-center gap-2 text-sm text-muted-foreground"
-        role="status"
-        aria-live="polite"
-      >
-        <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-        {label}
-      </div>
-    );
+    return <AuthFormSkeleton label={label} />;
   }
 
   return <>{children}</>;

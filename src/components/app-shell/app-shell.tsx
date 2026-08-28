@@ -1,7 +1,6 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
@@ -38,18 +37,19 @@ import {
   SidebarProvider,
   SidebarRail,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import {
   type Terminology,
 } from "@/components/dashboard/data";
+import type { Organization } from "@/components/dashboard/data";
 import { useFeatureEntitlements } from "@/components/dashboard/feature-gates";
 import { getCurrentDraftAction } from "@/app/actions/dashboard";
 import { useServerData } from "@/hooks/use-server-data";
 import {
   WorkspaceProvider,
   useWorkspace,
+  useWorkspaceReady,
 } from "@/components/dashboard/workspace-context";
 
 type NavItem = {
@@ -110,8 +110,7 @@ function WorkspaceNavigation({
 }) {
   const pathname = usePathname();
   const entitlements = useFeatureEntitlements();
-  const aiAgentLocked =
-    entitlements.isLoaded && !entitlements.hasAiAgent;
+  const aiAgentLocked = !entitlements.hasAiAgent;
 
   return (
     <>
@@ -173,31 +172,6 @@ function WorkspaceNavigation({
   );
 }
 
-function HoverExpandSidebar({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  const { setOpen, isMobile } = useSidebar();
-
-  return (
-    <Sidebar
-      collapsible="icon"
-      className={className}
-      onMouseEnter={() => {
-        if (!isMobile) setOpen(true);
-      }}
-      onMouseLeave={() => {
-        if (!isMobile) setOpen(false);
-      }}
-    >
-      {children}
-    </Sidebar>
-  );
-}
-
 function ShellChrome({
   children,
   orgSlug,
@@ -208,9 +182,11 @@ function ShellChrome({
   const pathname = usePathname();
   const { organization, isBootstrapping, bootstrapError, terminology } =
     useWorkspace();
+  const workspaceReady = useWorkspaceReady();
   const publicSite = useServerData(
     () => getCurrentDraftAction(),
     [organization?._id],
+    { enabled: workspaceReady },
   );
   const navigation = navigationFor(terminology);
   const routeLabels = Object.fromEntries(
@@ -221,12 +197,9 @@ function ShellChrome({
   const segment = pathname.split("/").filter(Boolean)[2] ?? "";
   const pageLabel = routeLabels[segment] ?? "Overview";
   const organizationName = organization?.name ?? "Your business";
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <SidebarProvider
-      open={sidebarOpen}
-      onOpenChange={setSidebarOpen}
       defaultOpen={false}
       style={
         {
@@ -235,7 +208,10 @@ function ShellChrome({
         } as CSSProperties
       }
     >
-      <HoverExpandSidebar className="border-r border-black/10 bg-[#f2f0e9]">
+      <Sidebar
+        collapsible="icon"
+        className="border-r border-black/10 bg-[#f2f0e9]"
+      >
         <SidebarHeader className="gap-4 px-3 pt-4 pb-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-2">
           <Brand
             href={`/app/${orgSlug}`}
@@ -302,7 +278,7 @@ function ShellChrome({
               </span>
             </div>
             <p className="mt-2 truncate text-xs font-medium group-data-[collapsible=icon]:hidden">
-              {isBootstrapping ? "Setting up…" : organizationName}
+              {organizationName}
             </p>
             <span
               className={`hidden size-2 rounded-full group-data-[collapsible=icon]:block ${
@@ -323,7 +299,7 @@ function ShellChrome({
           </div>
         </SidebarFooter>
         <SidebarRail />
-      </HoverExpandSidebar>
+      </Sidebar>
 
       <SidebarInset className="min-w-0 bg-[#faf9f5]">
         <header className="sticky top-0 z-30 flex h-14 items-center border-b border-black/10 bg-[#faf9f5]/95 px-4 supports-backdrop-filter:bg-[#faf9f5]/85 supports-backdrop-filter:backdrop-blur-md sm:px-6">
@@ -403,12 +379,14 @@ function ShellChrome({
 export function AppShell({
   children,
   orgSlug,
+  initialOrganization,
 }: {
   children: ReactNode;
   orgSlug: string;
+  initialOrganization?: Organization | null;
 }) {
   return (
-    <WorkspaceProvider orgSlug={orgSlug}>
+    <WorkspaceProvider orgSlug={orgSlug} initialOrganization={initialOrganization}>
       <ShellChrome orgSlug={orgSlug}>{children}</ShellChrome>
     </WorkspaceProvider>
   );

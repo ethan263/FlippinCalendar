@@ -36,7 +36,7 @@ import {
   ScreenHeader,
   StatusBadge,
 } from "@/components/dashboard/screen-kit";
-import { useWorkspace } from "@/components/dashboard/workspace-context";
+import { useWorkspace, useWorkspaceReady } from "@/components/dashboard/workspace-context";
 import { useServerData } from "@/hooks/use-server-data";
 
 function BookingRow({ booking }: { booking: Booking }) {
@@ -64,11 +64,13 @@ function BookingRow({ booking }: { booking: Booking }) {
 }
 
 export function OverviewScreen() {
-  const { organization, terminology, orgSlug } = useWorkspace();
+  const { organization, terminology, orgSlug, isBootstrapping } = useWorkspace();
+  const workspaceReady = useWorkspaceReady();
   const [referenceTime] = useState(() => Date.now());
   const overview = useServerData(
     () => overviewAction(),
     [organization?._id],
+    { enabled: workspaceReady },
   );
 
   if (!overview) {
@@ -79,7 +81,14 @@ export function OverviewScreen() {
           title="Your day, at a glance."
           description={`${terminology.bookingPlural}, conversations, and channel health update here as your business works.`}
         />
-        <LoadingPanel rows={6} />
+        <LoadingPanel
+          rows={6}
+          label={
+            isBootstrapping
+              ? "Opening your workspace…"
+              : "Loading today's overview…"
+          }
+        />
       </>
     );
   }

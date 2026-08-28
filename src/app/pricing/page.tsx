@@ -32,11 +32,11 @@ export default async function PricingPage() {
           </h1>
           <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground">
             Each plan belongs to a business. Paid upgrades checkout securely
-            through Yoco in ZAR.
+            through PayFast in ZAR.
           </p>
         </div>
 
-        <div className="grid border-l border-t lg:grid-cols-3">
+        <div className="grid border-l border-t lg:grid-cols-2">
           {marketingPlans.map((plan) => (
             <article
               key={plan.name}

@@ -37,20 +37,26 @@ const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 export function WorkspaceProvider({
   children,
   orgSlug,
+  initialOrganization,
 }: {
   children: ReactNode;
   orgSlug: string;
+  initialOrganization?: Organization | null;
 }) {
   const { isLoaded, orgId } = useAuth();
   const { organization: clerkOrganization } = useOrganization();
   const [organization, setOrganization] = useState<Organization | null | undefined>(
-    undefined,
+    () => (initialOrganization === undefined ? undefined : initialOrganization),
   );
   const [isCreating, setIsCreating] = useState(false);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const requestedBootstrap = useRef(false);
-  const hadOrganization = useRef(false);
-  const loadedOrgSlug = useRef<string | null>(null);
+  const hadOrganization = useRef(Boolean(initialOrganization));
+  const loadedOrgSlug = useRef<string | null>(
+    initialOrganization ? orgSlug : null,
+  );
+
+  const prevOrgSlugRef = useRef(orgSlug);
 
   const refreshOrganization = useCallback(async () => {
     const current = await fetchCurrentOrganizationAction(orgSlug);
@@ -68,11 +74,15 @@ export function WorkspaceProvider({
     // active Clerk session even when the server layout already resolved orgSlug.
     if (!isLoaded) return;
 
-    requestedBootstrap.current = false;
+    const slugChanged = prevOrgSlugRef.current !== orgSlug;
+    if (slugChanged) {
+      requestedBootstrap.current = false;
+      prevOrgSlugRef.current = orgSlug;
+    }
 
     if (!orgId) {
       // Clerk can briefly clear orgId during server-action transitions (e.g.
-      // starting Yoco checkout). Do not replace a loaded workspace with a false
+      // starting PayFast checkout). Do not replace a loaded workspace with a false
       // sync error while that happens.
       if (!hadOrganization.current) {
         setOrganization(null);
@@ -87,9 +97,6 @@ export function WorkspaceProvider({
     }
 
     let cancelled = false;
-    if (loadedOrgSlug.current !== orgSlug) {
-      setOrganization(undefined);
-    }
     setBootstrapError(null);
     void fetchCurrentOrganizationAction(orgSlug)
       .then((current) => {
@@ -157,7 +164,8 @@ export function WorkspaceProvider({
       terminology: organization
         ? normalizeTerminology(organization.terminology)
         : defaultTerminology,
-      isBootstrapping: organization === undefined || isCreating,
+      isBootstrapping:
+        (organization === undefined && !hadOrganization.current) || isCreating,
       bootstrapError,
       refreshOrganization,
     }),
@@ -177,4 +185,10 @@ export function useWorkspace() {
     throw new Error("useWorkspace must be used inside WorkspaceProvider");
   }
   return value;
+}
+
+/** True when org row is loaded and bootstrap finished — safe to run server actions. */
+export function useWorkspaceReady() {
+  const { organization, isBootstrapping } = useWorkspace();
+  return Boolean(organization?._id) && !isBootstrapping;
 }

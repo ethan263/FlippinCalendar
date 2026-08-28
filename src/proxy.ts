@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import {
   PLAN_INTENT_COOKIE,
+  buildAppEntryUrl,
   normalizePlanIntent,
 } from "@/lib/marketing/plan-intent";
 import { isFreePlan } from "@/lib/marketing/plans";
@@ -29,10 +30,13 @@ export default clerkMiddleware(
         redirectUrl.includes("/session-tasks/choose-organization");
 
       if (isCircular) {
+        const planIntent = normalizePlanIntent(
+          req.cookies.get(PLAN_INTENT_COOKIE)?.value,
+        );
         const target = req.nextUrl.clone();
         target.searchParams.set(
           "redirect_url",
-          new URL("/app", req.nextUrl.origin).toString(),
+          new URL(buildAppEntryUrl(planIntent), req.nextUrl.origin).toString(),
         );
         return NextResponse.redirect(target);
       }

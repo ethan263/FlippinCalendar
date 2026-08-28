@@ -41,7 +41,7 @@ export function HeroMotionVideo() {
               loop
               muted
               playsInline
-              preload={reduceMotion ? "metadata" : "auto"}
+              preload="metadata"
               aria-label="flippinCalendar product motion preview"
             >
               <source

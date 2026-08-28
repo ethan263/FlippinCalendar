@@ -13,8 +13,8 @@ export type OrganizationSubscription = {
   status: SubscriptionStatus;
   currentPeriodStart: string;
   currentPeriodEnd: string | null;
-  yocoCheckoutId: string | null;
-  yocoPaymentId: string | null;
+  payfastMPaymentId: string | null;
+  payfastPaymentId: string | null;
 };
 
 type SubscriptionRow = {
@@ -24,8 +24,8 @@ type SubscriptionRow = {
   status: SubscriptionStatus;
   current_period_start: string;
   current_period_end: string | null;
-  yoco_checkout_id: string | null;
-  yoco_payment_id: string | null;
+  payfast_m_payment_id: string | null;
+  payfast_payment_id: string | null;
 };
 
 function mapRow(row: SubscriptionRow): OrganizationSubscription {
@@ -36,8 +36,8 @@ function mapRow(row: SubscriptionRow): OrganizationSubscription {
     status: row.status,
     currentPeriodStart: row.current_period_start,
     currentPeriodEnd: row.current_period_end,
-    yocoCheckoutId: row.yoco_checkout_id,
-    yocoPaymentId: row.yoco_payment_id,
+    payfastMPaymentId: row.payfast_m_payment_id,
+    payfastPaymentId: row.payfast_payment_id,
   };
 }
 
@@ -116,7 +116,7 @@ export async function organizationHasFeature(
 export async function setPendingCheckout(args: {
   organizationId: string;
   plan: BillingPlanKey;
-  yocoCheckoutId: string;
+  payfastMPaymentId: string;
 }) {
   const supabase = createAdminClient();
   const { error } = await supabase.from("organization_subscriptions").upsert(
@@ -124,7 +124,7 @@ export async function setPendingCheckout(args: {
       organization_id: args.organizationId,
       pending_plan: args.plan,
       status: "pending",
-      yoco_checkout_id: args.yocoCheckoutId,
+      payfast_m_payment_id: args.payfastMPaymentId,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "organization_id" },
@@ -139,7 +139,7 @@ export async function abortPendingCheckout(organizationId: string) {
     .update({
       status: "active",
       pending_plan: null,
-      yoco_checkout_id: null,
+      payfast_m_payment_id: null,
       updated_at: new Date().toISOString(),
     })
     .eq("organization_id", organizationId)
@@ -150,8 +150,8 @@ export async function abortPendingCheckout(organizationId: string) {
 export async function activatePaidSubscription(args: {
   organizationId: string;
   plan: BillingPlanKey;
-  yocoCheckoutId?: string | null;
-  yocoPaymentId?: string | null;
+  payfastMPaymentId?: string | null;
+  payfastPaymentId?: string | null;
 }) {
   const supabase = createAdminClient();
   const periodEnd = new Date();
@@ -165,8 +165,8 @@ export async function activatePaidSubscription(args: {
       status: "active",
       current_period_start: new Date().toISOString(),
       current_period_end: periodEnd.toISOString(),
-      yoco_checkout_id: args.yocoCheckoutId ?? null,
-      yoco_payment_id: args.yocoPaymentId ?? null,
+      payfast_m_payment_id: args.payfastMPaymentId ?? null,
+      payfast_payment_id: args.payfastPaymentId ?? null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "organization_id" },
@@ -174,14 +174,16 @@ export async function activatePaidSubscription(args: {
   if (error) throw new Error(error.message);
 }
 
-export async function recordYocoBillingEvent(args: {
-  yocoEventId: string;
+export async function recordPayfastBillingEvent(args: {
+  pfPaymentId: string;
+  mPaymentId?: string | null;
   eventType: string;
   payload: unknown;
 }): Promise<boolean> {
   const supabase = createAdminClient();
-  const { error } = await supabase.from("yoco_billing_events").insert({
-    yoco_event_id: args.yocoEventId,
+  const { error } = await supabase.from("payfast_billing_events").insert({
+    pf_payment_id: args.pfPaymentId,
+    m_payment_id: args.mPaymentId ?? null,
     event_type: args.eventType,
     payload: args.payload,
   });

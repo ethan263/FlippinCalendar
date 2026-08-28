@@ -8,7 +8,6 @@ import {
   Bot,
   Check,
   LockKeyhole,
-  Sparkles,
 } from "lucide-react";
 
 import { fetchEntitlementsAction } from "@/app/actions/billing";
@@ -22,22 +21,16 @@ export type ProductFeature = "web_agent" | "browser_voice";
 
 const featureCopy = {
   web_agent: {
-    title: "AI text chat",
-    description:
-      "Let visitors message your ElevenLabs concierge from the public page.",
+    title: "Text chat",
     icon: Bot,
-    capability: "Secure live text chat",
   },
   browser_voice: {
-    title: "Browser audio",
-    description:
-      "Let visitors speak naturally to the same concierge using their microphone.",
+    title: "Voice",
     icon: AudioLines,
-    capability: "Live microphone conversations",
   },
 } satisfies Record<
   ProductFeature,
-  { title: string; description: string; icon: typeof Bot; capability: string }
+  { title: string; icon: typeof Bot }
 >;
 
 export function useFeatureEntitlements() {
@@ -50,9 +43,22 @@ export function useFeatureEntitlements() {
   });
 
   useEffect(() => {
+    if (!organization?._id) return;
+
+    let cancelled = false;
     void fetchEntitlementsAction()
-      .then(setState)
-      .catch(() => setState((current) => ({ ...current, isLoaded: true })));
+      .then((next) => {
+        if (!cancelled) setState(next);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setState((current) => ({ ...current, isLoaded: true }));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [organization?._id]);
 
   return state;
@@ -73,12 +79,8 @@ export function AiAgentPlanLock({
           <LockKeyhole className="size-5" />
         </span>
         <h2 className="mt-5 font-heading text-2xl font-semibold tracking-tight">
-          AI Agent is on Pro and Voice
+          Upgrade required
         </h2>
-        <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-          Core includes bookings and your public page. Upgrade to Pro for the
-          ElevenLabs web concierge, or Voice for browser audio conversations.
-        </p>
         <Button asChild className="mt-6">
           <Link href={`/app/${orgSlug}/billing`}>
             Compare plans <ArrowUpRight className="size-3.5" />
@@ -138,26 +140,15 @@ export function FeatureEntitlementCard({
           <h3 className="font-heading text-lg font-semibold tracking-tight">
             {copy.title}
           </h3>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {copy.description}
-          </p>
         </div>
       </CardHeader>
-      {!compact && (
+      {!compact && !entitled && isLoaded && (
         <CardContent>
-          <div className="flex items-center justify-between gap-4 border-t border-black/8 pt-3">
-            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Sparkles className="size-3.5" />
-              {copy.capability}
-            </span>
-            {!entitled && isLoaded && (
-              <Button asChild variant="outline" size="sm" className="bg-white">
-                <Link href={`/app/${orgSlug}/billing`}>
-                  Compare plans <ArrowUpRight className="size-3.5" />
-                </Link>
-              </Button>
-            )}
-          </div>
+          <Button asChild variant="outline" size="sm" className="w-full bg-white">
+            <Link href={`/app/${orgSlug}/billing`}>
+              Compare plans <ArrowUpRight className="size-3.5" />
+            </Link>
+          </Button>
         </CardContent>
       )}
     </Card>

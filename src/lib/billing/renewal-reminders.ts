@@ -166,7 +166,7 @@ export async function runBillingRenewalReminders(): Promise<{
       `Hi,`,
       ``,
       `Your flippinCalendar ${planLabel} plan (${amount}/month) renews on ${periodEnd}.`,
-      `Yoco does not auto-renew — open billing to complete checkout and keep Pro features active:`,
+      `PayFast does not auto-renew — open billing to complete checkout and keep Pro features active:`,
       billingUrl,
       ``,
       `— flippinCalendar`,
@@ -175,7 +175,7 @@ export async function runBillingRenewalReminders(): Promise<{
     const html = `
       <p>Hi,</p>
       <p>Your <strong>${candidate.orgName}</strong> ${planLabel} plan (${amount}/month) renews on <strong>${periodEnd}</strong>.</p>
-      <p>Yoco does not auto-renew. Complete checkout before the period ends to keep your features active.</p>
+      <p>PayFast does not auto-renew. Complete checkout before the period ends to keep your features active.</p>
       <p><a href="${billingUrl}">Renew on the billing page</a></p>
       <p>— flippinCalendar</p>
     `.trim();

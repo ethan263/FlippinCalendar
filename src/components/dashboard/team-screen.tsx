@@ -39,7 +39,7 @@ import {
   ScreenHeader,
   SubmitButton,
 } from "@/components/dashboard/screen-kit";
-import { useWorkspace } from "@/components/dashboard/workspace-context";
+import { useWorkspace, useWorkspaceReady } from "@/components/dashboard/workspace-context";
 import { useServerData } from "@/hooks/use-server-data";
 
 function initials(name: string) {
@@ -53,8 +53,8 @@ function initials(name: string) {
 
 function MemberDialog({ member }: { member?: TeamMember }) {
   const { terminology } = useWorkspace();
-  const offerings = useServerData(() => listOfferingsAction({}), []);
   const [open, setOpen] = useState(false);
+  const offerings = useServerData(() => listOfferingsAction({}), [], { enabled: open });
   const [pending, setPending] = useState(false);
   const [active, setActive] = useState(member?.active ?? true);
   const [bookable, setBookable] = useState(member?.acceptingBookings ?? true);
@@ -235,9 +235,11 @@ function MemberDialog({ member }: { member?: TeamMember }) {
 
 export function TeamScreen() {
   const { organization, terminology } = useWorkspace();
+  const workspaceReady = useWorkspaceReady();
   const members = useServerData(
     () => listMembersAction({ includeInactive: true }),
     [organization?._id],
+    { enabled: workspaceReady },
   );
 
   return (
@@ -250,7 +252,7 @@ export function TeamScreen() {
       />
 
       {!members ? (
-        <LoadingPanel rows={5} />
+        <LoadingPanel rows={5} label="Loading team…" />
       ) : members.length ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {members.map((member) => (

@@ -3,7 +3,7 @@ import { normalizeBillingPlanKey } from "@/lib/billing/plans";
 
 const WINDOW_MS = 60 * 60 * 1000;
 
-export function buildCheckoutIdempotencyKey(
+export function buildCheckoutMPaymentId(
   organizationId: string,
   plan: BillingPlanKey,
 ): string {
@@ -11,10 +11,16 @@ export function buildCheckoutIdempotencyKey(
   return `fc:${organizationId}:${plan}:${hourWindow}`;
 }
 
-export function readYocoPaymentMetadata(
-  metadata: Record<string, string> | undefined,
-): { organizationId?: string; plan?: BillingPlanKey } {
-  const organizationId = metadata?.organizationId?.trim();
-  const plan = normalizeBillingPlanKey(metadata?.plan);
+export function readPayfastPaymentMetadata(data: PayfastItnLike): {
+  organizationId?: string;
+  plan?: BillingPlanKey;
+} {
+  const organizationId = data.custom_str1?.trim();
+  const plan = normalizeBillingPlanKey(data.custom_str2);
   return { organizationId, plan: plan ?? undefined };
 }
+
+type PayfastItnLike = {
+  custom_str1?: string;
+  custom_str2?: string;
+};

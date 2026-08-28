@@ -3,6 +3,7 @@
 import { SignUp } from "@clerk/nextjs";
 
 import { ClerkAuthPanel } from "@/components/auth/clerk-auth-panel";
+import { CLERK_OIDC_ACCOUNT_PROMPT } from "@/lib/marketing/plan-intent";
 
 type SignUpPanelProps = {
   signInUrl: string;
@@ -18,6 +19,7 @@ export function SignUpPanel({ signInUrl, redirectUrl }: SignUpPanelProps) {
         signInUrl={signInUrl}
         forceRedirectUrl={redirectUrl}
         fallbackRedirectUrl={redirectUrl}
+        oidcPrompt={CLERK_OIDC_ACCOUNT_PROMPT}
         appearance={{
           elements: {
             rootBox: "w-full",

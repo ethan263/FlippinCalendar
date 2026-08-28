@@ -1,9 +1,11 @@
-import { describe, expect, it, afterEach } from "vitest";
+import { describe, expect, it, afterEach, vi } from "vitest";
 
 import {
+  PRODUCTION_APP_ORIGIN,
   PRODUCTION_ORIGINS,
   getAppOrigin,
   getClerkAuthorizedParties,
+  getWebhooksOrigin,
 } from "@/lib/site";
 
 describe("site canonical helpers", () => {
@@ -11,6 +13,7 @@ describe("site canonical helpers", () => {
     delete process.env.NEXT_PUBLIC_APP_URL;
     delete process.env.CLERK_AUTHORIZED_PARTIES;
     delete process.env.VERCEL_URL;
+    vi.unstubAllEnvs();
   });
 
   it("uses NEXT_PUBLIC_APP_URL when set", () => {
@@ -30,5 +33,10 @@ describe("site canonical helpers", () => {
       "https://preview.example.com",
       "https://flippincalendar.co.za",
     ]);
+  });
+
+  it("uses apex domain for webhooks in production", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    expect(getWebhooksOrigin()).toBe(PRODUCTION_APP_ORIGIN);
   });
 });

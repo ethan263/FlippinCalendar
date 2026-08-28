@@ -13,8 +13,9 @@ export const runtime = "nodejs";
  * ElevenLabs workspace post-call webhook.
  *
  * Register at https://elevenlabs.io/app/agents/settings → Webhooks:
- *   URL: https://<host>/api/webhooks/elevenlabs
- *   Events: transcript (post_call_transcription); optionally call_initiation_failure
+ *   URL: https://flippincalendar.co.za/api/webhooks/elevenlabs
+ *   Events: post_call_transcription
+ * Or run: node --env-file-if-exists=.env.local scripts/setup-elevenlabs-webhook.mjs
  * Store the generated HMAC secret as ELEVENLABS_WEBHOOK_SECRET.
  *
  * Tenant attribution uses session dynamic variables:

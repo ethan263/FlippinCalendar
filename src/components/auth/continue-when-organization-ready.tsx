@@ -3,6 +3,10 @@
 import { useEffect, useRef } from "react";
 import { useAuth, useClerk, useOrganization, useOrganizationList } from "@clerk/nextjs";
 
+type ContinueWhenOrganizationReadyProps = {
+  getDestination?: (orgSlug: string) => string;
+};
+
 /**
  * When Membership required leaves the session `pending` after an org is
  * already selected, choose-organization can get stuck. If a membership
@@ -10,7 +14,9 @@ import { useAuth, useClerk, useOrganization, useOrganizationList } from "@clerk/
  * while the session task is still pending — middleware + requireAppSession
  * treat pending as signed-in when a userId is present.
  */
-export function ContinueWhenOrganizationReady() {
+export function ContinueWhenOrganizationReady({
+  getDestination = (slug) => `/app/${slug}`,
+}: ContinueWhenOrganizationReadyProps) {
   const { isLoaded, orgSlug, orgId } = useAuth({
     treatPendingAsSignedOut: false,
   });
@@ -20,6 +26,8 @@ export function ContinueWhenOrganizationReady() {
     userMemberships: { infinite: true },
   });
   const activatingRef = useRef(false);
+  const destinationRef = useRef(getDestination);
+  destinationRef.current = getDestination;
 
   useEffect(() => {
     if (!isLoaded || !orgsLoaded) return;
@@ -42,7 +50,7 @@ export function ContinueWhenOrganizationReady() {
       Boolean(session?.lastActiveOrganizationId);
 
     const enterApp = () => {
-      window.location.replace(`/app/${slug}`);
+      window.location.replace(destinationRef.current(slug));
     };
 
     if (hasActiveOrg) {

@@ -3,8 +3,9 @@ import { NextResponse } from "next/server";
 
 import {
   PLAN_INTENT_COOKIE,
+  buildAppEntryUrl,
   buildBillingCheckoutUrl,
-  buildSignUpUrl,
+  buildSignInUrl,
   normalizePlanIntent,
 } from "@/lib/marketing/plan-intent";
 import { isFreePlan } from "@/lib/marketing/plans";
@@ -35,10 +36,10 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const { userId, orgSlug } = await auth();
   const destination = !userId
-    ? buildSignUpUrl(planIntent.key)
+    ? buildSignInUrl(planIntent.key)
     : orgSlug
       ? buildBillingCheckoutUrl(orgSlug, planIntent)
-      : `/app?plan=${encodeURIComponent(planIntent.key)}`;
+      : buildAppEntryUrl(planIntent);
 
   const response = NextResponse.redirect(new URL(destination, _request.url));
 

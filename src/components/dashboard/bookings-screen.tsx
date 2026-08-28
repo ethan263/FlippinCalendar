@@ -60,7 +60,7 @@ import {
   StatusBadge,
   SubmitButton,
 } from "@/components/dashboard/screen-kit";
-import { useWorkspace } from "@/components/dashboard/workspace-context";
+import { useWorkspace, useWorkspaceReady } from "@/components/dashboard/workspace-context";
 
 const statuses: BookingStatus[] = [
   "pending",
@@ -72,9 +72,9 @@ const statuses: BookingStatus[] = [
 
 function CreateBookingDialog() {
   const { terminology } = useWorkspace();
-  const offerings = useServerData(() => listOfferingsAction({}), []);
-  const members = useServerData(() => listMembersAction({}), []);
   const [open, setOpen] = useState(false);
+  const offerings = useServerData(() => listOfferingsAction({}), [], { enabled: open });
+  const members = useServerData(() => listMembersAction({}), [], { enabled: open });
   const [pending, setPending] = useState(false);
   const [offeringId, setOfferingId] = useState("");
   const [memberId, setMemberId] = useState("unassigned");
@@ -243,9 +243,11 @@ function BookingStatusSelect({ booking }: { booking: Booking }) {
 
 export function BookingsScreen() {
   const { organization, terminology } = useWorkspace();
+  const workspaceReady = useWorkspaceReady();
   const bookings = useServerData(
     () => listBookingsAction({ limit: 200 }),
     [organization?._id],
+    { enabled: workspaceReady },
   );
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -317,7 +319,7 @@ export function BookingsScreen() {
           </div>
 
           {!bookings ? (
-            <LoadingPanel bare rows={6} />
+            <LoadingPanel bare rows={6} label="Loading bookings…" />
           ) : filtered.length ? (
             <div className="-mx-1 overflow-x-auto overscroll-x-contain">
             <Table>

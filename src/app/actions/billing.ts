@@ -1,22 +1,25 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { createClerkClient } from "@clerk/backend";
 
 import type { BillingPlanKey } from "@/lib/billing/features";
-import { planIncludesFeature } from "@/lib/billing/features";
+import { getPlanEntitlements } from "@/lib/billing/features";
 import {
   assertBillingCheckoutRateLimit,
 } from "@/lib/billing/checkout-rate-limit";
-import { buildCheckoutIdempotencyKey } from "@/lib/billing/yoco-metadata";
+import { buildCheckoutMPaymentId } from "@/lib/billing/payfast-metadata";
 import { normalizeBillingPlanKey } from "@/lib/billing/plans";
 import {
+  ensureCoreSubscription,
   getSubscriptionByClerkOrgId,
+  getSubscriptionByOrganizationId,
   setPendingCheckout,
   type OrganizationSubscription,
 } from "@/lib/billing/subscriptions";
 import { requireCurrentOrganizationAdminForRouteSlug } from "@/lib/data/auth";
 import { reconcilePendingCheckout } from "@/lib/billing/reconcile-checkout";
-import { createYocoCheckout } from "@/lib/yoco/checkout";
+import { createPayfastCheckout } from "@/lib/payfast/checkout";
 
 export async function fetchSubscriptionAction(): Promise<OrganizationSubscription | null> {
   const { orgId } = await auth();
@@ -46,8 +49,9 @@ export async function fetchEntitlementsAction() {
     subscription?.status === "past_due" ||
     !subscription;
 
-  const webAgent = active && planIncludesFeature(plan, "web_agent");
-  const browserVoice = active && planIncludesFeature(plan, "browser_voice");
+  const entitlements = getPlanEntitlements(plan);
+  const webAgent = active && entitlements.webAgent;
+  const browserVoice = active && entitlements.browserVoice;
 
   return {
     isLoaded: true,
@@ -59,7 +63,26 @@ export async function fetchEntitlementsAction() {
   };
 }
 
-export async function createYocoCheckoutAction(
+async function resolvePayerProfile(userId: string) {
+  const secretKey = process.env.CLERK_SECRET_KEY?.trim();
+  if (!secretKey) {
+    throw new Error("CLERK_SECRET_KEY is not configured.");
+  }
+
+  const clerk = createClerkClient({ secretKey });
+  const user = await clerk.users.getUser(userId);
+  const email = user.primaryEmailAddress?.emailAddress?.trim();
+  if (!email) {
+    throw new Error("Add an email address to your account before checkout.");
+  }
+
+  const firstName = user.firstName?.trim() || "flippinCalendar";
+  const lastName = user.lastName?.trim() || "Customer";
+
+  return { email, firstName, lastName };
+}
+
+export async function createPayfastCheckoutAction(
   planKey: string,
   orgSlug: string,
 ) {
@@ -76,27 +99,47 @@ export async function createYocoCheckoutAction(
   const { auth: clerkAuth, organization } =
     await requireCurrentOrganizationAdminForRouteSlug(routeOrgSlug);
 
+  let subscription = await getSubscriptionByOrganizationId(organization.id);
+  if (!subscription) {
+    await ensureCoreSubscription(organization.id);
+    subscription = await getSubscriptionByOrganizationId(organization.id);
+  }
+
+  if (
+    subscription?.status === "active" &&
+    subscription.plan === plan &&
+    subscription.currentPeriodEnd &&
+    new Date(subscription.currentPeriodEnd).getTime() > Date.now()
+  ) {
+    throw new Error("This business is already on that plan.");
+  }
+
   await assertBillingCheckoutRateLimit({
     organizationId: organization.id,
     userId: clerkAuth.userId,
   });
 
-  const idempotencyKey = buildCheckoutIdempotencyKey(organization.id, plan);
-  const { checkoutId, redirectUrl } = await createYocoCheckout({
+  const mPaymentId = buildCheckoutMPaymentId(organization.id, plan);
+  const payer = await resolvePayerProfile(clerkAuth.userId);
+
+  const checkout = await createPayfastCheckout({
     organizationId: organization.id,
     clerkOrgId: clerkAuth.clerkOrgId,
     orgSlug: organization.slug,
     plan,
-    idempotencyKey,
+    mPaymentId,
+    payerEmail: payer.email,
+    payerFirstName: payer.firstName,
+    payerLastName: payer.lastName,
   });
 
   await setPendingCheckout({
     organizationId: organization.id,
     plan,
-    yocoCheckoutId: checkoutId,
+    payfastMPaymentId: mPaymentId,
   });
 
-  return { redirectUrl, checkoutId };
+  return checkout;
 }
 
 export async function reconcilePendingCheckoutAction(orgSlug: string) {

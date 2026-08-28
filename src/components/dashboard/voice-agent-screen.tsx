@@ -305,7 +305,7 @@ function ConversationDetailDialog({
           </DialogDescription>
         </DialogHeader>
         {!conversationId || detail === undefined ? (
-          <LoadingPanel rows={5} />
+          <LoadingPanel rows={5} label="Loading conversation…" />
         ) : !detail ? (
           <EmptyState
             compact
@@ -770,7 +770,7 @@ export function VoiceAgentScreen() {
             <p className="mb-3 text-xs text-destructive">{syncError}</p>
           ) : null}
           {!workspaceReady || conversations === undefined ? (
-            <LoadingPanel rows={4} />
+            <LoadingPanel rows={4} label="Loading conversations…" />
           ) : conversations.length ? (
             <div className="divide-y divide-black/8">
               {conversations.map((conversation) => {

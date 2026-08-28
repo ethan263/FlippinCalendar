@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   buildAfterOrganizationUrl,
   buildAppEntryUrl,
+  buildAuthCompleteUrl,
   buildBillingCheckoutUrl,
   buildPlanChoiceHref,
+  buildPostOrganizationUrl,
   normalizePlanIntent,
 } from "@/lib/marketing/plan-intent";
 
@@ -15,8 +17,8 @@ describe("plan choice routing intent", () => {
       name: "Pro",
     });
     expect(normalizePlanIntent("voice")).toMatchObject({
-      key: "voice",
-      name: "Voice",
+      key: "pro",
+      name: "Pro",
     });
     expect(normalizePlanIntent("free_org")).toMatchObject({
       key: "core",
@@ -28,8 +30,8 @@ describe("plan choice routing intent", () => {
     expect(
       buildPlanChoiceHref({ planKey: "pro", signedIn: true, orgSlug: "acme" }),
     ).toBe("/go/plan/pro");
-    expect(buildPlanChoiceHref({ planKey: "voice", signedIn: false })).toBe(
-      "/go/plan/voice",
+    expect(buildPlanChoiceHref({ planKey: "pro", signedIn: false })).toBe(
+      "/go/plan/pro",
     );
   });
 
@@ -42,11 +44,15 @@ describe("plan choice routing intent", () => {
     const paidPlan = normalizePlanIntent("pro");
     expect(paidPlan).not.toBeNull();
     expect(buildAppEntryUrl(paidPlan)).toBe("/app?plan=pro");
+    expect(buildAuthCompleteUrl(paidPlan)).toMatch(/\/app\?plan=pro$/);
     expect(buildAfterOrganizationUrl(paidPlan)).toBe(
-      "/app/:slug/billing?plan=pro&checkout=1",
+      "/app/:slug/billing?plan=pro&upgrade=1",
     );
     expect(buildBillingCheckoutUrl("acme", paidPlan!)).toBe(
-      "/app/acme/billing?plan=pro&checkout=1",
+      "/app/acme/billing?plan=pro&upgrade=1",
+    );
+    expect(buildPostOrganizationUrl("acme", paidPlan)).toBe(
+      "/app/acme/billing?plan=pro&upgrade=1",
     );
   });
 

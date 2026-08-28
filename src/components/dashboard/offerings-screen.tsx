@@ -40,7 +40,7 @@ import {
   ScreenHeader,
   SubmitButton,
 } from "@/components/dashboard/screen-kit";
-import { useWorkspace } from "@/components/dashboard/workspace-context";
+import { useWorkspace, useWorkspaceReady } from "@/components/dashboard/workspace-context";
 
 function OfferingDialog({ offering }: { offering?: Offering }) {
   const { organization, terminology } = useWorkspace();
@@ -202,9 +202,11 @@ function OfferingDialog({ offering }: { offering?: Offering }) {
 
 export function OfferingsScreen() {
   const { organization, terminology } = useWorkspace();
+  const workspaceReady = useWorkspaceReady();
   const offerings = useServerData(
     () => listOfferingsAction({ includeInactive: true }),
     [organization?._id],
+    { enabled: workspaceReady },
   );
 
   return (
@@ -217,7 +219,7 @@ export function OfferingsScreen() {
       />
 
       {!offerings ? (
-        <LoadingPanel rows={5} />
+        <LoadingPanel rows={5} label="Loading offerings…" />
       ) : offerings.length ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {offerings.map((offering, index) => (

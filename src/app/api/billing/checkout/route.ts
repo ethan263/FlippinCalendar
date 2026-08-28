@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { createYocoCheckoutAction } from "@/app/actions/billing";
+import { createPayfastCheckoutAction } from "@/app/actions/billing";
 
 export const runtime = "nodejs";
 
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await createYocoCheckoutAction(planKey, orgSlug);
+    const result = await createPayfastCheckoutAction(planKey, orgSlug);
     return NextResponse.json(result);
   } catch (error) {
     const message =
