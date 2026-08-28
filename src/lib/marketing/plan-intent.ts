@@ -17,9 +17,10 @@ const planByKey = new Map(
   marketingPlans.map((plan) => [plan.key, plan] as const),
 );
 
-/** Accept legacy Clerk slugs during transition. */
+/** Accept legacy Clerk slugs and retired tier names during transition. */
 const legacySlugMap: Record<string, MarketingPlanKey> = {
   free_org: "core",
+  free: "core",
   engage: "pro",
   voice: "pro",
 };
@@ -32,10 +33,16 @@ export function normalizePlanIntent(
   }
 
   const trimmed = value.trim().toLowerCase();
-  const plan =
-    planByKey.get(trimmed as MarketingPlanKey) ??
-    planByKey.get(legacySlugMap[trimmed]);
+  const resolvedKey =
+    (planByKey.has(trimmed as MarketingPlanKey)
+      ? (trimmed as MarketingPlanKey)
+      : legacySlugMap[trimmed]) ?? null;
 
+  if (!resolvedKey) {
+    return null;
+  }
+
+  const plan = planByKey.get(resolvedKey);
   if (!plan) {
     return null;
   }

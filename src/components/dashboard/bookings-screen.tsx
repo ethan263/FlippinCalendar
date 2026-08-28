@@ -50,6 +50,7 @@ import {
   listOfferingsAction,
   updateBookingStatusAction,
 } from "@/app/actions/dashboard";
+import { useLiveRefreshableServerData } from "@/hooks/use-live-refresh";
 import { useServerData } from "@/hooks/use-server-data";
 import {
   EmptyState,
@@ -70,7 +71,7 @@ const statuses: BookingStatus[] = [
   "no_show",
 ];
 
-function CreateBookingDialog() {
+function CreateBookingDialog({ onMutated }: { onMutated: () => void }) {
   const { terminology } = useWorkspace();
   const [open, setOpen] = useState(false);
   const offerings = useServerData(() => listOfferingsAction({}), [], { enabled: open });
@@ -99,6 +100,7 @@ function CreateBookingDialog() {
         notes: String(form.get("notes") ?? "").trim() || undefined,
       });
       toast.success(`${terminology.booking} created`);
+      onMutated();
       setOpen(false);
       setOfferingId("");
       setMemberId("unassigned");
@@ -206,7 +208,13 @@ function CreateBookingDialog() {
   );
 }
 
-function BookingStatusSelect({ booking }: { booking: Booking }) {
+function BookingStatusSelect({
+  booking,
+  onMutated,
+}: {
+  booking: Booking;
+  onMutated: () => void;
+}) {
   const [pending, setPending] = useState(false);
 
   async function handleChange(status: BookingStatus) {
@@ -214,6 +222,7 @@ function BookingStatusSelect({ booking }: { booking: Booking }) {
     try {
       await updateBookingStatusAction({ bookingId: booking._id, status });
       toast.success("Status updated");
+      onMutated();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not update status");
     } finally {
@@ -241,15 +250,19 @@ function BookingStatusSelect({ booking }: { booking: Booking }) {
   );
 }
 
-export function BookingsScreen() {
+export function BookingsScreen({ initialQuery = "" }: { initialQuery?: string }) {
   const { organization, terminology } = useWorkspace();
   const workspaceReady = useWorkspaceReady();
-  const bookings = useServerData(
+  const { data: bookings, refresh: refreshBookings } = useLiveRefreshableServerData(
     () => listBookingsAction({ limit: 200 }),
     [organization?._id],
-    { enabled: workspaceReady },
+    {
+      enabled: workspaceReady,
+      organizationId: organization?._id,
+      liveTables: ["bookings"],
+    },
   );
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [statusFilter, setStatusFilter] = useState("all");
 
   const normalizedBookings = useMemo(
@@ -282,7 +295,7 @@ export function BookingsScreen() {
           eyebrow="Schedule desk"
           title={terminology.bookingPlural}
           description={`Create, search, and manage every ${terminology.booking.toLowerCase()} across your public page, AI agent, and team.`}
-          action={<CreateBookingDialog />}
+          action={<CreateBookingDialog onMutated={refreshBookings} />}
         />
       </AnimatedContainer>
 
@@ -376,7 +389,10 @@ export function BookingsScreen() {
                       <StatusBadge status={booking.status} />
                     </TableCell>
                     <TableCell className="text-right">
-                      <BookingStatusSelect booking={booking} />
+                      <BookingStatusSelect
+                        booking={booking}
+                        onMutated={refreshBookings}
+                      />
                     </TableCell>
                   </>
                 )}
@@ -396,7 +412,11 @@ export function BookingsScreen() {
                   ? "Adjust the search or status filter to widen the schedule."
                   : `Create the first ${terminology.booking.toLowerCase()} or let your public page and agent do it for you.`
               }
-              action={!query && statusFilter === "all" ? <CreateBookingDialog /> : undefined}
+              action={
+                !query && statusFilter === "all" ? (
+                  <CreateBookingDialog onMutated={refreshBookings} />
+                ) : undefined
+              }
             />
           )}
         </CardContent>

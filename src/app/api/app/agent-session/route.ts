@@ -3,7 +3,7 @@ import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { NextResponse } from "next/server";
 
 import { createAgentDynamicVariables } from "@/lib/agent-context";
-import { organizationHasFeature } from "@/lib/billing/subscriptions";
+import { organizationHasFeatureByOrganizationId } from "@/lib/billing/subscriptions";
 import { listRules } from "@/lib/data/availability";
 import { getCurrentAgent } from "@/lib/data/agents";
 import { listOfferings } from "@/lib/data/catalog";
@@ -72,27 +72,39 @@ function weeklyHoursFromRules(
 }
 
 export async function POST() {
-  const { isAuthenticated, orgId } = await auth();
-  if (!isAuthenticated) {
+  const session = await auth();
+  if (!session.userId) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   }
-  if (!orgId) {
-    return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+
+  const organization = await getCurrentOrganization();
+  if (!organization) {
+    return NextResponse.json({ error: "Workspace not found." }, { status: 404 });
   }
-  const hasBrowserVoice = await organizationHasFeature(orgId, "browser_voice");
+
+  const hasBrowserVoice = await organizationHasFeatureByOrganizationId(
+    organization._id,
+    "browser_voice",
+  );
   if (!hasBrowserVoice) {
     return NextResponse.json(
       { error: "This business plan does not include browser audio." },
       { status: 403 },
     );
   }
-  const hasWebAgent = await organizationHasFeature(orgId, "web_agent");
-  const session = await auth();
-  if (
-    !session.has?.({ permission: "org:operations_hub:manage" }) &&
-    !session.has?.({ role: "org:admin" }) &&
-    !session.has?.({ role: "org:owner" })
-  ) {
+  const hasWebAgent = await organizationHasFeatureByOrganizationId(
+    organization._id,
+    "web_agent",
+  );
+
+  const isPersonalOwner = !organization.clerkOrgId;
+  const canOperate =
+    isPersonalOwner ||
+    session.has?.({ permission: "org:operations_hub:manage" }) ||
+    session.has?.({ role: "org:admin" }) ||
+    session.has?.({ role: "org:owner" }) ||
+    session.has?.({ role: "org:operator" });
+  if (!canOperate) {
     return NextResponse.json(
       { error: "Organization operator access is required." },
       { status: 403 },
@@ -109,9 +121,8 @@ export async function POST() {
   }
 
   try {
-    const [organization, agent, site, offerings, knowledgeItems, rules] =
+    const [agent, site, offerings, knowledgeItems, rules] =
       await Promise.all([
-        getCurrentOrganization(),
         getCurrentAgent(),
         getCurrentDraft(),
         listOfferings({ includeInactive: false }),
@@ -119,11 +130,7 @@ export async function POST() {
         listRules(),
       ]);
 
-    if (
-      !organization ||
-      organization.clerkOrgId !== orgId ||
-      !agent.integration?.webEnabled
-    ) {
+    if (!agent.integration?.webEnabled) {
       return NextResponse.json(
         { error: "No web agent is connected to this organization." },
         { status: 404 },
@@ -159,9 +166,9 @@ export async function POST() {
           knowledgeItems,
           weeklyHours,
           organizationId: organization._id,
-          externalUserId: organization.clerkOrgId,
+          externalUserId: organization.clerkOrgId ?? session.userId!,
           textChatEnabled: hasWebAgent,
-          voiceChatEnabled: true,
+          voiceChatEnabled: hasBrowserVoice,
           personaGuidance: persona
             ? resolvePersonaGuidance(persona)
             : undefined,

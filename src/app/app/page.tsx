@@ -1,8 +1,11 @@
-import { OrganizationList } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 
-import { Brand } from "@/components/brand";
+import { WorkspacePicker } from "@/components/auth/workspace-picker";
 import { requireAppSession } from "@/lib/auth/require-app-session";
+import {
+  bootstrapCurrentOrganization,
+  listAccessibleWorkspaces,
+} from "@/lib/data/organizations";
 import {
   buildAfterOrganizationUrl,
   buildBillingCheckoutUrl,
@@ -15,42 +18,47 @@ type AppIndexPageProps = {
 };
 
 export default async function AppIndexPage({ searchParams }: AppIndexPageProps) {
-  const { orgSlug } = await requireAppSession();
+  const session = await requireAppSession();
   const { plan } = await searchParams;
   const planIntent =
     normalizePlanIntent(plan) ?? (await readPlanIntentCookie());
 
-  if (orgSlug) {
+  if (session.orgSlug) {
     redirect(
       planIntent
-        ? buildBillingCheckoutUrl(orgSlug, planIntent)
-        : `/app/${orgSlug}`,
+        ? buildBillingCheckoutUrl(session.orgSlug, planIntent)
+        : `/app/${session.orgSlug}`,
     );
   }
 
-  const afterOrganizationUrl = buildAfterOrganizationUrl(planIntent);
+  const workspaces = await listAccessibleWorkspaces(session.userId!);
+
+  if (workspaces.length === 0) {
+    const workspace = await bootstrapCurrentOrganization({
+      timezone: "Africa/Johannesburg",
+      locale: "en-ZA",
+      currency: "ZAR",
+    });
+    redirect(
+      planIntent
+        ? buildBillingCheckoutUrl(workspace.slug, planIntent)
+        : `/app/${workspace.slug}`,
+    );
+  }
+
+  if (workspaces.length === 1) {
+    const workspace = workspaces[0]!;
+    redirect(
+      planIntent
+        ? buildBillingCheckoutUrl(workspace.slug, planIntent)
+        : `/app/${workspace.slug}`,
+    );
+  }
 
   return (
-    <main className="grid min-h-svh place-items-center bg-background px-4 py-12">
-      <section className="w-full max-w-md">
-        <div className="mb-6 flex justify-center">
-          <Brand href="/app" />
-        </div>
-        <OrganizationList
-          hidePersonal
-          afterCreateOrganizationUrl={afterOrganizationUrl}
-          afterSelectOrganizationUrl={afterOrganizationUrl}
-          appearance={{
-            elements: {
-              rootBox: "w-full",
-              cardBox: "w-full shadow-none",
-              card: "w-full border border-black/10 bg-white shadow-none",
-              organizationListCreateOrganizationActionButton:
-                "border-primary/20 text-primary hover:bg-primary/5",
-            },
-          }}
-        />
-      </section>
-    </main>
+    <WorkspacePicker
+      workspaces={workspaces}
+      afterOrganizationUrl={buildAfterOrganizationUrl(planIntent)}
+    />
   );
 }

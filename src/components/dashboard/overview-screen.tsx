@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   AudioLines,
@@ -37,7 +38,7 @@ import {
   StatusBadge,
 } from "@/components/dashboard/screen-kit";
 import { useWorkspace, useWorkspaceReady } from "@/components/dashboard/workspace-context";
-import { useServerData } from "@/hooks/use-server-data";
+import { useLiveRefreshableServerData } from "@/hooks/use-live-refresh";
 
 function BookingRow({ booking }: { booking: Booking }) {
   const { organization } = useWorkspace();
@@ -64,13 +65,18 @@ function BookingRow({ booking }: { booking: Booking }) {
 }
 
 export function OverviewScreen() {
+  const pathname = usePathname();
   const { organization, terminology, orgSlug, isBootstrapping } = useWorkspace();
   const workspaceReady = useWorkspaceReady();
   const [referenceTime] = useState(() => Date.now());
-  const overview = useServerData(
+  const { data: overview } = useLiveRefreshableServerData(
     () => overviewAction(),
-    [organization?._id],
-    { enabled: workspaceReady },
+    [organization?._id, pathname],
+    {
+      enabled: workspaceReady,
+      organizationId: organization?._id,
+      liveTables: ["bookings", "conversations"],
+    },
   );
 
   if (!overview) {

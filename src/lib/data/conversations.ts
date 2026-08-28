@@ -39,6 +39,17 @@ export async function resolveConversationOrganizationId(
     if (data?.id) return data.id as string;
   }
 
+  // Personal workspaces tag sessions with the Clerk user id.
+  if (hint.organizationId?.startsWith("user_")) {
+    const { data, error } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("owner_clerk_user_id", hint.organizationId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (data?.id) return data.id as string;
+  }
+
   const siteSlug = hint.siteSlug?.trim().toLowerCase();
   if (siteSlug) {
     const { data, error } = await supabase

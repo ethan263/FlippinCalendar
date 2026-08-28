@@ -3,9 +3,10 @@ import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { NextRequest, NextResponse } from "next/server";
 
 import { createAgentDynamicVariables } from "@/lib/agent-context";
-import { organizationHasFeature } from "@/lib/clerk-billing";
+import { organizationHasFeatureByOrganizationId } from "@/lib/billing/subscriptions";
 import {
   consumePublicSessionRateLimit,
+  releasePublicSessionRateLimit,
   requestPublicSession,
 } from "@/lib/data/agents";
 import { resolveElevenLabsAgentId } from "@/lib/elevenlabs/config";
@@ -75,8 +76,14 @@ export async function POST(
     }
 
     const [textEntitled, voiceEntitled, published] = await Promise.all([
-      organizationHasFeature(sessionConfig.clerkOrgId, "web_agent"),
-      organizationHasFeature(sessionConfig.clerkOrgId, "browser_voice"),
+      organizationHasFeatureByOrganizationId(
+        sessionConfig.organizationId,
+        "web_agent",
+      ),
+      organizationHasFeatureByOrganizationId(
+        sessionConfig.organizationId,
+        "browser_voice",
+      ),
       getPublishedBySlug(sessionConfig.siteSlug),
     ]);
 
@@ -116,17 +123,23 @@ export async function POST(
       );
     }
 
-    await consumePublicSessionRateLimit({
+    const rateLimitConsumption = await consumePublicSessionRateLimit({
       organizationId: sessionConfig.organizationId,
       publicSiteId: sessionConfig.publicSiteId,
       clientKey: clientKey(request),
     });
 
     const elevenlabs = new ElevenLabsClient({ apiKey });
-    const { signedUrl } =
-      await elevenlabs.conversationalAi.conversations.getSignedUrl({
+    let signedUrl: string;
+    try {
+      const session = await elevenlabs.conversationalAi.conversations.getSignedUrl({
         agentId,
       });
+      signedUrl = session.signedUrl;
+    } catch (elError) {
+      await releasePublicSessionRateLimit(rateLimitConsumption);
+      throw elError;
+    }
 
     // Signed URL only — never return the API key or raw agent id to the browser.
     const agentConfig = published.site.config.agent;
@@ -151,7 +164,8 @@ export async function POST(
           knowledgeItems: published.knowledgeItems,
           weeklyHours: published.weeklyHours,
           organizationId: published.organization.id,
-          externalUserId: published.organization.clerkOrgId,
+          externalUserId:
+            published.organization.clerkOrgId ?? published.organization.id,
           textChatEnabled: textEntitled,
           voiceChatEnabled: voiceEntitled,
           personaGuidance: persona

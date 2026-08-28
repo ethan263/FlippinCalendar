@@ -5,7 +5,7 @@ import type {
   Conversation,
   ConversationAnalytics,
 } from "@/components/dashboard/data";
-import { requireCurrentOrganizationOperator, ms, iso } from "@/lib/data/auth";
+import { requireCurrentOrganizationAdmin, requireCurrentOrganizationOperator, ms, iso } from "@/lib/data/auth";
 import { DAY_MS } from "@/lib/data/time";
 import { boundedInteger } from "@/lib/data/shared";
 import {
@@ -14,6 +14,8 @@ import {
   type ElevenLabsConversationSnapshot,
 } from "@/lib/elevenlabs/conversations";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { organizationHasFeatureByOrganizationId } from "@/lib/billing/subscriptions";
+import { sanitizeSiteConfig } from "@/lib/data/site-config";
 
 type ConversationRow = {
   id: string;
@@ -63,7 +65,10 @@ function hashClientKey(value: string): string {
   return (hash >>> 0).toString(36);
 }
 
-async function incrementRateWindow(
+const RATE_LIMIT_ERROR =
+  "Too many concierge sessions. Please wait a moment and try again.";
+
+async function consumeRateWindowAtomic(
   organizationId: string,
   publicSiteId: string,
   scopeKey: string,
@@ -72,40 +77,43 @@ async function incrementRateWindow(
   expiresAt: number,
 ) {
   const supabase = createAdminClient();
-  const { data: row, error } = await supabase
-    .from("agent_session_rate_limits")
-    .select("*")
-    .eq("organization_id", organizationId)
-    .eq("public_site_id", publicSiteId)
-    .eq("scope_key", scopeKey)
-    .eq("window_start", windowStart)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (row && row.count >= limit) {
-    throw new Error(
-      "Too many concierge sessions. Please wait a moment and try again.",
-    );
-  }
-  if (row) {
-    const { error: updateError } = await supabase
-      .from("agent_session_rate_limits")
-      .update({ count: row.count + 1 })
-      .eq("id", row.id);
-    if (updateError) throw new Error(updateError.message);
-  } else {
-    const { error: insertError } = await supabase
-      .from("agent_session_rate_limits")
-      .insert({
-        organization_id: organizationId,
-        public_site_id: publicSiteId,
-        scope_key: scopeKey,
-        window_start: windowStart,
-        count: 1,
-        expires_at: iso(expiresAt),
-      });
-    if (insertError) throw new Error(insertError.message);
+  const { error } = await supabase.rpc("consume_agent_session_rate_limit", {
+    p_organization_id: organizationId,
+    p_public_site_id: publicSiteId,
+    p_scope_key: scopeKey,
+    p_limit: limit,
+    p_window_start: windowStart,
+    p_expires_at: iso(expiresAt),
+  });
+  if (error) {
+    if (error.message.includes(RATE_LIMIT_ERROR)) {
+      throw new Error(RATE_LIMIT_ERROR);
+    }
+    throw new Error(error.message);
   }
 }
+
+async function releaseRateWindow(
+  organizationId: string,
+  publicSiteId: string,
+  scopeKey: string,
+  windowStart: number,
+) {
+  const supabase = createAdminClient();
+  const { error } = await supabase.rpc("release_agent_session_rate_limit", {
+    p_organization_id: organizationId,
+    p_public_site_id: publicSiteId,
+    p_scope_key: scopeKey,
+    p_window_start: windowStart,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export type PublicSessionRateLimitConsumption = {
+  organizationId: string;
+  publicSiteId: string;
+  windows: Array<{ scopeKey: string; windowStart: number }>;
+};
 
 export async function getCurrentAgent(): Promise<AgentConfiguration> {
   const { organization, supabase } = await requireCurrentOrganizationOperator();
@@ -122,6 +130,7 @@ export async function getCurrentAgent(): Promise<AgentConfiguration> {
       ? {
           _id: integration.id,
           webEnabled: integration.web_enabled,
+          knowledgeBaseId: integration.knowledge_base_id ?? undefined,
           updatedAt: ms(integration.updated_at)!,
         }
       : null,
@@ -131,7 +140,7 @@ export async function getCurrentAgent(): Promise<AgentConfiguration> {
 export type PublicSessionConfig = {
   organizationId: string;
   publicSiteId: string;
-  clerkOrgId: string;
+  clerkOrgId?: string;
   siteSlug: string;
   mode: "text" | "voice" | "widget";
   webAgentId: string | null;
@@ -178,7 +187,7 @@ export async function requestPublicSession(args: {
   return {
     organizationId: organization.id as string,
     publicSiteId: site.id as string,
-    clerkOrgId: organization.clerk_org_id,
+    clerkOrgId: organization.clerk_org_id ?? undefined,
     siteSlug: site.site_slug,
     mode: args.mode,
     webAgentId: (integration.web_agent_id as string | null) ?? null,
@@ -190,7 +199,7 @@ export async function consumePublicSessionRateLimit(args: {
   organizationId: string;
   publicSiteId: string;
   clientKey: string;
-}): Promise<void> {
+}): Promise<PublicSessionRateLimitConsumption> {
   const clientKey = args.clientKey.trim();
   if (!clientKey || clientKey.length > 200) {
     throw new Error(
@@ -213,30 +222,59 @@ export async function consumePublicSessionRateLimit(args: {
     await supabase.from("agent_session_rate_limits").delete().eq("id", row.id);
   }
 
-  await incrementRateWindow(
-    args.organizationId,
-    args.publicSiteId,
-    "site",
-    60,
-    minuteWindowStart,
-    minuteWindowStart + 2 * 60_000,
-  );
-  await incrementRateWindow(
-    args.organizationId,
-    args.publicSiteId,
-    `client:${hashClientKey(clientKey)}`,
-    8,
-    minuteWindowStart,
-    minuteWindowStart + 2 * 60_000,
-  );
-  await incrementRateWindow(
-    args.organizationId,
-    args.publicSiteId,
-    "site:daily",
-    500,
-    dayWindowStart,
-    dayWindowStart + 2 * 86_400_000,
-  );
+  const clientScopeKey = `client:${hashClientKey(clientKey)}`;
+  const windows: PublicSessionRateLimitConsumption["windows"] = [
+    { scopeKey: "site", windowStart: minuteWindowStart },
+    { scopeKey: clientScopeKey, windowStart: minuteWindowStart },
+    { scopeKey: "site:daily", windowStart: dayWindowStart },
+  ];
+
+  const consumed: PublicSessionRateLimitConsumption["windows"] = [];
+  try {
+    for (const [index, window] of windows.entries()) {
+      const limits = [60, 8, 500];
+      const expires =
+        index < 2
+          ? minuteWindowStart + 2 * 60_000
+          : dayWindowStart + 2 * 86_400_000;
+      await consumeRateWindowAtomic(
+        args.organizationId,
+        args.publicSiteId,
+        window.scopeKey,
+        limits[index],
+        window.windowStart,
+        expires,
+      );
+      consumed.push(window);
+    }
+  } catch (error) {
+    await releasePublicSessionRateLimit({
+      organizationId: args.organizationId,
+      publicSiteId: args.publicSiteId,
+      windows: consumed,
+    });
+    throw error;
+  }
+
+  return {
+    organizationId: args.organizationId,
+    publicSiteId: args.publicSiteId,
+    windows,
+  };
+}
+
+/** Roll back quota when ElevenLabs session mint fails after consume. */
+export async function releasePublicSessionRateLimit(
+  consumption: PublicSessionRateLimitConsumption,
+): Promise<void> {
+  for (const window of consumption.windows) {
+    await releaseRateWindow(
+      consumption.organizationId,
+      consumption.publicSiteId,
+      window.scopeKey,
+      window.windowStart,
+    );
+  }
 }
 
 export async function listRecentConversations(args: {
@@ -373,7 +411,7 @@ export async function recordPublicConversation(args: {
 
   const { data: organization } = await supabase
     .from("organizations")
-    .select("id, clerk_org_id")
+    .select("id, clerk_org_id, owner_clerk_user_id")
     .eq("id", site.organization_id)
     .maybeSingle();
   if (!organization) return null;
@@ -383,6 +421,7 @@ export async function recordPublicConversation(args: {
     const matchesOrg =
       snapshot.organizationIdHint === organization.id ||
       snapshot.externalUserId === organization.clerk_org_id ||
+      snapshot.externalUserId === organization.owner_clerk_user_id ||
       snapshot.siteSlug?.toLowerCase() === siteSlug;
     // If ElevenLabs returned initiation metadata, require a tenant match.
     if (
@@ -423,8 +462,92 @@ export async function recordOperatorConversation(args: {
   });
 }
 
+export async function updateAgentWorkspaceSettings(args: {
+  webEnabled?: boolean;
+  knowledgeBaseId?: string | null;
+  showWebChat?: boolean;
+  showVoiceChat?: boolean;
+}): Promise<AgentConfiguration> {
+  const { organization, supabase } = await requireCurrentOrganizationAdmin();
+
+  const { data: integration, error: integrationError } = await supabase
+    .from("agent_integrations")
+    .select("*")
+    .eq("organization_id", organization.id)
+    .eq("provider", "elevenlabs")
+    .maybeSingle();
+  if (integrationError) throw new Error(integrationError.message);
+  if (!integration) {
+    throw new Error("Agent integration is not initialized for this workspace.");
+  }
+
+  const integrationPatch: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (args.webEnabled !== undefined) {
+    integrationPatch.web_enabled = args.webEnabled;
+  }
+  if (args.knowledgeBaseId !== undefined) {
+    const trimmed = args.knowledgeBaseId?.trim() ?? "";
+    integrationPatch.knowledge_base_id = trimmed.length ? trimmed : null;
+  }
+
+  const { error: updateIntegrationError } = await supabase
+    .from("agent_integrations")
+    .update(integrationPatch)
+    .eq("id", integration.id);
+  if (updateIntegrationError) {
+    throw new Error(updateIntegrationError.message);
+  }
+
+  if (args.showWebChat !== undefined || args.showVoiceChat !== undefined) {
+    const { data: site, error: siteError } = await supabase
+      .from("public_sites")
+      .select("id, draft")
+      .eq("organization_id", organization.id)
+      .maybeSingle();
+    if (siteError) throw new Error(siteError.message);
+    if (!site?.draft) {
+      throw new Error("Public site draft is not initialized.");
+    }
+
+    const draft = sanitizeSiteConfig(site.draft);
+    const nextDraft = {
+      ...draft,
+      agent: {
+        ...draft.agent,
+        ...(args.showWebChat !== undefined
+          ? { showWebChat: args.showWebChat }
+          : {}),
+        ...(args.showVoiceChat !== undefined
+          ? { showVoiceChat: args.showVoiceChat }
+          : {}),
+      },
+    };
+
+    const { error: draftError } = await supabase
+      .from("public_sites")
+      .update({
+        draft: nextDraft,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", site.id);
+    if (draftError) throw new Error(draftError.message);
+  }
+
+  return getCurrentAgent();
+}
+
 export async function getConversationAnalytics(): Promise<ConversationAnalytics> {
   const { organization, supabase } = await requireCurrentOrganizationOperator();
+
+  const hasAnalytics = await organizationHasFeatureByOrganizationId(
+    organization.id,
+    "advanced_analytics",
+  );
+  if (!hasAnalytics) {
+    throw new Error("Advanced analytics requires the Voice plan.");
+  }
   const now = Date.now();
   const since30 = iso(now - 30 * DAY_MS);
   const since7 = now - 7 * DAY_MS;
@@ -536,9 +659,15 @@ export async function syncRecentConversationsFromElevenLabs(): Promise<{
     scanned += 1;
     const snapshot = await fetchElevenLabsConversation(conversationId);
     if (!snapshot) continue;
+    const orgRow = organization as {
+      id: string;
+      clerk_org_id: string | null;
+      owner_clerk_user_id: string | null;
+    };
     const matches =
-      snapshot.organizationIdHint === organization.id ||
-      snapshot.externalUserId === organization.clerk_org_id ||
+      snapshot.organizationIdHint === orgRow.id ||
+      snapshot.externalUserId === orgRow.clerk_org_id ||
+      snapshot.externalUserId === orgRow.owner_clerk_user_id ||
       (siteSlug && snapshot.siteSlug?.toLowerCase() === siteSlug);
     if (!matches) continue;
     await upsertConversationRow({

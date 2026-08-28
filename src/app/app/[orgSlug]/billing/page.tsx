@@ -3,6 +3,10 @@ import { redirect } from "next/navigation";
 
 import { reconcilePendingCheckoutAction } from "@/app/actions/billing";
 import { BillingScreen } from "@/components/dashboard/billing-screen";
+import {
+  canAccessBillingAndSettings,
+  requireCurrentOrganizationForRouteSlug,
+} from "@/lib/data/auth";
 import { normalizePlanIntent } from "@/lib/marketing/plan-intent";
 import { isFreePlan } from "@/lib/marketing/plans";
 import { getPayfastMode } from "@/lib/payfast/config";
@@ -28,6 +32,11 @@ export default async function BillingPage({
   await auth.protect();
 
   const { orgSlug } = await params;
+  const current = await requireCurrentOrganizationForRouteSlug(orgSlug);
+  if (!canAccessBillingAndSettings(current.auth)) {
+    redirect(`/app/${orgSlug}`);
+  }
+
   const { plan, checkout, upgrade } = await searchParams;
   const planIntent = normalizePlanIntent(plan);
 

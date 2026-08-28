@@ -135,7 +135,7 @@ export async function getPublishedBySlug(siteSlugRaw: string) {
     },
     organization: {
       id: org.id,
-      clerkOrgId: org.clerk_org_id,
+      clerkOrgId: org.clerk_org_id ?? undefined,
       name: org.name,
       slug: org.slug,
       timezone: org.timezone,
@@ -180,6 +180,37 @@ export async function getPublishedBySlug(siteSlugRaw: string) {
   };
 }
 
+/** Published catalog + site slug for dashboard agent client tools. */
+export async function getAgentClientToolContext() {
+  const { organization, supabase } = await requireCurrentOrganizationOperator();
+  const { data: site, error } = await supabase
+    .from("public_sites")
+    .select("site_slug")
+    .eq("organization_id", organization.id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!site?.site_slug) {
+    throw new Error("Public site not initialized.");
+  }
+
+  const published = await getPublishedBySlug(site.site_slug as string);
+  if (!published) {
+    throw new Error(
+      "Publish your public page before testing booking tools with the agent.",
+    );
+  }
+
+  return {
+    siteSlug: published.site.siteSlug,
+    businessName:
+      published.site.config.businessName.trim() || organization.name,
+    offerings: published.offerings,
+    teamMembers: published.teamMembers,
+    timezone: published.organization.timezone,
+    locale: published.organization.locale,
+  };
+}
+
 export async function getAgentSessionConfig(siteSlugRaw: string) {
   const supabase = createAdminClient();
   const siteSlug = siteSlugRaw.trim().toLowerCase();
@@ -212,7 +243,7 @@ export async function getAgentSessionConfig(siteSlugRaw: string) {
     .eq("provider", "elevenlabs")
     .maybeSingle();
   if (!integration?.web_enabled) return null;
-  return { clerkOrgId: org.clerk_org_id, siteSlug: siteRow.site_slug };
+  return { organizationId: org.id, siteSlug: siteRow.site_slug };
 }
 
 export async function getCurrentDraft() {

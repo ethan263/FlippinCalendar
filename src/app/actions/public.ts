@@ -12,7 +12,6 @@ import {
   getPublishedBySlug,
 } from "@/lib/data/public-site";
 import {
-  consumePublicSessionRateLimit,
   requestPublicSession,
 } from "@/lib/data/agents";
 
@@ -78,23 +77,9 @@ export async function requestPublicSessionAction(args: {
   clientKey: string;
   mode: "text" | "voice" | "widget";
 }) {
-  try {
-    const session = await requestPublicSession({
-      siteSlug: args.siteSlug,
-      mode: args.mode,
-    });
-    if (!session) return null;
-
-    await consumePublicSessionRateLimit({
-      organizationId: session.organizationId,
-      publicSiteId: session.publicSiteId,
-      clientKey: args.clientKey,
-    });
-    return session;
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to start a concierge session.";
-    // Re-throw as a stable Error so client callers can surface the message.
-    throw new Error(message);
-  }
+  const session = await requestPublicSession({
+    siteSlug: args.siteSlug,
+    mode: args.mode,
+  });
+  return session;
 }

@@ -9,7 +9,7 @@ describe("PayFast billing helpers", () => {
   it("builds stable m_payment_id keys per org/plan/hour", () => {
     const keyA = buildCheckoutMPaymentId("org-1", "pro");
     const keyB = buildCheckoutMPaymentId("org-1", "pro");
-    const keyC = buildCheckoutMPaymentId("org-1", "core");
+    const keyC = buildCheckoutMPaymentId("org-2", "pro");
 
     expect(keyA).toBe(keyB);
     expect(keyC).not.toBe(keyA);
@@ -26,6 +26,21 @@ describe("PayFast billing helpers", () => {
       organizationId: "org-uuid",
       plan: "pro",
     });
+  });
+
+  it("normalizes legacy engage/voice ITN plan slugs to pro", () => {
+    expect(
+      readPayfastPaymentMetadata({
+        custom_str1: "org-uuid",
+        custom_str2: "voice",
+      }).plan,
+    ).toBe("pro");
+    expect(
+      readPayfastPaymentMetadata({
+        custom_str1: "org-uuid",
+        custom_str2: "engage",
+      }).plan,
+    ).toBe("pro");
   });
 
   it("generates checkout signatures in PayFast documentation field order", () => {
@@ -66,6 +81,6 @@ describe("PayFast billing helpers", () => {
   });
 
   it("charges R99 for Pro", () => {
-    expect(billingPlanAmountCents.pro).toBe(9900);
+    expect(billingPlanAmountCents.pro).toBe(9_900);
   });
 });

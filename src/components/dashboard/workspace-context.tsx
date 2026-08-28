@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useAuth, useOrganization } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 
 import {
   defaultTerminology,
@@ -43,8 +43,10 @@ export function WorkspaceProvider({
   orgSlug: string;
   initialOrganization?: Organization | null;
 }) {
-  const { isLoaded, orgId } = useAuth();
-  const { organization: clerkOrganization } = useOrganization();
+  const { isLoaded } = useAuth();
+  const clerkUser = useUser();
+  const user =
+    clerkUser.isLoaded && clerkUser.isSignedIn ? clerkUser.user : null;
   const [organization, setOrganization] = useState<Organization | null | undefined>(
     () => (initialOrganization === undefined ? undefined : initialOrganization),
   );
@@ -70,8 +72,6 @@ export function WorkspaceProvider({
   }, [organization]);
 
   useEffect(() => {
-    // Prefer session orgId from useAuth — useOrganization() can lag behind the
-    // active Clerk session even when the server layout already resolved orgSlug.
     if (!isLoaded) return;
 
     const slugChanged = prevOrgSlugRef.current !== orgSlug;
@@ -80,18 +80,6 @@ export function WorkspaceProvider({
       prevOrgSlugRef.current = orgSlug;
     }
 
-    if (!orgId) {
-      // Clerk can briefly clear orgId during server-action transitions (e.g.
-      // starting PayFast checkout). Do not replace a loaded workspace with a false
-      // sync error while that happens.
-      if (!hadOrganization.current) {
-        setOrganization(null);
-        setBootstrapError("Select a business to continue.");
-      }
-      return;
-    }
-
-    // Already synced for this route — skip refetch during transient orgId flicker.
     if (loadedOrgSlug.current === orgSlug && hadOrganization.current) {
       return;
     }
@@ -119,15 +107,10 @@ export function WorkspaceProvider({
     return () => {
       cancelled = true;
     };
-  }, [isLoaded, orgId, orgSlug]);
+  }, [isLoaded, orgSlug]);
 
   useEffect(() => {
-    if (
-      !isLoaded ||
-      !orgId ||
-      organization !== null ||
-      requestedBootstrap.current
-    ) {
+    if (!isLoaded || organization !== null || requestedBootstrap.current) {
       return;
     }
 
@@ -135,13 +118,18 @@ export function WorkspaceProvider({
     setIsCreating(true);
     setBootstrapError(null);
     void bootstrapCurrentOrganizationAction({
-      name: clerkOrganization?.name,
+      name:
+        user?.fullName?.trim() ||
+        user?.firstName?.trim() ||
+        undefined,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       locale: navigator.language,
     })
       .then((created) => {
         setOrganization(created);
         setBootstrapError(null);
+        loadedOrgSlug.current = orgSlug;
+        hadOrganization.current = true;
       })
       .catch((error) => {
         requestedBootstrap.current = false;
@@ -152,14 +140,11 @@ export function WorkspaceProvider({
         );
       })
       .finally(() => setIsCreating(false));
-  }, [clerkOrganization?.name, isLoaded, orgId, organization, orgSlug]);
+  }, [isLoaded, organization, orgSlug, user?.firstName, user?.fullName]);
 
   const value = useMemo<WorkspaceContextValue>(
     () => ({
       orgSlug,
-      // Keep null only when bootstrapping is finished and no org exists.
-      // While loading (undefined), expose null AND isBootstrapping=true so
-      // consumers can skip server actions until the workspace is ready.
       organization: organization ?? null,
       terminology: organization
         ? normalizeTerminology(organization.terminology)

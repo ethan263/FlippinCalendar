@@ -31,7 +31,7 @@ import {
   getOfferingPrice,
   type Offering,
 } from "@/components/dashboard/data";
-import { useServerData } from "@/hooks/use-server-data";
+import { useRefreshableServerData } from "@/hooks/use-server-data";
 import {
   ActivePill,
   EmptyState,
@@ -42,7 +42,13 @@ import {
 } from "@/components/dashboard/screen-kit";
 import { useWorkspace, useWorkspaceReady } from "@/components/dashboard/workspace-context";
 
-function OfferingDialog({ offering }: { offering?: Offering }) {
+function OfferingDialog({
+  offering,
+  onMutated,
+}: {
+  offering?: Offering;
+  onMutated: () => void;
+}) {
   const { organization, terminology } = useWorkspace();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
@@ -74,6 +80,7 @@ function OfferingDialog({ offering }: { offering?: Offering }) {
       toast.success(
         `${terminology.offering} ${offering ? "updated" : "created"}`,
       );
+      onMutated();
       setOpen(false);
     } catch (error) {
       toast.error(
@@ -203,7 +210,7 @@ function OfferingDialog({ offering }: { offering?: Offering }) {
 export function OfferingsScreen() {
   const { organization, terminology } = useWorkspace();
   const workspaceReady = useWorkspaceReady();
-  const offerings = useServerData(
+  const { data: offerings, refresh: refreshOfferings } = useRefreshableServerData(
     () => listOfferingsAction({ includeInactive: true }),
     [organization?._id],
     { enabled: workspaceReady },
@@ -215,7 +222,7 @@ export function OfferingsScreen() {
         eyebrow="What you deliver"
         title={terminology.offeringPlural}
         description={`Define the bookable or requestable work your business provides. ${terminology.offeringPlural} can carry time, price, or simply act as a service category.`}
-        action={<OfferingDialog />}
+        action={<OfferingDialog onMutated={refreshOfferings} />}
       />
 
       {!offerings ? (
@@ -244,7 +251,7 @@ export function OfferingsScreen() {
                       </p>
                     </div>
                   </div>
-                  <OfferingDialog offering={offering} />
+                  <OfferingDialog offering={offering} onMutated={refreshOfferings} />
                 </div>
 
                 <p className="mt-5 line-clamp-3 min-h-15 text-xs leading-5 text-muted-foreground">
@@ -275,7 +282,7 @@ export function OfferingsScreen() {
           icon={Layers3}
           title={`Create your first ${terminology.offering.toLowerCase()}`}
           description={`Use ${terminology.offeringPlural.toLowerCase()} for anything people can book or request—from a service appointment to a technical support session.`}
-          action={<OfferingDialog />}
+          action={<OfferingDialog onMutated={refreshOfferings} />}
         />
       )}
     </>

@@ -17,6 +17,8 @@ import {
 import { toast } from "sonner";
 
 import { updateCurrentOrganizationAction } from "@/app/actions/organizations";
+import { useWorkspace } from "@/components/dashboard/workspace-context";
+import { isWorkspaceAdmin } from "@/lib/rbac";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -199,6 +201,7 @@ export function WorkspaceLanguageEditor({
 }: {
   organization: Organization;
 }) {
+  const { refreshOrganization } = useWorkspace();
   const [draft, setDraft] = useState<BackendTerminology>(() => ({
     ...organization.terminology,
   }));
@@ -206,8 +209,11 @@ export function WorkspaceLanguageEditor({
     ...organization.terminology,
   }));
   const [saving, setSaving] = useState(false);
-  const canEdit =
-    organization.role === "admin" || organization.role === "owner";
+  const canEdit = isWorkspaceAdmin({
+    mode: organization.clerkOrgId ? "organization" : "personal",
+    role: organization.role,
+    clerkOrgId: organization.clerkOrgId,
+  });
   const normalizedDraft = useMemo(
     () => normalizedTerminology(draft),
     [draft],
@@ -256,6 +262,7 @@ export function WorkspaceLanguageEditor({
       });
       setDraft({ ...updated.terminology });
       setBaseline({ ...updated.terminology });
+      await refreshOrganization();
       toast.success("Business language updated");
     } catch (error) {
       toast.error(

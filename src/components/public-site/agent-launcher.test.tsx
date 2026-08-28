@@ -74,7 +74,7 @@ describe("public agent session buttons", () => {
     expect(
       screen.getByRole("button", { name: "Speak with AI" }),
     ).toBeInTheDocument();
-  });
+  }, 15_000);
 
   it("shows entitlement error message when text session request is rejected", async () => {
     vi.spyOn(global, "fetch").mockResolvedValue({

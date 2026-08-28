@@ -16,6 +16,10 @@ describe("plan choice routing intent", () => {
       key: "pro",
       name: "Pro",
     });
+    expect(normalizePlanIntent("engage")).toMatchObject({
+      key: "pro",
+      name: "Pro",
+    });
     expect(normalizePlanIntent("voice")).toMatchObject({
       key: "pro",
       name: "Pro",
@@ -30,8 +34,8 @@ describe("plan choice routing intent", () => {
     expect(
       buildPlanChoiceHref({ planKey: "pro", signedIn: true, orgSlug: "acme" }),
     ).toBe("/go/plan/pro");
-    expect(buildPlanChoiceHref({ planKey: "pro", signedIn: false })).toBe(
-      "/go/plan/pro",
+    expect(buildPlanChoiceHref({ planKey: "core", signedIn: false })).toBe(
+      "/go/plan/core",
     );
   });
 

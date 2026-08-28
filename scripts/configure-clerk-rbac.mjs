@@ -4,12 +4,12 @@
  * Hobby-compatible RBAC for flippinCalendar.
  *
  * Clerk Hobby includes custom *permissions* but not custom *roles* / role sets
- * (those need the B2B Authentication add-on). This script only:
+ * (those need the B2B Authentication add-on). Default (Hobby) mode:
  *   1. Ensures `org:operations_hub:manage`
- *   2. Grants it to system roles `org:admin` and `org:member`
+ *   2. Grants it to `org:admin` only — not every `org:member`
  *
- * Org creators remain admins (Clerk default). Invited teammates are members and
- * can operate the workspace. Billing / org settings stay admin-gated in app code.
+ * Billing / settings stay admin-gated in app code. Operators (hub-only staff)
+ * require the B2B add-on: set CLERK_B2B_AUTH=1 to also provision `org:operator`.
  */
 
 import { createClerkClient } from "@clerk/backend";
@@ -22,9 +22,17 @@ const permissionDefinition = {
 };
 
 const legacyPermissionKey = "org:operations:manage";
-const legacyOperatorRoleKey = "org:operator";
+const operatorRoleDefinition = {
+  name: "Operator",
+  key: "org:operator",
+  description:
+    "Operational staff who can manage customer contacts and bookings.",
+};
 const adminRoleKey = "org:admin";
 const memberRoleKey = "org:member";
+const initialRoleSetKey = "role_set:default";
+
+const b2bMode = process.env.CLERK_B2B_AUTH === "1";
 
 if (!process.env.CLERK_SECRET_KEY) {
   throw new Error(
@@ -57,6 +65,16 @@ async function ensurePermission() {
   );
 }
 
+async function ensureRole(definition) {
+  const { data } = await clerk.organizationRoles.getOrganizationRoleList({
+    limit: 100,
+  });
+  const existing = data.find((role) => role.key === definition.key);
+  return (
+    existing ?? clerk.organizationRoles.createOrganizationRole(definition)
+  );
+}
+
 async function requireRole(roleKey) {
   const { data } = await clerk.organizationRoles.getOrganizationRoleList({
     limit: 100,
@@ -74,6 +92,27 @@ async function ensureRolePermission(role, permission) {
   return clerk.organizationRoles.assignPermissionToOrganizationRole({
     organizationRoleId: role.id,
     permissionId: permission.id,
+  });
+}
+
+async function removePermissionFromRole(role, permission) {
+  if (!role.permissions.some((candidate) => candidate.id === permission.id)) {
+    return role;
+  }
+  return clerk.organizationRoles.removePermissionFromOrganizationRole({
+    organizationRoleId: role.id,
+    permissionId: permission.id,
+  });
+}
+
+async function ensureInitialRoleSetIncludesOperator() {
+  const roleSet = await clerk.roleSets.getRoleSet(initialRoleSetKey);
+  if (roleSet.roles.some((role) => role.key === operatorRoleDefinition.key)) {
+    return roleSet;
+  }
+  return clerk.roleSets.addRolesToRoleSet({
+    roleSetKeyOrId: initialRoleSetKey,
+    roleKeys: [operatorRoleDefinition.key],
   });
 }
 
@@ -102,44 +141,41 @@ async function removeLegacyPermission(permission) {
   }
 }
 
-/**
- * Best-effort cleanup of the old paid custom role. Safe to no-op when the
- * B2B add-on is absent or the role was never created.
- */
-async function removeLegacyOperatorRole() {
-  const { data: roles } = await clerk.organizationRoles.getOrganizationRoleList({
-    limit: 100,
-  });
-  const operator = roles.find((role) => role.key === legacyOperatorRoleKey);
-  if (!operator) {
-    return { removed: false, reason: "not_present" };
-  }
-
-  try {
-    await clerk.organizationRoles.deleteOrganizationRole(operator.id);
-    return { removed: true, id: operator.id };
-  } catch (error) {
-    return {
-      removed: false,
-      reason: "delete_failed",
-      message: error instanceof Error ? error.message : String(error),
-      hint: "Remove org:operator in the Clerk Dashboard Roles UI if Production still flags custom roles.",
-    };
-  }
-}
-
 const permission = await ensurePermission();
 const adminRole = await requireRole(adminRoleKey);
 const memberRole = await requireRole(memberRoleKey);
 
-const [verifiedAdminRole, verifiedMemberRole] = await Promise.all([
-  ensureRolePermission(adminRole, permission),
-  ensureRolePermission(memberRole, permission),
-]);
-await removeLegacyPermission(permission);
-const legacyOperator = await removeLegacyOperatorRole();
+const verifiedAdminRole = await ensureRolePermission(adminRole, permission);
+const verifiedMemberRole = await removePermissionFromRole(memberRole, permission);
 
-for (const role of [verifiedAdminRole, verifiedMemberRole]) {
+let verifiedOperatorRole = null;
+let roleSet = null;
+
+if (b2bMode) {
+  const operatorRole = await ensureRole(operatorRoleDefinition);
+  [verifiedOperatorRole, roleSet] = await Promise.all([
+    ensureRolePermission(operatorRole, permission),
+    ensureInitialRoleSetIncludesOperator(),
+  ]);
+
+  const expectedRoleKeys = [adminRoleKey, memberRoleKey, operatorRoleDefinition.key];
+  const actualRoleKeys = new Set(roleSet.roles.map((role) => role.key));
+  for (const roleKey of expectedRoleKeys) {
+    if (!actualRoleKeys.has(roleKey)) {
+      throw new Error(`Clerk role set verification failed: ${roleKey} is missing.`);
+    }
+  }
+  if (roleSet.defaultRole?.key !== memberRoleKey) {
+    throw new Error("Clerk role set verification failed: the default role changed.");
+  }
+  if (roleSet.creatorRole?.key !== adminRoleKey) {
+    throw new Error("Clerk role set verification failed: the creator role changed.");
+  }
+}
+
+await removeLegacyPermission(permission);
+
+for (const role of [verifiedAdminRole, verifiedOperatorRole].filter(Boolean)) {
   const keys = role.permissions.map((candidate) => candidate.key);
   if (!keys.includes(permissionDefinition.key)) {
     throw new Error(
@@ -148,22 +184,48 @@ for (const role of [verifiedAdminRole, verifiedMemberRole]) {
   }
 }
 
+const memberPermissionKeys = verifiedMemberRole.permissions.map(
+  (candidate) => candidate.key,
+);
+if (memberPermissionKeys.includes(permissionDefinition.key)) {
+  throw new Error(
+    `Clerk RBAC verification failed: ${memberRoleKey} must not receive ${permissionDefinition.key} on Hobby.`,
+  );
+}
+
 console.log(
   JSON.stringify(
     {
-      mode: "hobby",
+      mode: b2bMode ? "b2b" : "hobby",
       permission: { id: permission.id, key: permission.key },
-      roles: [verifiedAdminRole, verifiedMemberRole].map((role) => ({
-        id: role.id,
-        key: role.key,
-        permissions: role.permissions.map((candidate) => candidate.key),
-      })),
-      legacyOperator,
-      notes: [
-        "Custom roles / role sets are not used (Hobby-compatible).",
-        "Members and admins both receive org:operations_hub:manage.",
-        "Keep org membership ≤20 without the B2B Authentication add-on.",
-      ],
+      roles: [verifiedAdminRole, verifiedMemberRole, verifiedOperatorRole]
+        .filter(Boolean)
+        .map((role) => ({
+          id: role.id,
+          key: role.key,
+          permissions: role.permissions.map((candidate) => candidate.key),
+        })),
+      roleSet: roleSet
+        ? {
+            id: roleSet.id,
+            key: roleSet.key,
+            defaultRole: roleSet.defaultRole?.key,
+            creatorRole: roleSet.creatorRole?.key,
+            roles: roleSet.roles.map((role) => role.key),
+          }
+        : null,
+      notes: b2bMode
+        ? [
+            "B2B mode: org:admin and org:operator receive org:operations_hub:manage.",
+            "org:member stays hub-less; invite operators with the Operator role.",
+            "Billing / settings remain admin-gated in app code.",
+          ]
+        : [
+            "Hobby mode: only org:admin receives org:operations_hub:manage.",
+            "org:member has no hub access until promoted to admin.",
+            "Set CLERK_B2B_AUTH=1 to provision org:operator for hub-only staff.",
+            "Billing / settings stay admin-gated in app code.",
+          ],
     },
     null,
     2,

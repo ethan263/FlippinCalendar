@@ -10,6 +10,7 @@ import {
 import {
   ChevronDown,
   ExternalLink,
+  LineChart,
   LoaderCircle,
   MessageSquareText,
   Mic,
@@ -33,17 +34,28 @@ import {
 } from "@/components/ui/dialog";
 import { Orb, type AgentState } from "@/components/ui/orb";
 import {
+  getAgentClientToolContextAction,
+  getConversationAnalyticsAction,
   getCurrentDraftAction,
   listRecentConversationsAction,
   publishSiteAction,
   syncRecentConversationsAction,
   updateDraftAction,
 } from "@/app/actions/dashboard";
-import { useServerData } from "@/hooks/use-server-data";
+import { useLiveRefreshableServerData } from "@/hooks/use-live-refresh";
+import { useRefreshableServerData } from "@/hooks/use-server-data";
+import { usePlatformRefresh } from "@/components/dashboard/platform-refresh-context";
 import type { SiteConfig } from "@/components/dashboard/data";
 import { AiAgentPlanOverlay } from "@/components/dashboard/ai-agent-plan-overlay";
 import { AgentConfigureWizard } from "@/components/dashboard/agent-configure-wizard";
 import { useFeatureEntitlements } from "@/components/dashboard/feature-gates";
+import {
+  AgentClientToolRegistrar,
+} from "@/components/public-site/agent-tools";
+import type {
+  PublicOffering,
+  PublicTeamMember,
+} from "@/components/public-site/types";
 import {
   EmptyState,
   formatDateTime,
@@ -51,12 +63,22 @@ import {
   ScreenHeader,
 } from "@/components/dashboard/screen-kit";
 import { useWorkspace, useWorkspaceReady } from "@/components/dashboard/workspace-context";
+import { useServerData } from "@/hooks/use-server-data";
 import {
   resolveGreeting,
   type AgentConfigureDraft,
   type SessionAgentOverrides,
 } from "@/lib/elevenlabs/free-plan-presets";
 import { ConversationDetailDialog } from "@/components/dashboard/voice-agent-conversation-detail";
+
+type AgentToolContext = {
+  siteSlug: string;
+  businessName: string;
+  offerings: PublicOffering[];
+  teamMembers: PublicTeamMember[];
+  timezone: string;
+  locale: string;
+};
 
 type AgentSessionResponse = {
   signedUrl: string;
@@ -155,30 +177,115 @@ function VoiceTestSession({ onClose }: { onClose: () => void }) {
   );
 }
 
+function ConversationAnalyticsPanel({
+  organizationId,
+}: {
+  organizationId: string;
+}) {
+  const { orgSlug } = useWorkspace();
+  const { advancedAnalytics, isLoaded } = useFeatureEntitlements();
+  const analytics = useServerData(
+    () => getConversationAnalyticsAction(),
+    [organizationId],
+    { enabled: isLoaded && advancedAnalytics },
+  );
+
+  if (!isLoaded) {
+    return null;
+  }
+
+  if (!advancedAnalytics) {
+    return (
+      <div className="mt-6 rounded-xl border border-dashed border-black/15 bg-[#f7f5ef] px-4 py-5">
+        <div className="flex items-start gap-3">
+          <span className="grid size-9 place-items-center rounded-lg border border-black/10 bg-white text-muted-foreground">
+            <LineChart className="size-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium">Advanced analytics</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Conversation outcomes and duration trends are included on the Voice
+              plan.
+            </p>
+            <Button asChild variant="outline" size="sm" className="mt-3 bg-white">
+              <Link href={`/app/${orgSlug}/billing`}>Compare plans</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analytics) {
+    return <LoadingPanel rows={2} label="Loading analytics…" />;
+  }
+
+  return (
+    <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      <div className="rounded-xl border border-black/10 bg-white px-4 py-3">
+        <p className="text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+          Last 7 days
+        </p>
+        <p className="mt-2 font-heading text-3xl font-semibold tabular-nums tracking-tight">
+          {analytics.last7Days}
+        </p>
+      </div>
+      <div className="rounded-xl border border-black/10 bg-white px-4 py-3">
+        <p className="text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+          Last 30 days
+        </p>
+        <p className="mt-2 font-heading text-3xl font-semibold tabular-nums tracking-tight">
+          {analytics.last30Days}
+          {analytics.last30DaysIsCapped ? (
+            <span className="ml-1 font-sans text-xs text-muted-foreground">+</span>
+          ) : null}
+        </p>
+      </div>
+      <div className="rounded-xl border border-black/10 bg-white px-4 py-3">
+        <p className="text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+          Avg duration
+        </p>
+        <p className="mt-2 font-heading text-3xl font-semibold tabular-nums tracking-tight">
+          {analytics.averageDurationSeconds
+            ? `${analytics.averageDurationSeconds}s`
+            : "—"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function RecentConversations({
   organizationId,
   timezone,
-  refreshKey,
+  onSyncComplete,
 }: {
   organizationId: string;
   timezone?: string;
-  refreshKey: number;
+  onSyncComplete: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  const conversations = useServerData(
-    () => listRecentConversationsAction({ limit: 15 }),
-    [organizationId, refreshKey, open],
-    { enabled: open },
-  );
+  const { data: conversations, refresh: refreshConversations } =
+    useLiveRefreshableServerData(
+      () => listRecentConversationsAction({ limit: 15 }),
+      [organizationId, open],
+      {
+        enabled: open,
+        organizationId,
+        liveTables: ["conversations"],
+      },
+    );
 
   async function sync() {
     setIsSyncing(true);
     try {
       await syncRecentConversationsAction();
+      refreshConversations();
+      onSyncComplete();
     } finally {
       setIsSyncing(false);
     }
@@ -272,20 +379,43 @@ export function VoiceAgentScreen() {
   const entitlements = useFeatureEntitlements();
   const workspaceReady = useWorkspaceReady();
   const hasAiAgent = entitlements.hasAiAgent;
-  const [refreshKey, setRefreshKey] = useState(0);
+  const { draftVersion, refreshDraft } = usePlatformRefresh();
   const [configureSaving, setConfigureSaving] = useState(false);
   const [configureMessage, setConfigureMessage] = useState<string | null>(null);
   const [testOpen, setTestOpen] = useState(false);
+  const [testToolContext, setTestToolContext] = useState<AgentToolContext | null>(
+    null,
+  );
+  const [testLoading, setTestLoading] = useState(false);
 
-  const siteDraft = useServerData(
+  const { data: siteDraft, refresh: refreshSiteDraft } = useRefreshableServerData(
     () => getCurrentDraftAction(),
-    [organization?._id, refreshKey],
+    [organization?._id, draftVersion],
     { enabled: workspaceReady },
   );
 
   const refresh = useCallback(() => {
-    setRefreshKey((value) => value + 1);
-  }, []);
+    refreshSiteDraft();
+    refreshDraft();
+  }, [refreshDraft, refreshSiteDraft]);
+
+  async function openVoiceTest() {
+    setConfigureMessage(null);
+    setTestLoading(true);
+    try {
+      const context = await getAgentClientToolContextAction();
+      setTestToolContext(context);
+      setTestOpen(true);
+    } catch (error) {
+      setConfigureMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to prepare the agent test session.",
+      );
+    } finally {
+      setTestLoading(false);
+    }
+  }
 
   async function applyAgentConfigure(draft: AgentConfigureDraft) {
     if (!hasAiAgent) {
@@ -364,9 +494,17 @@ export function VoiceAgentScreen() {
                     variant="outline"
                     size="sm"
                     className="bg-white"
-                    onClick={() => setTestOpen(true)}
+                    disabled={testLoading}
+                    onClick={() => void openVoiceTest()}
                   >
-                    <Mic data-icon="inline-start" />
+                    {testLoading ? (
+                      <LoaderCircle
+                        className="animate-spin"
+                        data-icon="inline-start"
+                      />
+                    ) : (
+                      <Mic data-icon="inline-start" />
+                    )}
                     Test voice
                   </Button>
                 ) : null}
@@ -408,11 +546,14 @@ export function VoiceAgentScreen() {
               ) : null}
 
               {hasAiAgent && organization?._id ? (
-                <RecentConversations
-                  organizationId={organization._id}
-                  timezone={organization.timezone}
-                  refreshKey={refreshKey}
-                />
+                <>
+                  <ConversationAnalyticsPanel organizationId={organization._id} />
+                  <RecentConversations
+                    organizationId={organization._id}
+                    timezone={organization.timezone}
+                    onSyncComplete={refresh}
+                  />
+                </>
               ) : null}
             </>
           )}
@@ -421,18 +562,33 @@ export function VoiceAgentScreen() {
         {showOverlay ? <AiAgentPlanOverlay orgSlug={orgSlug} /> : null}
       </div>
 
-      <Dialog open={testOpen} onOpenChange={setTestOpen}>
+      <Dialog
+        open={testOpen}
+        onOpenChange={(open) => {
+          setTestOpen(open);
+          if (!open) setTestToolContext(null);
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Test your agent</DialogTitle>
             <DialogDescription>
-              Start a short voice session to hear how your concierge sounds.
+              Start a short voice session to hear how your concierge sounds and
+              exercise live booking tools.
             </DialogDescription>
           </DialogHeader>
-          {testOpen ? (
+          {testOpen && testToolContext ? (
             <ConversationProvider
               onError={(error) => console.error("Web agent session error", error)}
             >
+              <AgentClientToolRegistrar
+                siteSlug={testToolContext.siteSlug}
+                businessName={testToolContext.businessName}
+                offerings={testToolContext.offerings}
+                teamMembers={testToolContext.teamMembers}
+                timezone={testToolContext.timezone}
+                locale={testToolContext.locale}
+              />
               <VoiceTestSession onClose={() => setTestOpen(false)} />
             </ConversationProvider>
           ) : null}

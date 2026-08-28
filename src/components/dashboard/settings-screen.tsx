@@ -16,16 +16,21 @@ import {
   SectionHeading,
 } from "@/components/dashboard/screen-kit";
 import { getCurrentDraftAction } from "@/app/actions/dashboard";
-import { useServerData } from "@/hooks/use-server-data";
+import { useRefreshableServerData } from "@/hooks/use-server-data";
+import { usePlatformRefresh } from "@/components/dashboard/platform-refresh-context";
 import { useWorkspace, useWorkspaceReady } from "@/components/dashboard/workspace-context";
 import { WorkspaceLanguageEditor } from "@/components/dashboard/workspace-language-editor";
+import { AgentWorkspaceSettings } from "@/components/dashboard/agent-workspace-settings";
 
 export function SettingsScreen() {
   const { organization } = useWorkspace();
   const workspaceReady = useWorkspaceReady();
-  const publicSite = useServerData(() => getCurrentDraftAction(), [organization?._id], {
-    enabled: workspaceReady,
-  });
+  const { draftVersion } = usePlatformRefresh();
+  const { data: publicSite } = useRefreshableServerData(
+    () => getCurrentDraftAction(),
+    [organization?._id, draftVersion],
+    { enabled: workspaceReady },
+  );
 
   return (
     <>
@@ -91,6 +96,12 @@ export function SettingsScreen() {
           <LoadingPanel rows={6} label="Loading workspace settings…" />
         )}
       </section>
+
+      {organization ? (
+        <section className="mt-8">
+          <AgentWorkspaceSettings organizationId={organization._id} />
+        </section>
+      ) : null}
 
       <section className="mt-8 space-y-4">
         <SectionHeading

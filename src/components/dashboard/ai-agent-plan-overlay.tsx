@@ -31,8 +31,8 @@ export function AiAgentPlanOverlay({
           Pro required
         </h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Upgrade to Pro to configure your AI concierge, publish it on your public
-          page, and review conversations.
+          Upgrade to Pro to configure your AI concierge, publish it on your
+          public page, and review conversations.
         </p>
         <Button asChild className="mt-5">
           <Link href={`/app/${orgSlug}/billing?plan=pro&upgrade=1`}>

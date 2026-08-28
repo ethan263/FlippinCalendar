@@ -40,7 +40,7 @@ import {
   SubmitButton,
 } from "@/components/dashboard/screen-kit";
 import { useWorkspace, useWorkspaceReady } from "@/components/dashboard/workspace-context";
-import { useServerData } from "@/hooks/use-server-data";
+import { useServerData, useRefreshableServerData } from "@/hooks/use-server-data";
 
 function initials(name: string) {
   return name
@@ -51,7 +51,13 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-function MemberDialog({ member }: { member?: TeamMember }) {
+function MemberDialog({
+  member,
+  onMutated,
+}: {
+  member?: TeamMember;
+  onMutated: () => void;
+}) {
   const { terminology } = useWorkspace();
   const [open, setOpen] = useState(false);
   const offerings = useServerData(() => listOfferingsAction({}), [], { enabled: open });
@@ -91,6 +97,7 @@ function MemberDialog({ member }: { member?: TeamMember }) {
       toast.success(
         `${terminology.teamMember} ${member ? "updated" : "created"}`,
       );
+      onMutated();
       setOpen(false);
     } catch (error) {
       toast.error(
@@ -236,7 +243,7 @@ function MemberDialog({ member }: { member?: TeamMember }) {
 export function TeamScreen() {
   const { organization, terminology } = useWorkspace();
   const workspaceReady = useWorkspaceReady();
-  const members = useServerData(
+  const { data: members, refresh: refreshMembers } = useRefreshableServerData(
     () => listMembersAction({ includeInactive: true }),
     [organization?._id],
     { enabled: workspaceReady },
@@ -248,7 +255,7 @@ export function TeamScreen() {
         eyebrow="Who does the work"
         title={terminology.teamMemberPlural}
         description={`Manage the people who deliver ${terminology.offeringPlural.toLowerCase()}, answer requests, or appear on the public page. Roles stay flexible across every type of business.`}
-        action={<MemberDialog />}
+        action={<MemberDialog onMutated={refreshMembers} />}
       />
 
       {!members ? (
@@ -275,7 +282,7 @@ export function TeamScreen() {
                       {member.title}
                     </p>
                   </div>
-                  <MemberDialog member={member} />
+                  <MemberDialog member={member} onMutated={refreshMembers} />
                 </div>
 
                 <p className="mt-5 line-clamp-3 min-h-15 text-xs leading-5 text-muted-foreground">
@@ -309,7 +316,7 @@ export function TeamScreen() {
           icon={UsersRound}
           title={`Add your first ${terminology.teamMember.toLowerCase()}`}
           description={`Build a flexible roster for anyone who delivers work or appears in your ${terminology.booking.toLowerCase()} flow.`}
-          action={<MemberDialog />}
+          action={<MemberDialog onMutated={refreshMembers} />}
         />
       )}
     </>

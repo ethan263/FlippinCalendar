@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 import { PublicSite } from "@/components/public-site/public-site";
 import { PublicSiteUnavailable } from "@/components/public-site/public-site-states";
-import { organizationHasFeature } from "@/lib/clerk-billing";
+import { organizationHasFeatureByOrganizationId } from "@/lib/billing/subscriptions";
 import {
   getAgentSessionConfig,
   getPublishedBySlug,
@@ -17,10 +17,10 @@ const getAgentSession = cache((siteSlug: string) =>
   getAgentSessionConfig(siteSlug),
 );
 
-const getAgentFeatures = cache(async (clerkOrgId: string) => {
+const getAgentFeatures = cache(async (organizationId: string) => {
   const [text, voice] = await Promise.all([
-    organizationHasFeature(clerkOrgId, "web_agent"),
-    organizationHasFeature(clerkOrgId, "browser_voice"),
+    organizationHasFeatureByOrganizationId(organizationId, "web_agent"),
+    organizationHasFeatureByOrganizationId(organizationId, "browser_voice"),
   ]);
 
   return { text, voice };
@@ -70,7 +70,7 @@ export default async function PublicSitePage({
   }
 
   const agentFeatures = agentSessionConfig
-    ? await getAgentFeatures(agentSessionConfig.clerkOrgId)
+    ? await getAgentFeatures(agentSessionConfig.organizationId)
     : { text: false, voice: false };
 
   return (

@@ -154,6 +154,7 @@ export type AgentConfiguration = {
   integration: {
     _id: string;
     webEnabled: boolean;
+    knowledgeBaseId?: string;
     updatedAt: number;
   } | null;
 };

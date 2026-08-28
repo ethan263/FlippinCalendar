@@ -58,7 +58,8 @@ import {
   publishSiteAction,
   updateDraftAction,
 } from "@/app/actions/dashboard";
-import { useServerData } from "@/hooks/use-server-data";
+import { useRefreshableServerData } from "@/hooks/use-server-data";
+import { usePlatformRefresh } from "@/components/dashboard/platform-refresh-context";
 import { useFeatureEntitlements } from "@/components/dashboard/feature-gates";
 import {
   formatMoney,
@@ -477,12 +478,15 @@ function SiteEditor({
   initial,
   offerings,
   members,
+  onMutated,
 }: {
   initial: CurrentSiteDraft;
   offerings: Offering[];
   members: TeamMember[];
+  onMutated: () => void;
 }) {
   const { terminology } = useWorkspace();
+  const { refreshDraft } = usePlatformRefresh();
   const entitlements = useFeatureEntitlements();
   const [siteSlug, setSiteSlug] = useState(initial.site.siteSlug);
   const [config, setConfig] = useState(initial.site.draft);
@@ -508,6 +512,8 @@ function SiteEditor({
     setSaving(true);
     try {
       await saveDraft();
+      onMutated();
+      refreshDraft();
       toast.success("Public site draft saved");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not save draft");
@@ -524,6 +530,8 @@ function SiteEditor({
       setPublishedAt(published.publishedAt);
       setCopied(false);
       setPublishDialogOpen(true);
+      onMutated();
+      refreshDraft();
       toast.success("Public site published");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not publish site");
@@ -1036,15 +1044,28 @@ function SiteEditor({
 export function PublicSiteScreen() {
   const { organization, terminology } = useWorkspace();
   const workspaceReady = useWorkspaceReady();
-  const current = useServerData(() => getCurrentDraftAction(), [organization?._id], {
-    enabled: workspaceReady,
-  });
-  const offerings = useServerData(() => listOfferingsAction({}), [organization?._id], {
-    enabled: workspaceReady,
-  });
-  const members = useServerData(() => listMembersAction({}), [organization?._id], {
-    enabled: workspaceReady,
-  });
+  const { draftVersion } = usePlatformRefresh();
+  const { data: current, refresh: refreshCurrent } = useRefreshableServerData(
+    () => getCurrentDraftAction(),
+    [organization?._id, draftVersion],
+    { enabled: workspaceReady },
+  );
+  const { data: offerings, refresh: refreshOfferings } = useRefreshableServerData(
+    () => listOfferingsAction({}),
+    [organization?._id],
+    { enabled: workspaceReady },
+  );
+  const { data: members, refresh: refreshMembers } = useRefreshableServerData(
+    () => listMembersAction({}),
+    [organization?._id],
+    { enabled: workspaceReady },
+  );
+
+  function refreshSiteData() {
+    refreshCurrent();
+    refreshOfferings();
+    refreshMembers();
+  }
 
   return (
     <>
@@ -1075,6 +1096,7 @@ export function PublicSiteScreen() {
           members={members.filter(
             (member) => member.active && member.acceptingBookings,
           )}
+          onMutated={refreshSiteData}
         />
       )}
     </>

@@ -6,6 +6,7 @@ import {
   getCurrentAgent,
   listRecentConversations,
   syncRecentConversationsFromElevenLabs,
+  updateAgentWorkspaceSettings,
 } from "@/lib/data/agents";
 import {
   listRules,
@@ -22,8 +23,14 @@ import {
   updateOffering,
 } from "@/lib/data/catalog";
 import { overview } from "@/lib/data/dashboard";
-import { listKnowledge } from "@/lib/data/knowledge";
+import { listContacts } from "@/lib/data/contacts";
 import {
+  listKnowledge,
+  removeKnowledge,
+  upsertKnowledge,
+} from "@/lib/data/knowledge";
+import {
+  getAgentClientToolContext,
   getCurrentDraft,
   publish,
   updateDraft,
@@ -156,6 +163,10 @@ export async function getCurrentDraftAction() {
   return getCurrentDraft();
 }
 
+export async function getAgentClientToolContextAction() {
+  return getAgentClientToolContext();
+}
+
 export async function updateDraftAction(args: {
   config: SiteConfig;
   siteSlug?: string;
@@ -169,6 +180,15 @@ export async function publishSiteAction() {
 
 export async function getCurrentAgentAction() {
   return getCurrentAgent();
+}
+
+export async function updateAgentWorkspaceSettingsAction(args: {
+  webEnabled?: boolean;
+  knowledgeBaseId?: string | null;
+  showWebChat?: boolean;
+  showVoiceChat?: boolean;
+}) {
+  return updateAgentWorkspaceSettings(args);
 }
 
 export async function listRecentConversationsAction(args: {
@@ -190,8 +210,27 @@ export async function syncRecentConversationsAction() {
   return syncRecentConversationsFromElevenLabs();
 }
 
+export async function listContactsAction() {
+  return listContacts();
+}
+
 export async function listKnowledgeAction(args: {
   includeUnpublished?: boolean;
 } = {}) {
   return listKnowledge(args);
+}
+
+export async function upsertKnowledgeAction(args: {
+  knowledgeItemId?: string;
+  title: string;
+  content: string;
+  category?: string;
+  published?: boolean;
+  sortOrder?: number;
+}) {
+  return upsertKnowledge(args);
+}
+
+export async function removeKnowledgeAction(knowledgeItemId: string) {
+  return removeKnowledge(knowledgeItemId);
 }

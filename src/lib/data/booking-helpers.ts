@@ -152,7 +152,7 @@ export function mapTeamMember(row: TeamMemberRow) {
 export function orgFromRow(row: OrganizationRow): Organization {
   return {
     _id: row.id,
-    clerkOrgId: row.clerk_org_id,
+    clerkOrgId: row.clerk_org_id ?? undefined,
     name: row.name,
     slug: row.slug,
     timezone: row.timezone,

@@ -1,15 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { fetchEntitlementsAction, reconcilePendingCheckoutAction } from "@/app/actions/billing";
+import { reconcilePendingCheckoutAction } from "@/app/actions/billing";
 import { BillingCheckoutPanel } from "@/components/billing/billing-checkout-panel";
 import { PlanComparison } from "@/components/billing/plan-comparison";
 import { Badge } from "@/components/ui/badge";
 import { ScreenHeader, LoadingPanel } from "@/components/dashboard/screen-kit";
+import {
+  useFeatureEntitlements,
+  useRefreshEntitlements,
+} from "@/components/dashboard/feature-gates";
 import { useWorkspace } from "@/components/dashboard/workspace-context";
-import { planDisplayName, type BillingPlanKey } from "@/lib/billing/features";
+import { planDisplayName } from "@/lib/billing/features";
 import { isFreePlan, type MarketingPlanKey } from "@/lib/marketing/plans";
 
 type BillingScreenProps = {
@@ -30,24 +35,16 @@ export function BillingScreen({
   openCheckoutPanel = false,
   checkoutStatus,
 }: BillingScreenProps) {
+  const router = useRouter();
   const { organization } = useWorkspace();
+  const entitlements = useFeatureEntitlements();
+  const refreshEntitlements = useRefreshEntitlements();
   const resolvedSlug = orgSlug || organization?.slug || "";
-  const [currentPlan, setCurrentPlan] = useState<BillingPlanKey>("core");
-  const [pendingPlan, setPendingPlan] = useState<BillingPlanKey | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [showCheckout, setShowCheckout] = useState(openCheckoutPanel);
 
-  const refreshEntitlements = useCallback(async () => {
-    const entitlements = await fetchEntitlementsAction();
-    setCurrentPlan(entitlements.plan);
-    setPendingPlan(entitlements.pendingPlan);
-    setIsLoaded(true);
-    return entitlements;
-  }, []);
-
   useEffect(() => {
-    void refreshEntitlements().catch(() => setIsLoaded(true));
-  }, [organization?._id, refreshEntitlements]);
+    void refreshEntitlements();
+  }, [refreshEntitlements]);
 
   useEffect(() => {
     if (!checkoutStatus) return;
@@ -73,12 +70,10 @@ export function BillingScreen({
           if (attempts === 1 || attempts % 3 === 0) {
             await reconcilePendingCheckoutAction(resolvedSlug);
           }
-          const entitlements = await refreshEntitlements();
-          if (
-            entitlements.pendingPlan === null &&
-            !isFreePlan(entitlements.plan)
-          ) {
-            toast.success(`${planDisplayName(entitlements.plan)} activated`);
+          const next = await refreshEntitlements();
+          if (next.pendingPlan === null && !isFreePlan(next.plan)) {
+            toast.success(`${planDisplayName(next.plan)} activated`);
+            router.replace(`/app/${resolvedSlug}/billing`);
             return;
           }
         } catch {
@@ -96,22 +91,22 @@ export function BillingScreen({
     return () => {
       cancelled = true;
     };
-  }, [checkoutStatus, refreshEntitlements, resolvedSlug]);
+  }, [checkoutStatus, refreshEntitlements, resolvedSlug, router]);
 
-  const statusLabel = pendingPlan
-    ? `Upgrading to ${planDisplayName(pendingPlan)}`
+  const statusLabel = entitlements.pendingPlan
+    ? `Upgrading to ${planDisplayName(entitlements.pendingPlan)}`
     : null;
 
   const canCheckout =
     highlightedPlan &&
     !isFreePlan(highlightedPlan) &&
-    currentPlan !== highlightedPlan;
+    entitlements.plan !== highlightedPlan;
 
   return (
     <>
       <ScreenHeader title="Billing" />
 
-      {!isLoaded ? (
+      {!entitlements.isLoaded ? (
         <LoadingPanel rows={4} label="Loading your plan…" />
       ) : (
         <>
@@ -119,7 +114,7 @@ export function BillingScreen({
             <div className="min-w-0 flex-1">
               <p className="text-xs text-muted-foreground">Current plan</p>
               <p className="font-heading text-2xl font-semibold tracking-tight">
-                {planDisplayName(currentPlan)}
+                {planDisplayName(entitlements.plan)}
               </p>
             </div>
             {statusLabel ? (
@@ -139,7 +134,7 @@ export function BillingScreen({
           ) : null}
 
           <PlanComparison
-            currentPlan={currentPlan}
+            currentPlan={entitlements.plan}
             highlightedPlan={highlightedPlan}
             orgSlug={resolvedSlug}
             payfastMode={payfastMode}

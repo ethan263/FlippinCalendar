@@ -5,11 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import {
+  BookOpen,
   Bot,
   CalendarDays,
   ChevronRight,
   CircleDollarSign,
   Clock3,
+  ContactRound,
   CreditCard,
   LayoutDashboard,
   LockKeyhole,
@@ -40,12 +42,17 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import {
+  canAccessBillingAndSettings,
+  type WorkspaceAuthRole,
+} from "@/lib/rbac";
+import {
   type Terminology,
 } from "@/components/dashboard/data";
 import type { Organization } from "@/components/dashboard/data";
-import { useFeatureEntitlements } from "@/components/dashboard/feature-gates";
+import { useFeatureEntitlements, EntitlementsProvider } from "@/components/dashboard/feature-gates";
+import { PlatformRefreshProvider, usePlatformRefresh } from "@/components/dashboard/platform-refresh-context";
 import { getCurrentDraftAction } from "@/app/actions/dashboard";
-import { useServerData } from "@/hooks/use-server-data";
+import { useRefreshableServerData } from "@/hooks/use-server-data";
 import {
   WorkspaceProvider,
   useWorkspace,
@@ -60,8 +67,9 @@ type NavItem = {
 
 function navigationFor(
   terminology: Terminology,
+  includeAdminNav: boolean,
 ): Array<{ label: string; items: NavItem[] }> {
-  return [
+  const sections: Array<{ label: string; items: NavItem[] }> = [
     {
       label: "Operate",
       items: [
@@ -81,6 +89,11 @@ function navigationFor(
           segment: "team",
           icon: UsersRound,
         },
+        {
+          label: terminology.customerPlural,
+          segment: "contacts",
+          icon: ContactRound,
+        },
         { label: "Availability", segment: "availability", icon: Clock3 },
       ],
     },
@@ -88,17 +101,23 @@ function navigationFor(
       label: "Experience",
       items: [
         { label: "AI Agent", segment: "voice-agent", icon: Bot },
+        { label: "Knowledge base", segment: "knowledge-base", icon: BookOpen },
         { label: "Public Site", segment: "public-site", icon: PanelsTopLeft },
       ],
     },
-    {
+  ];
+
+  if (includeAdminNav) {
+    sections.push({
       label: "Business",
       items: [
         { label: "Billing", segment: "billing", icon: CreditCard },
         { label: "Settings", segment: "settings", icon: Settings2 },
       ],
-    },
-  ];
+    });
+  }
+
+  return sections;
 }
 
 function WorkspaceNavigation({
@@ -183,12 +202,19 @@ function ShellChrome({
   const { organization, isBootstrapping, bootstrapError, terminology } =
     useWorkspace();
   const workspaceReady = useWorkspaceReady();
-  const publicSite = useServerData(
+  const { draftVersion } = usePlatformRefresh();
+  const { data: publicSite } = useRefreshableServerData(
     () => getCurrentDraftAction(),
-    [organization?._id],
+    [organization?._id, draftVersion],
     { enabled: workspaceReady },
   );
-  const navigation = navigationFor(terminology);
+  const workspaceAuth: WorkspaceAuthRole = {
+    mode: organization?.clerkOrgId ? "organization" : "personal",
+    role: organization?.role,
+    clerkOrgId: organization?.clerkOrgId,
+  };
+  const includeAdminNav = canAccessBillingAndSettings(workspaceAuth);
+  const navigation = navigationFor(terminology, includeAdminNav);
   const routeLabels = Object.fromEntries(
     navigation.flatMap((section) =>
       section.items.map((item) => [item.segment, item.label]),
@@ -222,22 +248,28 @@ function ShellChrome({
           />
 
           <div className="rounded-lg border border-black/10 bg-white/70 px-2 py-1 shadow-[0_1px_0_rgba(0,0,0,0.05)] group-data-[collapsible=icon]:hidden">
-            <OrganizationSwitcher
-              hidePersonal
-              afterCreateOrganizationUrl="/app/:slug"
-              afterSelectOrganizationUrl="/app/:slug"
-              appearance={{
-                elements: {
-                  rootBox: "w-full",
-                  organizationSwitcherTrigger:
-                    "w-full justify-between border-0 bg-transparent px-1 py-1 shadow-none",
-                  organizationPreviewMainIdentifier:
-                    "text-xs font-medium text-foreground",
-                  organizationPreviewSecondaryIdentifier:
-                    "text-[10px] text-muted-foreground",
-                },
-              }}
-            />
+            {organization?.clerkOrgId ? (
+              <OrganizationSwitcher
+                hidePersonal
+                afterCreateOrganizationUrl="/app/:slug"
+                afterSelectOrganizationUrl="/app/:slug"
+                appearance={{
+                  elements: {
+                    rootBox: "w-full",
+                    organizationSwitcherTrigger:
+                      "w-full justify-between border-0 bg-transparent px-1 py-1 shadow-none",
+                    organizationPreviewMainIdentifier:
+                      "text-xs font-medium text-foreground",
+                    organizationPreviewSecondaryIdentifier:
+                      "text-[10px] text-muted-foreground",
+                  },
+                }}
+              />
+            ) : (
+              <p className="px-1 py-1 text-xs font-medium text-foreground">
+                {organization?.name ?? "Your business"}
+              </p>
+            )}
           </div>
         </SidebarHeader>
 
@@ -387,7 +419,11 @@ export function AppShell({
 }) {
   return (
     <WorkspaceProvider orgSlug={orgSlug} initialOrganization={initialOrganization}>
-      <ShellChrome orgSlug={orgSlug}>{children}</ShellChrome>
+      <EntitlementsProvider>
+        <PlatformRefreshProvider>
+          <ShellChrome orgSlug={orgSlug}>{children}</ShellChrome>
+        </PlatformRefreshProvider>
+      </EntitlementsProvider>
     </WorkspaceProvider>
   );
 }

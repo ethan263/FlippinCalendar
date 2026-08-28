@@ -34,15 +34,28 @@ describe("GET /go/plan/[planKey]", () => {
     expect(response.headers.get("set-cookie")).toContain("fc_plan_intent=pro");
   });
 
-  it("redirects legacy voice plan to pro billing checkout", async () => {
+  it("redirects pro plan to pro billing checkout", async () => {
     authMock.mockResolvedValue({ userId: "user_123", orgSlug: "acme" });
     const { GET } = await import("./route");
     const response = await GET(
-      new Request("https://example.com/go/plan/voice"),
+      new Request("https://example.com/go/plan/pro"),
       {
-        params: Promise.resolve({ planKey: "voice" }),
+        params: Promise.resolve({ planKey: "pro" }),
       },
     );
+
+    expect(response.headers.get("location")).toBe(
+      "https://example.com/app/acme/billing?plan=pro&upgrade=1",
+    );
+    expect(response.headers.get("set-cookie")).toContain("fc_plan_intent=pro");
+  });
+
+  it("maps legacy engage slug to pro billing checkout", async () => {
+    authMock.mockResolvedValue({ userId: "user_123", orgSlug: "acme" });
+    const { GET } = await import("./route");
+    const response = await GET(new Request("https://example.com/go/plan/engage"), {
+      params: Promise.resolve({ planKey: "engage" }),
+    });
 
     expect(response.headers.get("location")).toBe(
       "https://example.com/app/acme/billing?plan=pro&upgrade=1",

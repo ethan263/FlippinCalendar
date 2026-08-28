@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { planDisplayName, type BillingPlanKey } from "@/lib/billing/features";
 import {
+  isCurrentOrHigherPlan,
+  isPaidPlan,
+} from "@/lib/billing/plans";
+import {
   marketingPlans,
   pricingPeriodLabel,
   type MarketingPlanKey,
@@ -47,7 +51,10 @@ export function PlanComparison({
         {marketingPlans.map((plan) => {
           const isCurrent = currentPlan === plan.key;
           const isHighlighted = highlightedPlan === plan.key || plan.featured;
-          const isPaid = plan.key !== "core";
+          const isPaid = isPaidPlan(plan.key);
+          const alreadyIncluded =
+            isPaid && isCurrentOrHigherPlan(currentPlan, plan.key) && !isCurrent;
+          const canUpgrade = isPaid && !isCurrent && !alreadyIncluded;
 
           return (
             <article
@@ -79,14 +86,16 @@ export function PlanComparison({
               <Button
                 className="mt-5 w-full"
                 variant={isHighlighted ? "default" : "outline"}
-                disabled={isCurrent || !isPaid}
+                disabled={isCurrent || !canUpgrade}
                 onClick={() => setCheckoutPlan(plan.key)}
               >
                 {isCurrent
                   ? `Current · ${planDisplayName(currentPlan)}`
-                  : isPaid
-                    ? "Upgrade to Pro"
-                    : "Included"}
+                  : alreadyIncluded
+                    ? "Included"
+                    : isPaid
+                      ? `Upgrade to ${plan.name}`
+                      : "Included"}
               </Button>
             </article>
           );

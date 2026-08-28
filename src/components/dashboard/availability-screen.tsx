@@ -27,7 +27,7 @@ import {
   listRulesAction,
   replaceMemberRulesAction,
 } from "@/app/actions/dashboard";
-import { useServerData } from "@/hooks/use-server-data";
+import { useRefreshableServerData } from "@/hooks/use-server-data";
 import {
   EmptyState,
   LoadingPanel,
@@ -82,9 +82,11 @@ function initialSchedule(rules: AvailabilityRule[]) {
 function WeeklyEditor({
   member,
   rules,
+  onSaved,
 }: {
   member: TeamMember;
   rules: AvailabilityRule[];
+  onSaved: () => void;
 }) {
   const { organization, terminology } = useWorkspace();
   const [schedule, setSchedule] = useState(() => initialSchedule(rules));
@@ -111,6 +113,7 @@ function WeeklyEditor({
         })),
       });
       toast.success(`${member.name}’s availability updated`);
+      onSaved();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not update availability");
     } finally {
@@ -218,12 +221,16 @@ function WeeklyEditor({
 export function AvailabilityScreen() {
   const { organization, terminology } = useWorkspace();
   const workspaceReady = useWorkspaceReady();
-  const members = useServerData(() => listMembersAction({}), [organization?._id], {
-    enabled: workspaceReady,
-  });
-  const rules = useServerData(() => listRulesAction({}), [organization?._id], {
-    enabled: workspaceReady,
-  });
+  const { data: members } = useRefreshableServerData(
+    () => listMembersAction({}),
+    [organization?._id],
+    { enabled: workspaceReady },
+  );
+  const { data: rules, refresh: refreshRules } = useRefreshableServerData(
+    () => listRulesAction({}),
+    [organization?._id],
+    { enabled: workspaceReady },
+  );
   const bookableMembers = useMemo(
     () =>
       (members ?? []).filter(
@@ -273,6 +280,7 @@ export function AvailabilityScreen() {
           key={`${member._id}-${rules.length}`}
           member={member}
           rules={memberRules}
+          onSaved={refreshRules}
         />
       ) : (
         <EmptyState

@@ -1,12 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   AudioLines,
   ArrowUpRight,
   Bot,
   Check,
+  LineChart,
   LockKeyhole,
 } from "lucide-react";
 
@@ -15,9 +24,37 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import type { BillingPlanKey } from "@/lib/billing/features";
 import { useWorkspace } from "@/components/dashboard/workspace-context";
 
-export type ProductFeature = "web_agent" | "browser_voice";
+export type ProductFeature = "web_agent" | "browser_voice" | "advanced_analytics";
+
+export type EntitlementsState = {
+  isLoaded: boolean;
+  plan: BillingPlanKey;
+  pendingPlan: BillingPlanKey | null;
+  webAgent: boolean;
+  browserVoice: boolean;
+  advancedAnalytics: boolean;
+  hasAiAgent: boolean;
+};
+
+const defaultEntitlements: EntitlementsState = {
+  isLoaded: false,
+  plan: "core",
+  pendingPlan: null,
+  webAgent: false,
+  browserVoice: false,
+  advancedAnalytics: false,
+  hasAiAgent: false,
+};
+
+type EntitlementsContextValue = {
+  entitlements: EntitlementsState;
+  refreshEntitlements: () => Promise<EntitlementsState>;
+};
+
+const EntitlementsContext = createContext<EntitlementsContextValue | null>(null);
 
 const featureCopy = {
   web_agent: {
@@ -28,40 +65,90 @@ const featureCopy = {
     title: "Voice",
     icon: AudioLines,
   },
+  advanced_analytics: {
+    title: "Analytics",
+    icon: LineChart,
+  },
 } satisfies Record<
   ProductFeature,
   { title: string; icon: typeof Bot }
 >;
 
-export function useFeatureEntitlements() {
-  const { organization } = useWorkspace();
-  const [state, setState] = useState({
-    isLoaded: false,
-    webAgent: false,
-    browserVoice: false,
-    hasAiAgent: false,
-  });
+export function EntitlementsProvider({ children }: { children: ReactNode }) {
+  const { organization, orgSlug } = useWorkspace();
+  const [entitlements, setEntitlements] =
+    useState<EntitlementsState>(defaultEntitlements);
+
+  const refreshEntitlements = useCallback(async () => {
+    if (!organization?._id) {
+      const empty = { ...defaultEntitlements, isLoaded: true };
+      setEntitlements(empty);
+      return empty;
+    }
+
+    try {
+      const next = await fetchEntitlementsAction(orgSlug);
+      setEntitlements(next);
+      return next;
+    } catch {
+      const fallback = { ...defaultEntitlements, isLoaded: true };
+      setEntitlements((current) =>
+        current.isLoaded ? current : fallback,
+      );
+      return fallback;
+    }
+  }, [organization?._id, orgSlug]);
 
   useEffect(() => {
-    if (!organization?._id) return;
+    if (!organization?._id) {
+      setEntitlements({ ...defaultEntitlements, isLoaded: true });
+      return;
+    }
 
     let cancelled = false;
-    void fetchEntitlementsAction()
+    void fetchEntitlementsAction(orgSlug)
       .then((next) => {
-        if (!cancelled) setState(next);
+        if (!cancelled) setEntitlements(next);
       })
       .catch(() => {
         if (!cancelled) {
-          setState((current) => ({ ...current, isLoaded: true }));
+          setEntitlements((current) => ({ ...current, isLoaded: true }));
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [organization?._id]);
+  }, [organization?._id, orgSlug]);
 
-  return state;
+  const value = useMemo(
+    () => ({ entitlements, refreshEntitlements }),
+    [entitlements, refreshEntitlements],
+  );
+
+  return (
+    <EntitlementsContext.Provider value={value}>
+      {children}
+    </EntitlementsContext.Provider>
+  );
+}
+
+function useEntitlementsContext() {
+  const value = useContext(EntitlementsContext);
+  if (!value) {
+    throw new Error(
+      "useFeatureEntitlements must be used inside EntitlementsProvider",
+    );
+  }
+  return value;
+}
+
+export function useFeatureEntitlements() {
+  return useEntitlementsContext().entitlements;
+}
+
+export function useRefreshEntitlements() {
+  return useEntitlementsContext().refreshEntitlements;
 }
 
 /** Full-page lock when Core tries to open AI Agent. */
@@ -99,8 +186,14 @@ export function FeatureEntitlementCard({
   compact?: boolean;
 }) {
   const { orgSlug } = useWorkspace();
-  const { isLoaded, webAgent, browserVoice } = useFeatureEntitlements();
-  const entitled = feature === "web_agent" ? webAgent : browserVoice;
+  const { isLoaded, webAgent, browserVoice, advancedAnalytics } =
+    useFeatureEntitlements();
+  const entitled =
+    feature === "web_agent"
+      ? webAgent
+      : feature === "browser_voice"
+        ? browserVoice
+        : advancedAnalytics;
   const copy = featureCopy[feature];
   const Icon = copy.icon;
 

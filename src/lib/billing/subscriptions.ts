@@ -1,7 +1,10 @@
 import "server-only";
 
+import { revalidatePath } from "next/cache";
+
 import type { BillingFeature, BillingPlanKey } from "@/lib/billing/features";
 import { planIncludesFeature } from "@/lib/billing/features";
+import { normalizeBillingPlanKey } from "@/lib/billing/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type SubscriptionStatus = "active" | "pending" | "past_due" | "cancelled";
@@ -19,8 +22,8 @@ export type OrganizationSubscription = {
 
 type SubscriptionRow = {
   organization_id: string;
-  plan: BillingPlanKey;
-  pending_plan?: BillingPlanKey | null;
+  plan: string;
+  pending_plan?: string | null;
   status: SubscriptionStatus;
   current_period_start: string;
   current_period_end: string | null;
@@ -31,8 +34,10 @@ type SubscriptionRow = {
 function mapRow(row: SubscriptionRow): OrganizationSubscription {
   return {
     organizationId: row.organization_id,
-    plan: row.plan,
-    pendingPlan: row.pending_plan ?? null,
+    plan: normalizeBillingPlanKey(row.plan) ?? "core",
+    pendingPlan: row.pending_plan
+      ? normalizeBillingPlanKey(row.pending_plan)
+      : null,
     status: row.status,
     currentPeriodStart: row.current_period_start,
     currentPeriodEnd: row.current_period_end,
@@ -41,7 +46,9 @@ function mapRow(row: SubscriptionRow): OrganizationSubscription {
   };
 }
 
-function subscriptionGrantsAccess(subscription: OrganizationSubscription): boolean {
+export function subscriptionGrantsAccess(
+  subscription: OrganizationSubscription,
+): boolean {
   if (subscription.status === "active" || subscription.status === "pending") {
     return true;
   }
@@ -53,6 +60,42 @@ function subscriptionGrantsAccess(subscription: OrganizationSubscription): boole
     return true;
   }
   return false;
+}
+
+export type ResolvedEntitlements = {
+  plan: BillingPlanKey;
+  pendingPlan: BillingPlanKey | null;
+  webAgent: boolean;
+  browserVoice: boolean;
+  advancedAnalytics: boolean;
+  hasAiAgent: boolean;
+};
+
+/** Single source of truth for plan + subscription status → feature access. */
+export function resolveEntitlementsFromSubscription(
+  subscription: OrganizationSubscription | null,
+): ResolvedEntitlements {
+  const plan = subscription?.plan ?? "core";
+  const pendingPlan = subscription?.pendingPlan ?? null;
+  const grantsAccess = subscription
+    ? subscriptionGrantsAccess(subscription)
+    : true;
+
+  const webAgent =
+    grantsAccess && planIncludesFeature(plan, "web_agent");
+  const browserVoice =
+    grantsAccess && planIncludesFeature(plan, "browser_voice");
+  const advancedAnalytics =
+    grantsAccess && planIncludesFeature(plan, "advanced_analytics");
+
+  return {
+    plan,
+    pendingPlan,
+    webAgent,
+    browserVoice,
+    advancedAnalytics,
+    hasAiAgent: webAgent || browserVoice,
+  };
 }
 
 export async function ensureCoreSubscription(organizationId: string) {
@@ -104,6 +147,21 @@ export async function organizationHasFeature(
   feature: BillingFeature,
 ): Promise<boolean> {
   const subscription = await getSubscriptionByClerkOrgId(clerkOrgId);
+  return subscriptionGrantsFeature(subscription, feature);
+}
+
+export async function organizationHasFeatureByOrganizationId(
+  organizationId: string,
+  feature: BillingFeature,
+): Promise<boolean> {
+  const subscription = await getSubscriptionByOrganizationId(organizationId);
+  return subscriptionGrantsFeature(subscription, feature);
+}
+
+function subscriptionGrantsFeature(
+  subscription: OrganizationSubscription | null,
+  feature: BillingFeature,
+): boolean {
   if (!subscription) {
     return planIncludesFeature("core", feature);
   }
@@ -147,6 +205,21 @@ export async function abortPendingCheckout(organizationId: string) {
   if (error) throw new Error(error.message);
 }
 
+async function revalidateOrganizationBillingPaths(organizationId: string) {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("organizations")
+    .select("slug")
+    .eq("id", organizationId)
+    .maybeSingle();
+  if (error || !data?.slug) return;
+
+  const slug = data.slug as string;
+  revalidatePath(`/app/${slug}/billing`);
+  revalidatePath(`/app/${slug}/voice-agent`);
+  revalidatePath(`/app/${slug}`);
+}
+
 export async function activatePaidSubscription(args: {
   organizationId: string;
   plan: BillingPlanKey;
@@ -172,6 +245,7 @@ export async function activatePaidSubscription(args: {
     { onConflict: "organization_id" },
   );
   if (error) throw new Error(error.message);
+  await revalidateOrganizationBillingPaths(args.organizationId);
 }
 
 export async function recordPayfastBillingEvent(args: {

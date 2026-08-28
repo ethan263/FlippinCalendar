@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function depsToKey(deps: unknown[]) {
   try {
@@ -11,7 +11,7 @@ function depsToKey(deps: unknown[]) {
   }
 }
 
-type UseServerDataOptions = {
+export type UseServerDataOptions = {
   /** When false, skip the loader and return undefined (avoids bootstrap races). */
   enabled?: boolean;
 };
@@ -64,4 +64,16 @@ export function useServerData<T>(
   }, [depsKey, enabled]);
 
   return cache.key === depsKey ? cache.data : undefined;
+}
+
+/** Same as useServerData but exposes an imperative refresh() after mutations. */
+export function useRefreshableServerData<T>(
+  loader: () => Promise<T>,
+  deps: unknown[],
+  options?: UseServerDataOptions,
+): { data: T | undefined; refresh: () => void } {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const data = useServerData(loader, [...deps, refreshKey], options);
+  const refresh = useCallback(() => setRefreshKey((value) => value + 1), []);
+  return { data, refresh };
 }

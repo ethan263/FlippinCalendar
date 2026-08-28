@@ -6,15 +6,19 @@ import { recordOperatorConversation } from "@/lib/data/agents";
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
-  const { has, isAuthenticated, orgId } = await auth();
-  if (!isAuthenticated || !orgId) {
+  const session = await auth();
+  if (!session.userId) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   }
-  if (
-    !has({ permission: "org:operations_hub:manage" }) &&
-    !has({ role: "org:admin" }) &&
-    !has({ role: "org:owner" })
-  ) {
+
+  const canOperate =
+    !session.orgId ||
+    session.has?.({ permission: "org:operations_hub:manage" }) ||
+    session.has?.({ role: "org:admin" }) ||
+    session.has?.({ role: "org:owner" }) ||
+    session.has?.({ role: "org:operator" });
+  // Personal workspaces have no org claim; operator check runs in recordOperatorConversation.
+  if (!canOperate) {
     return NextResponse.json(
       { error: "Organization operator access is required." },
       { status: 403 },

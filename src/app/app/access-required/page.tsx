@@ -7,15 +7,23 @@ import { redirect } from "next/navigation";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { isWorkspaceOperator } from "@/lib/rbac";
 
 export default async function AccessRequiredPage() {
   const session = await auth.protect();
 
-  const canOperate =
-    session.has({ permission: "org:operations_hub:manage" }) ||
-    session.has({ role: "org:admin" }) ||
-    session.has({ role: "org:owner" });
-  if (canOperate && session.orgSlug) {
+  const authRole = {
+    mode: session.orgId ? ("organization" as const) : ("personal" as const),
+    role: session.orgRole?.startsWith("org:")
+      ? session.orgRole.slice(4)
+      : session.orgRole,
+    clerkOrgId: session.orgId,
+    permissions: session.has({ permission: "org:operations_hub:manage" })
+      ? ["org:operations_hub:manage"]
+      : [],
+  };
+
+  if (isWorkspaceOperator(authRole) && session.orgSlug) {
     redirect(`/app/${session.orgSlug}`);
   }
 
@@ -46,13 +54,14 @@ export default async function AccessRequiredPage() {
               You’re signed in, but this business isn’t ready for you yet.
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
-              Ask a business administrator to confirm your membership, or
-              run{" "}
+              Ask a business administrator to confirm your membership or assign
+              you the Operator role. Plain members cannot access the operations
+              hub. Admins can also run{" "}
               <code className="rounded bg-black/5 px-1.5 py-0.5 text-[0.85em]">
                 pnpm run clerk:rbac
               </code>{" "}
-              so admins and members receive the operations permission. You can
-              also switch to another business you already belong to.
+              after changing Clerk roles. Switch to another workspace you can
+              operate below.
             </p>
             <Button asChild variant="outline" className="mt-7">
               <Link href="/app">

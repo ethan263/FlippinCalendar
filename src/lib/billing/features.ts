@@ -14,6 +14,7 @@ const planFeatures: Record<BillingPlanKey, readonly BillingFeature[]> = {
     "custom_public_page",
     "web_agent",
     "browser_voice",
+    "advanced_analytics",
   ],
 };
 
@@ -23,6 +24,7 @@ export type PlanEntitlements = {
   customPublicPage: boolean;
   webAgent: boolean;
   browserVoice: boolean;
+  advancedAnalytics: boolean;
   hasAiAgent: boolean;
 };
 
@@ -36,6 +38,7 @@ export function getPlanEntitlements(plan: BillingPlanKey): PlanEntitlements {
     customPublicPage: features.includes("custom_public_page"),
     webAgent,
     browserVoice,
+    advancedAnalytics: features.includes("advanced_analytics"),
     hasAiAgent: webAgent || browserVoice,
   };
 }

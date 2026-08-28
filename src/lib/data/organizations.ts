@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createClerkClient } from "@clerk/backend";
 import { auth } from "@clerk/nextjs/server";
 
 import type { Organization } from "@/components/dashboard/data";
@@ -16,10 +17,14 @@ import { resolveElevenLabsAgentId } from "@/lib/elevenlabs/config";
 import { ensureCoreSubscription } from "@/lib/billing/subscriptions";
 import { requireCurrentOrganizationForRouteSlug } from "@/lib/data/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { AccessibleWorkspace } from "@/lib/workspaces";
+
+export type { AccessibleWorkspace } from "@/lib/workspaces";
 
 type OrganizationRow = {
   id: string;
-  clerk_org_id: string;
+  clerk_org_id: string | null;
+  owner_clerk_user_id: string | null;
   name: string;
   slug: string;
   timezone: string;
@@ -31,7 +36,8 @@ type OrganizationRow = {
 };
 
 export type ActiveClerkOrganization = {
-  clerkOrgId: string;
+  mode: "organization" | "personal";
+  clerkOrgId?: string;
   clerkOrgSlug?: string;
   role?: string;
   userId: string;
@@ -43,7 +49,7 @@ function viewOrganization(
 ): Organization {
   return {
     _id: row.id,
-    clerkOrgId: row.clerk_org_id,
+    clerkOrgId: row.clerk_org_id ?? undefined,
     name: row.name,
     slug: row.slug,
     timezone: row.timezone,
@@ -56,24 +62,92 @@ function viewOrganization(
   };
 }
 
+function normalizeClerkRole(role: string | null | undefined): string | undefined {
+  if (!role) return undefined;
+  return role.startsWith("org:") ? role.slice(4) : role;
+}
+
+export async function listAccessibleWorkspaces(
+  userId: string,
+): Promise<AccessibleWorkspace[]> {
+  const supabase = createAdminClient();
+  const workspaces: AccessibleWorkspace[] = [];
+
+  const { data: personal, error: personalError } = await supabase
+    .from("organizations")
+    .select("*")
+    .eq("owner_clerk_user_id", userId)
+    .maybeSingle();
+  if (personalError) throw new Error(personalError.message);
+  if (personal) {
+    const row = personal as OrganizationRow;
+    workspaces.push({
+      slug: row.slug,
+      name: row.name,
+      mode: "personal",
+      role: "owner",
+      isBootstrapped: true,
+    });
+  }
+
+  const secretKey = process.env.CLERK_SECRET_KEY?.trim();
+  if (!secretKey) {
+    return workspaces;
+  }
+
+  const clerk = createClerkClient({ secretKey });
+  const memberships = await clerk.users.getOrganizationMembershipList({
+    userId,
+    limit: 100,
+  });
+
+  for (const membership of memberships.data) {
+    const clerkOrgId = membership.organization.id;
+    const { data: orgRow, error: orgError } = await supabase
+      .from("organizations")
+      .select("*")
+      .eq("clerk_org_id", clerkOrgId)
+      .maybeSingle();
+    if (orgError) throw new Error(orgError.message);
+
+    const role = normalizeClerkRole(membership.role);
+    const clerkSlug = membership.organization.slug?.trim();
+    workspaces.push({
+      slug: (orgRow as OrganizationRow | null)?.slug ?? clerkSlug ?? clerkOrgId,
+      name:
+        (orgRow as OrganizationRow | null)?.name ??
+        membership.organization.name,
+      mode: "organization",
+      clerkOrgId,
+      role,
+      isBootstrapped: Boolean(orgRow),
+    });
+  }
+
+  return workspaces;
+}
+
 export async function requireActiveClerkOrganization(): Promise<ActiveClerkOrganization> {
   const session = await auth();
   if (!session.userId) {
     throw new Error("Authentication required.");
   }
 
-  const clerkOrgId = session.orgId;
-  if (!clerkOrgId) {
-    throw new Error(
-      "Select an organization before using the workspace. The active Clerk session has no organization claim.",
-    );
+  if (!session.orgId) {
+    return {
+      mode: "personal",
+      userId: session.userId,
+      role: "owner",
+    };
   }
 
+  const clerkOrgId = session.orgId;
   const role = session.orgRole?.startsWith("org:")
     ? session.orgRole.slice(4)
     : session.orgRole;
 
   return {
+    mode: "organization",
     clerkOrgId,
     clerkOrgSlug: session.orgSlug ?? undefined,
     role: role ?? undefined,
@@ -85,15 +159,39 @@ export async function getCurrentOrganization(): Promise<Organization | null> {
   const clerkAuth = await requireActiveClerkOrganization();
   const supabase = createAdminClient();
 
+  if (clerkAuth.mode === "organization" && clerkAuth.clerkOrgId) {
+    const { data, error } = await supabase
+      .from("organizations")
+      .select("*")
+      .eq("clerk_org_id", clerkAuth.clerkOrgId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+    return viewOrganization(data as OrganizationRow, clerkAuth.role);
+  }
+
   const { data, error } = await supabase
     .from("organizations")
     .select("*")
-    .eq("clerk_org_id", clerkAuth.clerkOrgId)
+    .eq("owner_clerk_user_id", clerkAuth.userId)
     .maybeSingle();
-
   if (error) throw new Error(error.message);
   if (!data) return null;
-  return viewOrganization(data as OrganizationRow, clerkAuth.role);
+  return viewOrganization(data as OrganizationRow, clerkAuth.role ?? "owner");
+}
+
+export async function getWorkspaceForUser(
+  userId: string,
+): Promise<Organization | null> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("organizations")
+    .select("*")
+    .eq("owner_clerk_user_id", userId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+  return viewOrganization(data as OrganizationRow, "owner");
 }
 
 export async function getOrganizationForRouteSlug(
@@ -110,7 +208,11 @@ export async function bootstrapCurrentOrganization(args: {
   locale?: string;
 }): Promise<Organization> {
   const clerkAuth = await requireActiveClerkOrganization();
-  if (clerkAuth.role !== "admin" && clerkAuth.role !== "owner") {
+  if (
+    clerkAuth.mode === "organization" &&
+    clerkAuth.role !== "admin" &&
+    clerkAuth.role !== "owner"
+  ) {
     throw new Error("An organization admin must initialize this workspace.");
   }
 
@@ -127,7 +229,7 @@ export async function bootstrapCurrentOrganization(args: {
         ?.split("-")
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
         .join(" ") ??
-      "New organization",
+      "My business",
     "name",
     120,
   );
@@ -144,7 +246,10 @@ export async function bootstrapCurrentOrganization(args: {
     throw new Error(`Invalid locale: "${locale}".`);
   }
 
-  const preferredSlug = slugify(clerkAuth.clerkOrgSlug ?? name);
+  const preferredSlug =
+    clerkAuth.mode === "organization" && clerkAuth.clerkOrgSlug
+      ? slugify(clerkAuth.clerkOrgSlug)
+      : slugify(name);
   const supabase = createAdminClient();
 
   const { data: slugOwner, error: slugError } = await supabase
@@ -154,16 +259,21 @@ export async function bootstrapCurrentOrganization(args: {
     .maybeSingle();
   if (slugError) throw new Error(slugError.message);
 
-  const slug = slugOwner
-    ? `${preferredSlug}-${slugify(clerkAuth.clerkOrgId).slice(-8)}`
-    : preferredSlug;
+  const slugSuffix =
+    clerkAuth.mode === "organization" && clerkAuth.clerkOrgId
+      ? slugify(clerkAuth.clerkOrgId).slice(-8)
+      : clerkAuth.userId.slice(-8);
+  const slug = slugOwner ? `${preferredSlug}-${slugSuffix}` : preferredSlug;
 
   const defaultAgentId = resolveElevenLabsAgentId();
 
   const { data: organization, error: insertError } = await supabase
     .from("organizations")
     .insert({
-      clerk_org_id: clerkAuth.clerkOrgId,
+      clerk_org_id:
+        clerkAuth.mode === "organization" ? clerkAuth.clerkOrgId ?? null : null,
+      owner_clerk_user_id:
+        clerkAuth.mode === "personal" ? clerkAuth.userId : null,
       name,
       slug,
       timezone,
@@ -267,7 +377,11 @@ export async function updateCurrentOrganization(args: {
   terminology?: BackendTerminology;
 }): Promise<Organization> {
   const clerkAuth = await requireActiveClerkOrganization();
-  if (clerkAuth.role !== "admin" && clerkAuth.role !== "owner") {
+  if (
+    clerkAuth.mode === "organization" &&
+    clerkAuth.role !== "admin" &&
+    clerkAuth.role !== "owner"
+  ) {
     throw new Error("An organization admin role is required for this action.");
   }
 

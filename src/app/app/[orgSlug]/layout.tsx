@@ -3,6 +3,10 @@ import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell/app-shell";
 import { requireAppSession } from "@/lib/auth/require-app-session";
+import {
+  requireCurrentOrganizationForRouteSlug,
+  isWorkspaceOperator,
+} from "@/lib/data/auth";
 import { getOrganizationForRouteSlug } from "@/lib/data/organizations";
 
 export default async function OrganizationLayout({
@@ -15,18 +19,18 @@ export default async function OrganizationLayout({
   const session = await requireAppSession();
   const { orgSlug: routeOrgSlug } = await params;
 
-  if (!session.orgId || !session.orgSlug) {
-    redirect("/app");
-  }
-
-  if (session.orgSlug !== routeOrgSlug) {
+  if (session.orgId && session.orgSlug && session.orgSlug !== routeOrgSlug) {
     redirect(`/app/${session.orgSlug}`);
   }
 
-  const canOperate =
-    session.has({ permission: "org:operations_hub:manage" }) ||
-    session.has({ role: "org:admin" }) ||
-    session.has({ role: "org:owner" });
+  let canOperate = false;
+  try {
+    const current = await requireCurrentOrganizationForRouteSlug(routeOrgSlug);
+    canOperate = isWorkspaceOperator(current.auth);
+  } catch {
+    canOperate = false;
+  }
+
   if (!canOperate) {
     redirect("/app/access-required");
   }
