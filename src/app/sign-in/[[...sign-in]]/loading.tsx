@@ -1,10 +1,9 @@
-import { AuthShell } from "@/components/auth-shell";
 import { AuthFormSkeleton } from "@/components/loading/auth-form-skeleton";
 
 export default function SignInLoading() {
   return (
-    <AuthShell>
+    <div className="flex min-h-[280px] items-center justify-center">
       <AuthFormSkeleton label="Loading sign-in…" />
-    </AuthShell>
+    </div>
   );
 }

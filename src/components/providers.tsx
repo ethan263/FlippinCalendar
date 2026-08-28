@@ -7,7 +7,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem
+      scriptProps={{ type: "application/json" }}
+    >
       <TooltipProvider delayDuration={250}>
         {children}
         <Toaster richColors position="bottom-right" />

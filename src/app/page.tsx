@@ -9,8 +9,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
 import { Brand } from "@/components/brand";
+import { getAppAuthSession } from "@/lib/auth/require-app-session";
 import { HeroSection } from "@/components/marketing/hero-section";
 import { Button } from "@/components/ui/button";
 import { marketingPlans, pricingPeriodLabel } from "@/lib/marketing/plans";
@@ -70,7 +70,7 @@ function MarketingNav({ signedIn }: { signedIn: boolean }) {
 }
 
 export default async function Home() {
-  const { userId, orgSlug } = await auth();
+  const { userId, orgSlug } = await getAppAuthSession();
 
   return (
     <main className="overflow-hidden bg-background">

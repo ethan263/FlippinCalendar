@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
 import { ArrowLeft, Check } from "lucide-react";
 import { Brand } from "@/components/brand";
+import { getAppAuthSession } from "@/lib/auth/require-app-session";
 import { Button } from "@/components/ui/button";
 import { marketingPlans, pricingPeriodLabel } from "@/lib/marketing/plans";
 import { buildPlanChoiceHref } from "@/lib/marketing/plan-intent";
 
 export default async function PricingPage() {
-  const { userId, orgSlug } = await auth();
+  const { userId, orgSlug } = await getAppAuthSession();
 
   return (
     <main className="min-h-dvh bg-background">

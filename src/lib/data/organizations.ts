@@ -1,9 +1,9 @@
 import "server-only";
 
 import { createClerkClient } from "@clerk/backend";
-import { auth } from "@clerk/nextjs/server";
 
 import type { Organization } from "@/components/dashboard/data";
+import { getAppAuthSession } from "@/lib/auth/require-app-session";
 import {
   DEFAULT_TERMINOLOGY,
   assertIanaTimezone,
@@ -128,7 +128,7 @@ export async function listAccessibleWorkspaces(
 }
 
 export async function requireActiveClerkOrganization(): Promise<ActiveClerkOrganization> {
-  const session = await auth();
+  const session = await getAppAuthSession();
   if (!session.userId) {
     throw new Error("Authentication required.");
   }

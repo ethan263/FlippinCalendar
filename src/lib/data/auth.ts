@@ -1,9 +1,9 @@
 import "server-only";
 
 import { createClerkClient } from "@clerk/backend";
-import { auth } from "@clerk/nextjs/server";
 
 import type { BackendTerminology, Organization } from "@/components/dashboard/data";
+import { getAppAuthSession } from "@/lib/auth/require-app-session";
 import {
   MANAGE_OPERATIONS_PERMISSION,
   canAccessBillingAndSettings,
@@ -66,7 +66,7 @@ export function mapOrganization(
 
 /** Clerk org when present; otherwise personal workspace scoped to the signed-in user. */
 export async function requireActiveClerkOrganization(): Promise<ActiveClerkOrganization> {
-  const session = await auth();
+  const session = await getAppAuthSession();
   if (!session.userId) {
     throw new Error("Authentication required.");
   }
@@ -189,7 +189,7 @@ async function verifyClerkOrganizationMembership(args: {
  * lacks an organization claim (common during server-action transitions).
  */
 export async function requireCurrentOrganizationForRouteSlug(routeOrgSlug: string) {
-  const session = await auth();
+  const session = await getAppAuthSession();
   if (!session.userId) {
     throw new Error("Authentication required.");
   }
