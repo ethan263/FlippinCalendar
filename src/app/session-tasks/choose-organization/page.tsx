@@ -1,8 +1,9 @@
-import { TaskChooseOrganization } from "@clerk/nextjs";
-import { ContinueWhenOrganizationReady } from "@/components/auth/continue-when-organization-ready";
-import { AuthShell } from "@/components/auth-shell";
+import { redirect } from "next/navigation";
+
+import { requireAppSession } from "@/lib/auth/require-app-session";
+import { listAccessibleWorkspaces } from "@/lib/data/organizations";
 import {
-  buildAfterOrganizationUrl,
+  buildAppEntryUrl,
   buildPostOrganizationUrl,
   normalizePlanIntent,
 } from "@/lib/marketing/plan-intent";
@@ -12,30 +13,28 @@ type ChooseOrganizationPageProps = {
   searchParams: Promise<{ plan?: string }>;
 };
 
+/**
+ * Personal workspaces do not require Clerk Organizations.
+ * Skip the org-picker task and route into `/app`, which bootstraps or picks
+ * the user's workspace.
+ */
 export default async function ChooseOrganizationPage({
   searchParams,
 }: ChooseOrganizationPageProps) {
+  const session = await requireAppSession();
   const { plan } = await searchParams;
   const planIntent =
     normalizePlanIntent(plan) ?? (await readPlanIntentCookie());
 
-  return (
-    <AuthShell title="Choose a business">
-      <ContinueWhenOrganizationReady
-        getDestination={(slug) => buildPostOrganizationUrl(slug, planIntent)}
-      />
-      <TaskChooseOrganization
-        redirectUrlComplete={buildAfterOrganizationUrl(planIntent)}
-        appearance={{
-          elements: {
-            rootBox: "w-full",
-            cardBox: "w-full shadow-none",
-            card: "w-full border-0 bg-transparent p-0 shadow-none",
-            header: "hidden",
-            footer: "bg-transparent",
-          },
-        }}
-      />
-    </AuthShell>
-  );
+  const workspaces = await listAccessibleWorkspaces(session.userId!);
+
+  if (workspaces.length === 1) {
+    redirect(buildPostOrganizationUrl(workspaces[0]!.slug, planIntent));
+  }
+
+  if (workspaces.length > 1) {
+    redirect(buildAppEntryUrl(planIntent));
+  }
+
+  redirect(buildAppEntryUrl(planIntent));
 }

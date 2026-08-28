@@ -1,4 +1,3 @@
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { reconcilePendingCheckoutAction } from "@/app/actions/billing";
@@ -29,8 +28,6 @@ export default async function BillingPage({
   params,
   searchParams,
 }: BillingPageProps) {
-  await auth.protect();
-
   const { orgSlug } = await params;
   const current = await requireCurrentOrganizationForRouteSlug(orgSlug);
   if (!canAccessBillingAndSettings(current.auth)) {

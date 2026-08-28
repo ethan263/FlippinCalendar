@@ -1,5 +1,4 @@
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -7,10 +6,12 @@ import { redirect } from "next/navigation";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { requireAppSession } from "@/lib/auth/require-app-session";
+import { listAccessibleWorkspaces } from "@/lib/data/organizations";
 import { isWorkspaceOperator } from "@/lib/rbac";
 
 export default async function AccessRequiredPage() {
-  const session = await auth.protect();
+  const session = await requireAppSession();
 
   const authRole = {
     mode: session.orgId ? ("organization" as const) : ("personal" as const),
@@ -18,13 +19,19 @@ export default async function AccessRequiredPage() {
       ? session.orgRole.slice(4)
       : session.orgRole,
     clerkOrgId: session.orgId,
-    permissions: session.has({ permission: "org:operations_hub:manage" })
+    permissions: session.has?.({ permission: "org:operations_hub:manage" })
       ? ["org:operations_hub:manage"]
       : [],
   };
 
-  if (isWorkspaceOperator(authRole) && session.orgSlug) {
-    redirect(`/app/${session.orgSlug}`);
+  if (isWorkspaceOperator(authRole)) {
+    const slug =
+      session.orgSlug ??
+      (await listAccessibleWorkspaces(session.userId!))[0]?.slug;
+    if (slug) {
+      redirect(`/app/${slug}`);
+    }
+    redirect("/app");
   }
 
   return (
@@ -42,7 +49,7 @@ export default async function AccessRequiredPage() {
       </div>
 
       <Card className="mx-auto mt-12 max-w-2xl overflow-hidden border-black/10 bg-[#faf9f5] shadow-[0_24px_70px_rgba(44,36,24,0.12)] sm:mt-20">
-        <CardContent className="grid gap-8 p-7 sm:p-10 sm:grid-cols-[auto_1fr]">
+        <CardContent className="grid gap-8 p-7 sm:grid-cols-[auto_1fr] sm:p-10">
           <div className="grid size-14 place-items-center rounded-xl bg-foreground text-background">
             <ShieldCheck className="size-6" aria-hidden="true" />
           </div>

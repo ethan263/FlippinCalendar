@@ -98,7 +98,7 @@ export default function RootLayout({
           signUpUrl="/sign-up"
           signInFallbackRedirectUrl={buildAuthCompleteUrl(null)}
           signUpFallbackRedirectUrl={buildAuthCompleteUrl(null)}
-          afterSignOutUrl="/"
+          afterSignOutUrl="/sign-in"
         >
           <Providers>{children}</Providers>
         </ClerkProvider>

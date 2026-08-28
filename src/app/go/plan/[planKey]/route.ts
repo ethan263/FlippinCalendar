@@ -1,5 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+
+import { getAppAuthSession } from "@/lib/auth/require-app-session";
 
 import {
   PLAN_INTENT_COOKIE,
@@ -34,7 +35,7 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.redirect(new URL("/pricing", _request.url));
   }
 
-  const { userId, orgSlug } = await auth();
+  const { userId, orgSlug } = await getAppAuthSession();
   const destination = !userId
     ? buildSignInUrl(planIntent.key)
     : orgSlug

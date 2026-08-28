@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { SignInPanel } from "@/components/auth/sign-in-panel";
+import { getAppAuthSession } from "@/lib/auth/require-app-session";
 import { AuthShell } from "@/components/auth-shell";
 import {
   buildAuthCompleteUrl,
@@ -22,7 +22,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
     ? `/sign-up?plan=${planIntent.key}`
     : "/sign-up";
 
-  const session = await auth();
+  const session = await getAppAuthSession();
   if (session.userId) {
     redirect(redirectUrl);
   }

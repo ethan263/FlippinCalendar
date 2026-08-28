@@ -10,8 +10,9 @@ export type PlanIntent = Pick<MarketingPlan, "key" | "name">;
 
 export const PLAN_INTENT_COOKIE = "fc_plan_intent";
 
-/** Always show the Google account picker on OAuth sign-in. */
-export const CLERK_OIDC_ACCOUNT_PROMPT = "select_account" as const;
+export {
+  CLERK_OIDC_ACCOUNT_PROMPT,
+} from "@/lib/clerk/oauth";
 
 const planByKey = new Map(
   marketingPlans.map((plan) => [plan.key, plan] as const),

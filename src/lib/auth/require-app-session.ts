@@ -4,19 +4,21 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 /**
- * Require a signed-in session for `/app` routes.
+ * Read the Clerk session for `/app` routes.
  *
- * Clerk's `auth.protect()` no longer accepts `treatPendingAsSignedOut`.
- * In development we still allow pending sessions (choose-organization) via
- * `auth({ treatPendingAsSignedOut: false })` so local org selection is not
- * trapped. Production keeps the secure default (pending ≡ signed out).
+ * Personal workspaces do not require a Clerk organization or a completed
+ * choose-organization session task — only `userId` matters. Pending sessions
+ * still carry `userId`, so we must not treat them as signed-out here.
+ */
+export async function getAppAuthSession() {
+  return auth({ treatPendingAsSignedOut: false });
+}
+
+/**
+ * Require a signed-in session for `/app` routes.
  */
 export async function requireAppSession() {
-  if (process.env.NODE_ENV === "production") {
-    return auth.protect();
-  }
-
-  const session = await auth({ treatPendingAsSignedOut: false });
+  const session = await getAppAuthSession();
   if (!session.userId) {
     redirect("/sign-in");
   }
