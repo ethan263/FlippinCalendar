@@ -92,7 +92,7 @@ export function defaultSiteConfig(businessName: string): SiteConfig {
       maximumAdvanceDays: 90,
     },
     agent: {
-      // Entitled plans still gate visibility; defaulting on means Pro/Voice
+      // Entitled plans still gate visibility; defaulting on means Pro
       // orgs get the public Orb after publish without a second toggle hunt.
       showWebChat: true,
       showVoiceChat: true,

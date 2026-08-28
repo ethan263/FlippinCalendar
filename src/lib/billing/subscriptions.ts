@@ -162,13 +162,17 @@ function subscriptionGrantsFeature(
   subscription: OrganizationSubscription | null,
   feature: BillingFeature,
 ): boolean {
-  if (!subscription) {
-    return planIncludesFeature("core", feature);
+  const entitlements = resolveEntitlementsFromSubscription(subscription);
+  switch (feature) {
+    case "web_agent":
+      return entitlements.webAgent;
+    case "browser_voice":
+      return entitlements.browserVoice;
+    case "advanced_analytics":
+      return entitlements.advancedAnalytics;
+    default:
+      return false;
   }
-  if (!subscriptionGrantsAccess(subscription)) {
-    return false;
-  }
-  return planIncludesFeature(subscription.plan, feature);
 }
 
 export async function setPendingCheckout(args: {

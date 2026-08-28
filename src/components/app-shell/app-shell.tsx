@@ -5,13 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import {
-  BookOpen,
   Bot,
   CalendarDays,
   ChevronRight,
   CircleDollarSign,
   Clock3,
-  ContactRound,
   CreditCard,
   LayoutDashboard,
   LockKeyhole,
@@ -89,11 +87,6 @@ function navigationFor(
           segment: "team",
           icon: UsersRound,
         },
-        {
-          label: terminology.customerPlural,
-          segment: "contacts",
-          icon: ContactRound,
-        },
         { label: "Availability", segment: "availability", icon: Clock3 },
       ],
     },
@@ -101,7 +94,6 @@ function navigationFor(
       label: "Experience",
       items: [
         { label: "AI Agent", segment: "voice-agent", icon: Bot },
-        { label: "Knowledge base", segment: "knowledge-base", icon: BookOpen },
         { label: "Public Site", segment: "public-site", icon: PanelsTopLeft },
       ],
     },

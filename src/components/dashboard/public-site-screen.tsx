@@ -840,7 +840,7 @@ function SiteEditor({
                     </p>
                   ) : !entitlements.webAgent ? (
                     <p className="mt-0.5 text-[10px] text-primary">
-                      Requires a plan upgrade
+                      Requires Pro
                     </p>
                   ) : null}
                 </div>
@@ -865,7 +865,7 @@ function SiteEditor({
                     </p>
                   ) : !entitlements.browserVoice ? (
                     <p className="mt-0.5 text-[10px] text-primary">
-                      Requires the Voice plan
+                      Requires Pro
                     </p>
                   ) : (
                     <p className="mt-0.5 text-[10px] text-muted-foreground">
@@ -896,7 +896,7 @@ function SiteEditor({
                     </p>
                   ) : !entitlements.browserVoice ? (
                     <p className="mt-0.5 text-[10px] text-primary">
-                      Requires the Voice plan
+                      Requires Pro
                     </p>
                   ) : (
                     <p className="mt-0.5 text-[10px] text-muted-foreground">

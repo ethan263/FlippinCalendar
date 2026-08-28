@@ -23,12 +23,6 @@ import {
   updateOffering,
 } from "@/lib/data/catalog";
 import { overview } from "@/lib/data/dashboard";
-import { listContacts } from "@/lib/data/contacts";
-import {
-  listKnowledge,
-  removeKnowledge,
-  upsertKnowledge,
-} from "@/lib/data/knowledge";
 import {
   getAgentClientToolContext,
   getCurrentDraft,
@@ -210,27 +204,3 @@ export async function syncRecentConversationsAction() {
   return syncRecentConversationsFromElevenLabs();
 }
 
-export async function listContactsAction() {
-  return listContacts();
-}
-
-export async function listKnowledgeAction(args: {
-  includeUnpublished?: boolean;
-} = {}) {
-  return listKnowledge(args);
-}
-
-export async function upsertKnowledgeAction(args: {
-  knowledgeItemId?: string;
-  title: string;
-  content: string;
-  category?: string;
-  published?: boolean;
-  sortOrder?: number;
-}) {
-  return upsertKnowledge(args);
-}
-
-export async function removeKnowledgeAction(knowledgeItemId: string) {
-  return removeKnowledge(knowledgeItemId);
-}

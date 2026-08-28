@@ -204,8 +204,7 @@ function ConversationAnalyticsPanel({
           <div className="min-w-0">
             <p className="text-sm font-medium">Advanced analytics</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Conversation outcomes and duration trends are included on the Voice
-              plan.
+              Conversation outcomes and duration trends are included on Pro.
             </p>
             <Button asChild variant="outline" size="sm" className="mt-3 bg-white">
               <Link href={`/app/${orgSlug}/billing`}>Compare plans</Link>

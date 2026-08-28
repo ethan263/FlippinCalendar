@@ -460,7 +460,7 @@ export function AgentConfigureWizard({
                 <StepHeading
                   eyebrow="Public card"
                   title="Where should visitors talk to the agent?"
-                  description="Channels still require your flippinCalendar plan (Pro for text, Voice for microphone)."
+                  description="AI channels require the Pro plan."
                 />
                 <div className="space-y-2">
                   {FREE_PLAN_SURFACES.map((surface) => {
@@ -655,8 +655,8 @@ export function AgentConfigureWizard({
           />
           <p className="mt-4 text-[11px] leading-5 text-white/45">
             Free plan limits (~15 min / month on ElevenLabs Free) still apply at
-            the provider. flippinCalendar Pro/Voice unlock which channels appear
-            on your public card.
+            the provider. flippinCalendar Pro unlocks which channels appear on
+            your public card.
           </p>
         </aside>
       </div>

@@ -546,7 +546,7 @@ export async function getConversationAnalytics(): Promise<ConversationAnalytics>
     "advanced_analytics",
   );
   if (!hasAnalytics) {
-    throw new Error("Advanced analytics requires the Voice plan.");
+    throw new Error("Advanced analytics requires Pro.");
   }
   const now = Date.now();
   const since30 = iso(now - 30 * DAY_MS);

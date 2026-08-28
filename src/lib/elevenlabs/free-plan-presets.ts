@@ -124,7 +124,7 @@ export const FREE_PLAN_SURFACES: Array<{
   {
     id: "voice",
     label: "Browser audio",
-    hint: "Microphone conversations (Voice plan)",
+    hint: "Microphone conversations (Pro)",
     requires: ["browser_voice"],
   },
   {

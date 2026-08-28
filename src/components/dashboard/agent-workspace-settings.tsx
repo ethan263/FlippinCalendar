@@ -132,7 +132,7 @@ export function AgentWorkspaceSettings({
               </p>
             ) : !entitlements.webAgent ? (
               <p className="mt-0.5 text-[10px] text-primary">
-                Requires Engage or Voice
+                Requires Pro
               </p>
             ) : null}
           </div>
@@ -163,7 +163,7 @@ export function AgentWorkspaceSettings({
               </p>
             ) : !entitlements.browserVoice ? (
               <p className="mt-0.5 text-[10px] text-primary">
-                Requires Voice plan
+                Requires Pro
               </p>
             ) : (
               <p className="mt-0.5 text-[10px] text-muted-foreground">
