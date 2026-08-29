@@ -33,8 +33,8 @@ export function HeroMotionVideo() {
               }
         }
       >
-        <div className="overflow-hidden border border-foreground/12 bg-card shadow-[18px_22px_0_0_oklch(0.205_0.018_264.4)]">
-          <div className="relative aspect-video w-full bg-[#171b24]">
+        <div className="overflow-hidden border border-foreground/12 bg-card shadow-[18px_22px_0_0_oklch(0.48_0.19_260)]">
+          <div className="relative aspect-video w-full bg-[#0c1a2e]">
             <video
               className="size-full object-cover"
               autoPlay={!reduceMotion}

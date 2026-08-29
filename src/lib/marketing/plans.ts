@@ -16,7 +16,7 @@ export const marketingPlans: MarketingPlan[] = [
     key: "core",
     name: "Core",
     price: "R0",
-    description: "Bookings, operations, and a custom public page.",
+    description: "Bookings, ops, and your public page.",
     features: [
       "Bookings and availability",
       "Offerings and team",
@@ -27,7 +27,7 @@ export const marketingPlans: MarketingPlan[] = [
     key: "pro",
     name: "Pro",
     price: "R99",
-    description: "Full AI concierge — text chat, browser voice, and analytics.",
+    description: "AI chat, voice, and analytics.",
     features: [
       "Everything in Core",
       "AI text chat concierge",

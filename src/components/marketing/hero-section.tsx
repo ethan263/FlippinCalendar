@@ -64,7 +64,7 @@ export function HeroSection() {
               variant="outline"
               className="mb-7 rounded-sm bg-background px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em]"
             >
-              AI concierge · Tailored to your business
+              AI concierge for your business
             </Badge>
           </motion.div>
 
@@ -73,10 +73,10 @@ export function HeroSection() {
             variants={copyVariants}
             initial={reduceMotion ? false : "hidden"}
             animate="show"
-            className="font-heading text-[clamp(3.8rem,8vw,7.4rem)] font-medium leading-[0.82] tracking-[-0.065em] text-balance"
+            className="font-heading text-[clamp(3.8rem,8vw,7.4rem)] font-semibold leading-[0.88] tracking-[-0.04em] text-balance"
           >
-            The smart choice
-            <span className="mt-3 block text-primary italic">concierge.</span>
+            Your AI
+            <span className="mt-3 block text-primary">front desk.</span>
           </motion.h1>
 
           <motion.p
@@ -86,9 +86,8 @@ export function HeroSection() {
             animate="show"
             className="mt-9 max-w-xl text-lg leading-7 text-muted-foreground sm:text-xl sm:leading-8"
           >
-            flippinCalendar answers questions, chats with clients, and organizes
-            bookings for any service business—using your language, hours, people,
-            and brand.
+            Answers questions, handles chat, and books appointments—using your
+            hours, team, and brand.
           </motion.p>
 
           <motion.div
@@ -100,7 +99,7 @@ export function HeroSection() {
           >
             <Button asChild size="lg" className="h-12 gap-2 rounded-md px-6 shadow-none">
               <Link href="/sign-up">
-                Build your assistant <ArrowRight className="size-4" />
+                Get started <ArrowRight className="size-4" />
               </Link>
             </Button>
             <AnimatedContainer animation="scaleIn" delay={0.32} duration={0.35}>
@@ -116,13 +115,13 @@ export function HeroSection() {
             className="mt-12 flex flex-wrap gap-x-8 gap-y-3 border-t pt-5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground"
           >
             <span className="flex items-center gap-2">
-              <Check className="size-3 text-primary" /> Start free
+              <Check className="size-3 text-primary" /> Free to start
             </span>
             <span className="flex items-center gap-2">
-              <Check className="size-3 text-primary" /> No card required
+              <Check className="size-3 text-primary" /> No card needed
             </span>
             <span className="flex items-center gap-2">
-              <Check className="size-3 text-primary" /> Built on Clerk + ElevenLabs
+              <Check className="size-3 text-primary" /> Clerk + ElevenLabs
             </span>
           </motion.div>
         </div>
