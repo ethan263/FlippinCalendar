@@ -153,23 +153,28 @@ export async function overviewAction() {
   return overview();
 }
 
-export async function getCurrentDraftAction() {
-  return getCurrentDraft();
+export async function getCurrentDraftAction(orgSlug: string) {
+  return getCurrentDraft(orgSlug);
 }
 
-export async function getAgentClientToolContextAction() {
-  return getAgentClientToolContext();
+export async function getAgentClientToolContextAction(orgSlug: string) {
+  return getAgentClientToolContext(orgSlug);
 }
 
 export async function updateDraftAction(args: {
+  orgSlug: string;
   config: SiteConfig;
   siteSlug?: string;
 }) {
-  return updateDraft(args);
+  return updateDraft({
+    routeOrgSlug: args.orgSlug,
+    config: args.config,
+    siteSlug: args.siteSlug,
+  });
 }
 
-export async function publishSiteAction() {
-  return publish();
+export async function publishSiteAction(orgSlug: string) {
+  return publish(orgSlug);
 }
 
 export async function getCurrentAgentAction() {

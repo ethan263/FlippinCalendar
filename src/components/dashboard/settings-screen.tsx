@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { OrganizationProfile } from "@clerk/nextjs";
 import {
   Building2,
@@ -9,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   LoadingPanel,
@@ -24,13 +26,13 @@ import { WorkspaceIdentityEditor } from "@/components/dashboard/workspace-identi
 import { AgentWorkspaceSettings } from "@/components/dashboard/agent-workspace-settings";
 
 export function SettingsScreen() {
-  const { organization } = useWorkspace();
+  const { organization, orgSlug } = useWorkspace();
   const workspaceReady = useWorkspaceReady();
   const { draftVersion } = usePlatformRefresh();
   const isPersonalWorkspace = Boolean(organization && !organization.clerkOrgId);
   const { data: publicSite } = useRefreshableServerData(
-    () => getCurrentDraftAction(),
-    [organization?._id, draftVersion],
+    () => getCurrentDraftAction(orgSlug),
+    [organization?._id, orgSlug, draftVersion],
     { enabled: workspaceReady },
   );
 
@@ -53,6 +55,7 @@ export function SettingsScreen() {
               key={organization._id}
               organization={organization}
               publicSlug={publicSite?.site.siteSlug}
+              orgSlug={orgSlug}
             />
           ) : (
             <Card className="h-fit bg-white">
@@ -92,12 +95,15 @@ export function SettingsScreen() {
                 <Separator />
                 <div className="flex items-start justify-between gap-4">
                   <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Globe2 className="size-3.5" /> Public slug
+                    <Globe2 className="size-3.5" /> Public booking link
                   </span>
                   <span className="font-mono text-[10px] font-medium">
                     /p/{publicSite?.site.siteSlug ?? "—"}
                   </span>
                 </div>
+                <Button asChild variant="link" size="sm" className="h-auto px-0 text-xs">
+                  <Link href={`/app/${orgSlug}/public-site`}>Change link</Link>
+                </Button>
               </CardContent>
             </Card>
           )

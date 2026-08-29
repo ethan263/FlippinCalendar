@@ -478,11 +478,13 @@ function SiteEditor({
   initial,
   offerings,
   members,
+  orgSlug,
   onMutated,
 }: {
   initial: CurrentSiteDraft;
   offerings: Offering[];
   members: TeamMember[];
+  orgSlug: string;
   onMutated: () => void;
 }) {
   const { terminology } = useWorkspace();
@@ -504,7 +506,9 @@ function SiteEditor({
   }
 
   async function saveDraft() {
-    await updateDraftAction({ config, siteSlug });
+    const updated = await updateDraftAction({ orgSlug, config, siteSlug });
+    setSiteSlug(updated.site_slug);
+    return updated;
   }
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
@@ -526,7 +530,7 @@ function SiteEditor({
     setPublishing(true);
     try {
       await saveDraft();
-      const published = await publishSiteAction();
+      const published = await publishSiteAction(orgSlug);
       setPublishedAt(published.publishedAt);
       setCopied(false);
       setPublishDialogOpen(true);
@@ -1042,12 +1046,12 @@ function SiteEditor({
 }
 
 export function PublicSiteScreen() {
-  const { organization, terminology } = useWorkspace();
+  const { organization, orgSlug, terminology } = useWorkspace();
   const workspaceReady = useWorkspaceReady();
   const { draftVersion } = usePlatformRefresh();
   const { data: current, refresh: refreshCurrent } = useRefreshableServerData(
-    () => getCurrentDraftAction(),
-    [organization?._id, draftVersion],
+    () => getCurrentDraftAction(orgSlug),
+    [organization?._id, orgSlug, draftVersion],
     { enabled: workspaceReady },
   );
   const { data: offerings, refresh: refreshOfferings } = useRefreshableServerData(
@@ -1088,8 +1092,9 @@ export function PublicSiteScreen() {
         <LoadingPanel rows={7} label="Loading your public site…" />
       ) : (
         <SiteEditor
-          key={`${current.site._id}-${current.site.updatedAt}`}
+          key={`${current.site._id}-${current.site.updatedAt}-${current.site.siteSlug}`}
           initial={current}
+          orgSlug={orgSlug}
           offerings={offerings.filter(
             (offering) => offering.active && offering.bookableOnline,
           )}

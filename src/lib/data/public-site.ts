@@ -7,7 +7,10 @@ import { requiredTrimmed, slugify } from "@/lib/data/shared";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ms, type OrganizationRow } from "@/lib/data/auth";
 import type { SiteConfig } from "@/components/dashboard/data";
-import { requireCurrentOrganizationOperator } from "@/lib/data/auth";
+import {
+  isWorkspaceOperator,
+  requireCurrentOrganizationForRouteSlug,
+} from "@/lib/data/auth";
 import type { OfferingRow, TeamMemberRow } from "@/lib/data/booking-helpers";
 
 type PublicSiteRow = {
@@ -180,9 +183,19 @@ export async function getPublishedBySlug(siteSlugRaw: string) {
   };
 }
 
+async function requirePublicSiteOperator(routeOrgSlug: string) {
+  const current = await requireCurrentOrganizationForRouteSlug(routeOrgSlug);
+  if (!isWorkspaceOperator(current.auth)) {
+    throw new Error(
+      "The organization operator permission is required for this action.",
+    );
+  }
+  return current;
+}
+
 /** Published catalog + site slug for dashboard agent client tools. */
-export async function getAgentClientToolContext() {
-  const { organization, supabase } = await requireCurrentOrganizationOperator();
+export async function getAgentClientToolContext(routeOrgSlug: string) {
+  const { organization, supabase } = await requirePublicSiteOperator(routeOrgSlug);
   const { data: site, error } = await supabase
     .from("public_sites")
     .select("site_slug")
@@ -246,8 +259,8 @@ export async function getAgentSessionConfig(siteSlugRaw: string) {
   return { organizationId: org.id, siteSlug: siteRow.site_slug };
 }
 
-export async function getCurrentDraft() {
-  const { organization, supabase } = await requireCurrentOrganizationOperator();
+export async function getCurrentDraft(routeOrgSlug: string) {
+  const { organization, supabase } = await requirePublicSiteOperator(routeOrgSlug);
   const { data: site, error } = await supabase
     .from("public_sites")
     .select("*")
@@ -276,10 +289,13 @@ export async function getCurrentDraft() {
 }
 
 export async function updateDraft(args: {
+  routeOrgSlug: string;
   config: SiteConfig;
   siteSlug?: string;
 }) {
-  const { organization, supabase } = await requireCurrentOrganizationOperator();
+  const { organization, supabase } = await requirePublicSiteOperator(
+    args.routeOrgSlug,
+  );
   const { data: site, error } = await supabase
     .from("public_sites")
     .select("*")
@@ -288,6 +304,7 @@ export async function updateDraft(args: {
   if (error) throw new Error(error.message);
   if (!site) throw new Error("Public site not initialized.");
   const siteRow = site as PublicSiteRow;
+  const previousSlug = siteRow.site_slug;
 
   let nextSlug = siteRow.site_slug;
   if (args.siteSlug !== undefined) {
@@ -313,11 +330,21 @@ export async function updateDraft(args: {
     .select("*")
     .single();
   if (updateError) throw new Error(updateError.message);
+
+  revalidatePath(`/p/${nextSlug}`);
+  if (previousSlug !== nextSlug) {
+    revalidatePath(`/p/${previousSlug}`);
+  }
+  if (organization.slug) {
+    revalidatePath(`/app/${organization.slug}/public-site`);
+    revalidatePath(`/app/${organization.slug}/voice-agent`);
+  }
+
   return data as PublicSiteRow;
 }
 
-export async function publish() {
-  const { organization, supabase } = await requireCurrentOrganizationOperator();
+export async function publish(routeOrgSlug: string) {
+  const { organization, supabase } = await requirePublicSiteOperator(routeOrgSlug);
   const { data: site, error } = await supabase
     .from("public_sites")
     .select("*")

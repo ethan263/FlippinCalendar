@@ -219,9 +219,11 @@ async function revalidateOrganizationBillingPaths(organizationId: string) {
   if (error || !data?.slug) return;
 
   const slug = data.slug as string;
+  revalidatePath(`/app/${slug}`);
   revalidatePath(`/app/${slug}/billing`);
   revalidatePath(`/app/${slug}/voice-agent`);
-  revalidatePath(`/app/${slug}`);
+  revalidatePath(`/app/${slug}/public-site`);
+  revalidatePath(`/app/${slug}/settings`);
 }
 
 export async function activatePaidSubscription(args: {

@@ -11,7 +11,9 @@ import {
 
 type PlatformRefreshContextValue = {
   draftVersion: number;
+  entitlementsVersion: number;
   refreshDraft: () => void;
+  refreshEntitlementsState: () => void;
 };
 
 const PlatformRefreshContext =
@@ -19,13 +21,22 @@ const PlatformRefreshContext =
 
 export function PlatformRefreshProvider({ children }: { children: ReactNode }) {
   const [draftVersion, setDraftVersion] = useState(0);
+  const [entitlementsVersion, setEntitlementsVersion] = useState(0);
   const refreshDraft = useCallback(() => {
     setDraftVersion((value) => value + 1);
   }, []);
+  const refreshEntitlementsState = useCallback(() => {
+    setEntitlementsVersion((value) => value + 1);
+  }, []);
 
   const value = useMemo(
-    () => ({ draftVersion, refreshDraft }),
-    [draftVersion, refreshDraft],
+    () => ({
+      draftVersion,
+      entitlementsVersion,
+      refreshDraft,
+      refreshEntitlementsState,
+    }),
+    [draftVersion, entitlementsVersion, refreshDraft, refreshEntitlementsState],
   );
 
   return (

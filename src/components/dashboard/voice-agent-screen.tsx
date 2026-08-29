@@ -388,8 +388,8 @@ export function VoiceAgentScreen() {
   const [testLoading, setTestLoading] = useState(false);
 
   const { data: siteDraft, refresh: refreshSiteDraft } = useRefreshableServerData(
-    () => getCurrentDraftAction(),
-    [organization?._id, draftVersion],
+    () => getCurrentDraftAction(orgSlug),
+    [organization?._id, orgSlug, draftVersion],
     { enabled: workspaceReady },
   );
 
@@ -402,7 +402,7 @@ export function VoiceAgentScreen() {
     setConfigureMessage(null);
     setTestLoading(true);
     try {
-      const context = await getAgentClientToolContextAction();
+      const context = await getAgentClientToolContextAction(orgSlug);
       setTestToolContext(context);
       setTestOpen(true);
     } catch (error) {
@@ -447,8 +447,8 @@ export function VoiceAgentScreen() {
           language: draft.language,
         },
       };
-      await updateDraftAction({ config: next });
-      const published = await publishSiteAction();
+      await updateDraftAction({ orgSlug, config: next });
+      const published = await publishSiteAction(orgSlug);
       setConfigureMessage(`Published to /p/${published.siteSlug}`);
       refresh();
     } finally {

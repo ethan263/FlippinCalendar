@@ -196,8 +196,8 @@ function ShellChrome({
   const workspaceReady = useWorkspaceReady();
   const { draftVersion } = usePlatformRefresh();
   const { data: publicSite } = useRefreshableServerData(
-    () => getCurrentDraftAction(),
-    [organization?._id, draftVersion],
+    () => getCurrentDraftAction(orgSlug),
+    [organization?._id, orgSlug, draftVersion],
     { enabled: workspaceReady },
   );
   const workspaceAuth: WorkspaceAuthRole = {
@@ -411,11 +411,11 @@ export function AppShell({
 }) {
   return (
     <WorkspaceProvider orgSlug={orgSlug} initialOrganization={initialOrganization}>
-      <EntitlementsProvider>
-        <PlatformRefreshProvider>
+      <PlatformRefreshProvider>
+        <EntitlementsProvider>
           <ShellChrome orgSlug={orgSlug}>{children}</ShellChrome>
-        </PlatformRefreshProvider>
-      </EntitlementsProvider>
+        </EntitlementsProvider>
+      </PlatformRefreshProvider>
     </WorkspaceProvider>
   );
 }

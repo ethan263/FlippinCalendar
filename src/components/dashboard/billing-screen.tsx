@@ -13,6 +13,7 @@ import {
   useFeatureEntitlements,
   useRefreshEntitlements,
 } from "@/components/dashboard/feature-gates";
+import { usePlatformRefresh } from "@/components/dashboard/platform-refresh-context";
 import { useWorkspace } from "@/components/dashboard/workspace-context";
 import { planDisplayName } from "@/lib/billing/features";
 import { isFreePlan, type MarketingPlanKey } from "@/lib/marketing/plans";
@@ -39,6 +40,7 @@ export function BillingScreen({
   const { organization } = useWorkspace();
   const entitlements = useFeatureEntitlements();
   const refreshEntitlements = useRefreshEntitlements();
+  const { refreshEntitlementsState } = usePlatformRefresh();
   const resolvedSlug = orgSlug || organization?.slug || "";
   const [showCheckout, setShowCheckout] = useState(openCheckoutPanel);
 
@@ -72,6 +74,7 @@ export function BillingScreen({
           }
           const next = await refreshEntitlements();
           if (next.pendingPlan === null && !isFreePlan(next.plan)) {
+            refreshEntitlementsState();
             toast.success(`${planDisplayName(next.plan)} activated`);
             router.replace(`/app/${resolvedSlug}/billing`);
             return;
@@ -91,7 +94,7 @@ export function BillingScreen({
     return () => {
       cancelled = true;
     };
-  }, [checkoutStatus, refreshEntitlements, resolvedSlug, router]);
+  }, [checkoutStatus, refreshEntitlements, refreshEntitlementsState, resolvedSlug, router]);
 
   const statusLabel = entitlements.pendingPlan
     ? `Upgrading to ${planDisplayName(entitlements.pendingPlan)}`

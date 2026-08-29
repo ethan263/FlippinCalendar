@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { Building2, Clock3, Globe2, LoaderCircle, Save } from "lucide-react";
 import { toast } from "sonner";
 
@@ -78,9 +79,11 @@ function toDraft(organization: Organization): IdentityDraft {
 export function WorkspaceIdentityEditor({
   organization,
   publicSlug,
+  orgSlug,
 }: {
   organization: Organization;
   publicSlug?: string;
+  orgSlug: string;
 }) {
   const { refreshOrganization } = useWorkspace();
   const [draft, setDraft] = useState<IdentityDraft>(() => toDraft(organization));
@@ -260,9 +263,12 @@ export function WorkspaceIdentityEditor({
           {publicSlug ? (
             <div className="rounded-lg border border-black/8 bg-[#faf9f6] px-3 py-2.5">
               <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                Public slug
+                Public booking link
               </p>
               <p className="mt-1 font-mono text-[11px] font-medium">/p/{publicSlug}</p>
+              <Button asChild variant="link" size="sm" className="mt-1 h-auto px-0 text-xs">
+                <Link href={`/app/${orgSlug}/public-site`}>Change link on Public Site</Link>
+              </Button>
             </div>
           ) : null}
         </CardContent>

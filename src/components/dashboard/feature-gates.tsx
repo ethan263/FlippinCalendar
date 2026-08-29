@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { fetchEntitlementsAction } from "@/app/actions/billing";
+import { usePlatformRefresh } from "@/components/dashboard/platform-refresh-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -76,6 +77,7 @@ const featureCopy = {
 
 export function EntitlementsProvider({ children }: { children: ReactNode }) {
   const { organization, orgSlug } = useWorkspace();
+  const { entitlementsVersion } = usePlatformRefresh();
   const [entitlements, setEntitlements] =
     useState<EntitlementsState>(defaultEntitlements);
 
@@ -118,6 +120,32 @@ export function EntitlementsProvider({ children }: { children: ReactNode }) {
 
     return () => {
       cancelled = true;
+    };
+  }, [organization?._id, orgSlug, entitlementsVersion]);
+
+  useEffect(() => {
+    if (!organization?._id) return;
+
+    const refreshNow = () => {
+      void fetchEntitlementsAction(orgSlug)
+        .then((next) => setEntitlements(next))
+        .catch(() => {
+          // Keep the last known entitlements when a background refresh fails.
+        });
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") refreshNow();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", refreshNow);
+    window.addEventListener("online", refreshNow);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", refreshNow);
+      window.removeEventListener("online", refreshNow);
     };
   }, [organization?._id, orgSlug]);
 

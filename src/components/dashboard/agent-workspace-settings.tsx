@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useServerData } from "@/hooks/use-server-data";
+import { useWorkspace } from "@/components/dashboard/workspace-context";
 
 type AgentWorkspaceSettingsProps = {
   organizationId: string;
@@ -24,11 +25,12 @@ type AgentWorkspaceSettingsProps = {
 export function AgentWorkspaceSettings({
   organizationId,
 }: AgentWorkspaceSettingsProps) {
+  const { orgSlug } = useWorkspace();
   const entitlements = useFeatureEntitlements();
   const agent = useServerData(() => getCurrentAgentAction(), [organizationId]);
   const siteDraft = useServerData(
-    () => getCurrentDraftAction(),
-    [organizationId],
+    () => getCurrentDraftAction(orgSlug),
+    [organizationId, orgSlug],
   );
 
   const [webEnabled, setWebEnabled] = useState(false);

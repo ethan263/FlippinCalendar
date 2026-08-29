@@ -124,7 +124,7 @@ export async function POST() {
     const [agent, site, offerings, knowledgeItems, rules] =
       await Promise.all([
         getCurrentAgent(),
-        getCurrentDraft(),
+        getCurrentDraft(organization.slug),
         listOfferings({ includeInactive: false }),
         listKnowledge({ includeUnpublished: false }),
         listRules(),
