@@ -126,10 +126,7 @@ function WorkspaceNavigation({
   return (
     <>
       {navigation.map((section) => (
-        <SidebarGroup
-          key={section.label}
-          className="px-2 py-2 group-data-[collapsible=icon]:px-1.5"
-        >
+        <SidebarGroup key={section.label} className="px-3 py-2">
           <SidebarGroupLabel className="px-2 text-[10px] font-semibold tracking-[0.18em] text-sidebar-foreground/45 uppercase">
             {section.label}
           </SidebarGroupLabel>
@@ -166,9 +163,9 @@ function WorkspaceNavigation({
                         <span>{item.label}</span>
                         {item.segment === "voice-agent" &&
                           (locked ? (
-                            <LockKeyhole className="ml-auto size-3.5 opacity-70 group-data-[collapsible=icon]:hidden" />
+                            <LockKeyhole className="ml-auto size-3.5 opacity-70" />
                           ) : (
-                            <span className="ml-auto size-1.5 rounded-full bg-primary group-data-[collapsible=icon]:hidden" />
+                            <span className="ml-auto size-1.5 rounded-full bg-primary" />
                           ))}
                       </Link>
                     </SidebarMenuButton>
@@ -218,28 +215,28 @@ function ShellChrome({
 
   return (
     <SidebarProvider
-      defaultOpen={false}
-      style={
-        {
-          "--sidebar-width": "17.25rem",
-          "--sidebar-width-icon": "3.5rem",
-        } as CSSProperties
-      }
+      defaultOpen
+      style={{ "--sidebar-width": "17.25rem" } as CSSProperties}
     >
       <Sidebar
-        collapsible="icon"
+        collapsible="offcanvas"
         className="border-r border-black/10 bg-[#f2f0e9]"
       >
-        <SidebarHeader className="gap-4 px-3 pt-4 pb-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-2">
-          <Brand
-            href={`/app/${orgSlug}`}
-            size="sm"
-            subtitle="Operations desk"
-            className="rounded-md group-data-[collapsible=icon]:justify-center"
-            wordmarkClassName="group-data-[collapsible=icon]:hidden"
-          />
+        <SidebarHeader className="gap-4 px-4 pt-4 pb-3">
+          <div className="flex items-start justify-between gap-2">
+            <Brand
+              href={`/app/${orgSlug}`}
+              size="sm"
+              subtitle="Operations desk"
+              className="min-w-0 flex-1 rounded-md"
+            />
+            <SidebarTrigger
+              className="hidden size-8 shrink-0 md:inline-flex"
+              aria-label="Collapse sidebar"
+            />
+          </div>
 
-          <div className="rounded-lg border border-black/10 bg-white/70 px-2 py-1 shadow-[0_1px_0_rgba(0,0,0,0.05)] group-data-[collapsible=icon]:hidden">
+          <div className="rounded-lg border border-black/10 bg-white/70 px-2 py-1 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
             {organization?.clerkOrgId ? (
               <OrganizationSwitcher
                 hidePersonal
@@ -265,14 +262,14 @@ function ShellChrome({
           </div>
         </SidebarHeader>
 
-        <Separator className="bg-black/10 group-data-[collapsible=icon]:mx-2" />
+        <Separator className="bg-black/10" />
         <SidebarContent className="py-2">
           <WorkspaceNavigation navigation={navigation} orgSlug={orgSlug} />
         </SidebarContent>
 
-        <SidebarFooter className="p-3 group-data-[collapsible=icon]:p-2">
-          <div className="rounded-lg border border-black/10 bg-white/55 p-3 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2">
-            <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:hidden">
+        <SidebarFooter className="p-3">
+          <div className="rounded-lg border border-black/10 bg-white/55 p-3">
+            <div className="flex items-center justify-between gap-2">
               <p className="text-[10px] font-semibold tracking-[0.14em] text-sidebar-foreground/50 uppercase">
                 Your business
               </p>
@@ -301,25 +298,9 @@ function ShellChrome({
                     : "Synced"}
               </span>
             </div>
-            <p className="mt-2 truncate text-xs font-medium group-data-[collapsible=icon]:hidden">
+            <p className="mt-2 truncate text-xs font-medium">
               {organizationName}
             </p>
-            <span
-              className={`hidden size-2 rounded-full group-data-[collapsible=icon]:block ${
-                bootstrapError && !organization
-                  ? "bg-rose-500"
-                  : isBootstrapping
-                    ? "bg-amber-500"
-                    : "bg-emerald-500"
-              }`}
-              title={
-                bootstrapError && !organization
-                  ? "Sync failed"
-                  : isBootstrapping
-                    ? "Syncing"
-                    : "Synced"
-              }
-            />
           </div>
         </SidebarFooter>
         <SidebarRail />
@@ -327,7 +308,7 @@ function ShellChrome({
 
       <SidebarInset className="min-w-0 bg-[#faf9f5]">
         <header className="sticky top-0 z-30 flex h-14 items-center border-b border-black/10 bg-[#faf9f5]/95 px-4 supports-backdrop-filter:bg-[#faf9f5]/85 supports-backdrop-filter:backdrop-blur-md sm:px-6">
-          <SidebarTrigger className="mr-3" />
+          <SidebarTrigger className="mr-3 md:hidden" />
 
           <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
             <span className="hidden truncate text-muted-foreground sm:inline">
@@ -372,8 +353,8 @@ function ShellChrome({
           </div>
         </header>
 
-        <main className="min-h-[calc(100svh-3.5rem)] px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-          <div className="mx-auto w-full max-w-7xl">
+        <main className="min-h-[calc(100svh-3.5rem)] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <div className="mx-auto w-full max-w-[1440px]">
             {bootstrapError && !organization && !isBootstrapping ? (
               <div className="rounded-xl border border-rose-200 bg-rose-50 px-5 py-6 text-sm text-rose-900">
                 <p className="font-heading text-lg font-semibold tracking-tight">
