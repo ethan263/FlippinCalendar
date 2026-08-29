@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Check } from "lucide-react";
 import { Brand } from "@/components/brand";
+import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { getAppAuthSession } from "@/lib/auth/require-app-session";
 import { Button } from "@/components/ui/button";
 import { marketingPlans, pricingPeriodLabel } from "@/lib/marketing/plans";
@@ -92,6 +93,8 @@ export default async function PricingPage() {
           </p>
         )}
       </section>
+
+      <MarketingFooter />
     </main>
   );
 }

@@ -25,15 +25,24 @@ Add domains: `flippincalendar.co.za`, `www.flippincalendar.co.za`.
 Production env (do **not** put live keys on Preview):
 
 ```bash
-NEXT_PUBLIC_APP_URL=https://flippincalendar.co.za
+NEXT_PUBLIC_APP_URL=https://www.flippincalendar.co.za
 CLERK_AUTHORIZED_PARTIES=https://flippincalendar.co.za,https://www.flippincalendar.co.za
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_…   # from clerk env pull --instance prod
 CLERK_SECRET_KEY=sk_live_…                    # rotated cutover secret
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=…
+SUPABASE_SECRET_KEY=…
+PAYFAST_MODE=live
+ELEVENLABS_DEFAULT_AGENT_ID=…
+CRON_SECRET=…
 ```
 
 Keep Supabase + ElevenLabs secrets. ElevenLabs webhook:
 
-`https://flippincalendar.co.za/api/webhooks/elevenlabs`
+`https://www.flippincalendar.co.za/api/webhooks/elevenlabs`
+
+PayFast ITN:
+
+`https://www.flippincalendar.co.za/api/webhooks/payfast`
 
 Enable Cloudflare proxy on apex/www: `node scripts/setup-cloudflare-dns.mjs`
 
@@ -76,7 +85,7 @@ Or Clerk Dashboard → Production → Social connections → Google.
 ```bash
 clerk deploy status
 # dns/ssl/mail → ok
-# open https://flippincalendar.co.za/sign-in
+# open https://www.flippincalendar.co.za/sign-in
 ```
 
 Clerk domains UI: https://dashboard.clerk.com/apps/app_3H4zQPUD48F6Nf1OBfcjiU4lCxg/instances/ins_3H8qnDBcKY6852h5cV9BTnqJFT2/domains

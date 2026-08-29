@@ -38,15 +38,15 @@ Orchestrate a safe go-live across Vercel, Clerk, Supabase, PayFast, and ElevenLa
 Set on **Production** environment only (redeploy after changes):
 
 ```bash
-NEXT_PUBLIC_APP_URL=https://flippincalendar.co.za
+NEXT_PUBLIC_APP_URL=https://www.flippincalendar.co.za
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
 CLERK_SECRET_KEY=sk_live_...
 CLERK_AUTHORIZED_PARTIES=https://flippincalendar.co.za,https://www.flippincalendar.co.za
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+SUPABASE_SECRET_KEY=...
 
 # PayFast LIVE
 PAYFAST_MODE=live
@@ -57,11 +57,13 @@ PAYFAST_PASSPHRASE=...
 # ElevenLabs
 ELEVENLABS_API_KEY=...
 ELEVENLABS_WEBHOOK_SECRET=...
-ELEVENLABS_AGENT_ID=...
+ELEVENLABS_DEFAULT_AGENT_ID=...
 
 # Optional
 CRON_SECRET=...
 RESEND_API_KEY=...
+RESEND_FROM_EMAIL=...
+NEXT_PUBLIC_CLERK_FAPI_HOST=clerk.flippincalendar.co.za
 ```
 
 Verify domains: `flippincalendar.co.za`, `www.flippincalendar.co.za`.
@@ -74,9 +76,9 @@ Local dev stays on `pk_test` / `PAYFAST_MODE=sandbox` in `.env.local` (gitignore
 |------|------------------|
 | Process URL | `https://www.payfast.co.za/eng/process` |
 | Validate URL | `https://www.payfast.co.za/eng/query/validate` |
-| ITN `notify_url` | `https://flippincalendar.co.za/api/webhooks/payfast` |
-| `return_url` | `https://flippincalendar.co.za/app/{slug}/billing?checkout=success` |
-| `cancel_url` | `https://flippincalendar.co.za/app/{slug}/billing` |
+| ITN `notify_url` | `https://www.flippincalendar.co.za/api/webhooks/payfast` |
+| `return_url` | `https://www.flippincalendar.co.za/app/{slug}/billing?checkout=success` |
+| `cancel_url` | `https://www.flippincalendar.co.za/app/{slug}/billing` |
 
 Checklist:
 
@@ -94,7 +96,7 @@ Code paths: `src/lib/payfast/`, `src/app/api/webhooks/payfast/route.ts`, `src/li
 
 | Item | Value |
 |------|-------|
-| Webhook URL | `https://flippincalendar.co.za/api/webhooks/elevenlabs` |
+| Webhook URL | `https://www.flippincalendar.co.za/api/webhooks/elevenlabs` |
 | Secret | `ELEVENLABS_WEBHOOK_SECRET` in Vercel Production |
 
 Checklist:

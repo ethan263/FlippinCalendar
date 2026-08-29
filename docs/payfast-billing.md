@@ -34,7 +34,7 @@ RESEND_API_KEY=...                    # renewal reminders (optional)
 
 ## Webhook URL
 
-`https://flippincalendar.co.za/api/webhooks/payfast`
+`https://www.flippincalendar.co.za/api/webhooks/payfast`
 
 Cloudflare proxies the apex domain to Vercel. Run `node scripts/setup-cloudflare-dns.mjs` once to enable orange-cloud proxy.
 

@@ -12,6 +12,7 @@ import { UserButton } from "@clerk/nextjs";
 import { Brand } from "@/components/brand";
 import { getAppAuthSession } from "@/lib/auth/require-app-session";
 import { HeroSection } from "@/components/marketing/hero-section";
+import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { Button } from "@/components/ui/button";
 import { marketingPlans, pricingPeriodLabel } from "@/lib/marketing/plans";
 import { buildPlanChoiceHref } from "@/lib/marketing/plan-intent";
@@ -195,14 +196,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="border-t bg-card">
-        <div className="mx-auto flex max-w-350 flex-col gap-5 px-5 py-8 text-xs text-muted-foreground sm:flex-row sm:items-center sm:px-8 lg:px-12">
-          <Brand />
-          <p className="sm:ml-auto">An AI front desk for every business.</p>
-          <Link href="/pricing" className="hover:text-foreground">Pricing</Link>
-          <Link href="/sign-in" className="hover:text-foreground">Sign in</Link>
-        </div>
-      </footer>
+      <MarketingFooter />
     </main>
   );
 }

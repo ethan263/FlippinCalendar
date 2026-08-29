@@ -10,8 +10,8 @@ export const PRODUCTION_ORIGINS = [
   `https://${PRODUCTION_WWW_HOST}`,
 ] as const;
 
-/** Canonical production origin — apex domain via Cloudflare → Vercel. */
-export const PRODUCTION_APP_ORIGIN = PRODUCTION_ORIGINS[0];
+/** Canonical production origin — www (apex 308-redirects here via Vercel/DNS). */
+export const PRODUCTION_APP_ORIGIN = PRODUCTION_ORIGINS[1];
 
 /** Webhooks use the same apex domain (Cloudflare-proxied). */
 export function getWebhooksOrigin(): string {

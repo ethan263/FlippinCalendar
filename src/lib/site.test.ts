@@ -35,8 +35,9 @@ describe("site canonical helpers", () => {
     ]);
   });
 
-  it("uses apex domain for webhooks in production", () => {
+  it("uses canonical www origin for webhooks in production", () => {
     vi.stubEnv("NODE_ENV", "production");
-    expect(getWebhooksOrigin()).toBe(PRODUCTION_APP_ORIGIN);
+    expect(getWebhooksOrigin()).toBe("https://www.flippincalendar.co.za");
+    expect(PRODUCTION_APP_ORIGIN).toBe("https://www.flippincalendar.co.za");
   });
 });

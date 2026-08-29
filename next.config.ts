@@ -8,6 +8,16 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   poweredByHeader: false,
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "flippincalendar.co.za" }],
+        destination: "https://www.flippincalendar.co.za/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
